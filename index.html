@@ -2026,6 +2026,21 @@
   :root{--gc1:#0A84FF; --gc2:#BF5AF2; --gc3:#40C8E0; --gc4:#FF9F0A; --gc5:#9BE15D; --gc6:#7D7AFF; --gc7:#30D158; --gc8:#C69C6D; --gc9:#64D2FF; --gc10:#FFD60A;}
   html[data-theme="light"]{--gc1:#007AFF; --gc2:#AF52DE; --gc3:#0E9F8F; --gc4:#E8590C; --gc5:#5C940D; --gc6:#5856D6; --gc7:#2F9E44; --gc8:#8F5B2E; --gc9:#1C7ED6; --gc10:#B08900;}
   .gm-modal{max-width:1080px; max-height:92vh;}
+  /* grade de um colega (link compartilhado) */
+  .am-modal{max-width:760px;}
+  .am-sub{margin:-4px 0 14px; font-size:13px; color:var(--text-dim); line-height:1.5;}
+  .am-resumo{padding:11px 14px; border-radius:14px; background:var(--blue-dim); font-size:13px; line-height:1.5; color:var(--text); margin-bottom:14px;}
+  .am-lista{display:flex; flex-direction:column; margin-top:14px;}
+  .am-item{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--line-soft); font-size:13px; min-width:0;}
+  .am-item .gm-dot{background:var(--c);}
+  .am-item__n{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
+  .am-item__n b{font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .am-item__n small{font-size:11.5px; color:var(--text-faint);}
+  .am-item__st{font-size:11.5px; font-weight:600; flex-shrink:0; text-align:right; max-width:45%;}
+  .gm-bl.is-igual{box-shadow:inset 3px 0 0 var(--c), 0 0 0 1.5px var(--green);}
+  .gm-amigos{display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; margin:0 0 14px; font-size:12.5px; color:var(--text-dim);}
+  .gm-amigo{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); background:var(--panel-2); color:var(--text); border-radius:999px; padding:4px 11px; font:inherit; font-size:12.5px; cursor:pointer;}
+  .gm-amigo:hover{border-color:var(--blue);}
   .gm-modal [hidden]{display:none !important;}
   .gm-fonte{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 14px; border-radius:16px; background:var(--panel-2); border:1px solid var(--line-soft);}
   .gm-fonte__ic{width:40px; height:40px; border-radius:11px; display:grid; place-items:center; flex-shrink:0; font-size:10.5px; font-weight:700; letter-spacing:.04em; color:var(--red); background:var(--red-dim);}
@@ -3214,6 +3229,19 @@
 </div>
 
 <!-- MODAL: montar a grade do semestre pelo PDF de horários -->
+<div class="modal-overlay" id="modalAmigo">
+  <div class="modal am-modal" role="dialog" aria-modal="true" aria-labelledby="amTitulo">
+    <div class="modal-head">
+      <h3 id="amTitulo">Grade de um colega</h3>
+      <button class="btn btn-ghost" id="amFechar" style="padding:4px 8px; font-size:16px;" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body" id="amBody"></div>
+    <div class="modal-foot">
+      <button class="btn" id="amApagar">Apagar esta grade</button>
+      <button class="btn btn-primary" id="amUsar">Usar as mesmas turmas</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="modalGrade">
   <div class="modal gm-modal" role="dialog" aria-modal="true" aria-labelledby="gmTitulo">
     <div class="modal-head">
@@ -3223,6 +3251,7 @@
     <div class="modal-body" id="gmBody">
       <input type="file" id="gmPdf" accept="application/pdf,.pdf" hidden>
       <div id="gmFonte"></div>
+      <div id="gmAmigos"></div>
       <div id="gmConteudo" hidden>
         <div class="gm-turnos" role="group" aria-label="Horários em que você pode ter aula">
           <span>Posso ter aula</span>
@@ -3254,7 +3283,7 @@
           <div class="panel panel--pad gm-turmas" id="gmTurmas"></div>
           <div class="panel gm-semana" id="gmSemana" aria-label="A semana"></div>
         </div>
-        <div class="section-label gm-sec"><span>3. Resumo</span><span class="gm-sec__fim"><button type="button" class="link-btn" id="gmCopiar" hidden>Copiar</button></span></div>
+        <div class="section-label gm-sec"><span>3. Resumo</span><span class="gm-sec__fim"><button type="button" class="link-btn" id="gmCopiar" hidden>Copiar</button><button type="button" class="link-btn" id="gmCompartilhar" hidden>Mandar para um colega</button></span></div>
         <div class="panel panel--pad" id="gmResumo"></div>
       </div>
     </div>
@@ -3605,6 +3634,7 @@ function sanearDados(){
     pl.limite = Math.round(num(pl.limite, 0, 20));
     STATE.gradePlano = pl;
   }
+  STATE.gradeAmigos = (Array.isArray(STATE.gradeAmigos) ? STATE.gradeAmigos : []).map(gAmigoValido).filter(Boolean).slice(0, 5);
 }
 
 // ---------------- init ----------------
@@ -3668,6 +3698,7 @@ async function init(opts = {}){
   STATE.semestres = await storeGet('semestres', []); // semestres encerrados (ver "Fim de semestre")
   STATE.gradeOferta = await storeGet('grade_oferta', null);
   STATE.gradePlano = await storeGet('grade_plano', null);
+  STATE.gradeAmigos = await storeGet('grade_amigos', []); // grades que colegas mandaram por link
   STATE.geminiKey = await storeGet('gemini_key', '');
   STATE.geminiModel = await storeGet('gemini_model', '');
   applyTheme(STATE.tema);
@@ -3997,7 +4028,7 @@ function closeMoreSheet(){
     horas_comp:'horasComp', horas_global:'horasGlobal', aulas_custom:'aulasCustom', turmas_custom:'turmasCustom',
     notas_parciais:'notasParciais', metas_notas:'metasNotas', lembretes:'lembretes', pom_sessions:'pomSessions',
     disc_notes:'discNotes', estudos_materiais:'estudos', semestres:'semestres',
-    grade_oferta:'gradeOferta', grade_plano:'gradePlano',
+    grade_oferta:'gradeOferta', grade_plano:'gradePlano', grade_amigos:'gradeAmigos',
   };
   const SYNC_KEYS = new Set([...Object.keys(CAMPOS), 'config', 'tema', 'labs']);
   // várias chaves mudam juntas (o "Faltei" grava faltas e o registro; a nuvem traz várias de uma vez):
@@ -5906,6 +5937,136 @@ function reqDetalheHtml(sigla, item){
       <p class="gm-nota" style="font-size:12.5px;color:var(--text-dim);">${nomesLibera}.</p>
     </div>` : '');
 }
+
+// ---------------- Grade compartilhada com colegas ----------------
+// O montador gera um link com a grade (disciplinas, turmas e horários) depois do "#": essa parte do
+// endereço não vai para o servidor. Quem abre vê a semana do colega e pode usar as mesmas turmas.
+// Tudo o que chega pelo link é conferido aqui: código, turma, horários e tamanho de cada texto.
+function gAmigoValido(g){
+  if(!g || typeof g !== 'object' || Array.isArray(g)) return null;
+  // (sem caracteres de controle nem < > " ' `: o texto já é escapado ao mostrar, mas assim nem chega)
+  const texto = (v, n) => typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f<>"'`]/g, '').trim().slice(0, n) : '';
+  const d = (Array.isArray(g.d) ? g.d.slice(0, 24) : []).map(x => {
+    if(!Array.isArray(x)) return null;
+    const [sg, nome, turma, lab, slots, sala] = x;
+    if(typeof sg !== 'string' || !/^[A-Za-z0-9]{1,12}$/.test(sg) || !siglaOk(sg)) return null;
+    if(typeof turma !== 'string' || !/^[\wÀ-ú]{1,12}$/.test(turma)) return null;
+    const hs = (Array.isArray(slots) ? slots.slice(0, 30) : []).filter(h => Array.isArray(h) && Number.isInteger(h[0]) && Number.isInteger(h[1])
+      && h[0] >= 0 && h[0] < WEEK_DAYS.length && h[1] >= 0 && h[1] < GRADE_SLOTS.length).map(h => [h[0], h[1]]);
+    return [sg, texto(nome, 80), turma, lab ? 1 : 0, hs, texto(sala, 20)];
+  }).filter(Boolean);
+  if(!d.length) return null;
+  return {n: texto(g.n, 40) || 'Um colega', t: texto(g.t, 80), d, em: Number.isFinite(g.em) ? g.em : Date.now()};
+}
+// a grade marcada no montador vira um link
+function gLinkDaGrade(){
+  const lista = gEscolhidas();
+  if(!lista.length) return null;
+  const g = {v: 1, n: String(STATE.config.aluno || '').trim().split(/\s+/)[0].slice(0, 40), t: String((STATE.gradeOferta || {}).titulo || '').slice(0, 80),
+    d: lista.map(e => [e.sigla, gNome(e.sigla).slice(0, 80), e.t.id, e.tipo === 'lab' ? 1 : 0,
+      e.t.slots.map(h => [WEEK_DAYS.indexOf(h.dia), GRADE_SLOTS.indexOf(h.hora)]).filter(([a, b]) => a >= 0 && b >= 0), String(e.t.sala || '').slice(0, 20)])};
+  const bytes = new TextEncoder().encode(JSON.stringify(g));
+  let bin = '';
+  bytes.forEach(b => { bin += String.fromCharCode(b); });
+  return location.origin + location.pathname + '#grade=' + btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function gLerLinkGrade(b64){
+  try{
+    if(b64.length > 30000) return null;
+    const bin = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+    const g = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+    return g && g.v === 1 ? gAmigoValido(Object.assign({}, g, {em: Date.now()})) : null;
+  }catch(e){ return null; }
+}
+// chegou uma grade pelo link: guarda (uma por colega, as 5 mais recentes) e mostra
+async function receberGradeAmigo(g){
+  STATE.gradeAmigos = [g, ...(STATE.gradeAmigos || []).filter(x => x.n !== g.n)].slice(0, 5);
+  await storeSet('grade_amigos', STATE.gradeAmigos);
+  abrirGradeAmigo(0);
+}
+// a grade de um colega como lista de turmas do montador
+const gAmigoTurmas = g => g.d.map(([sg, , turma, lab, hs, sala]) => ({sigla: sg, tipo: lab ? 'lab' : 'teoria',
+  t: {id: turma, sala, slots: hs.map(([a, b]) => ({dia: WEEK_DAYS[a], hora: GRADE_SLOTS[b]}))}}));
+let AM_IDX = 0;
+function abrirGradeAmigo(i){
+  const g = (STATE.gradeAmigos || [])[i];
+  if(!g) return;
+  AM_IDX = i;
+  const lista = gAmigoTurmas(g), ordem = [...new Set(lista.map(e => e.sigla))];
+  const cor = e => `var(--gc${(ordem.indexOf(e.sigla) % 10) + 1})`;
+  const sel = (STATE.gradePlano && STATE.gradePlano.sel) || {}, marcadas = (STATE.gradePlano && STATE.gradePlano.escolhidas) || [];
+  const minha = e => marcadas.includes(e.sigla) && (sel[e.sigla] || {})[e.tipo] === e.t.id;
+  const oferta = STATE.gradeOferta ? gModelo(gRegistros(STATE.gradeOferta)) : null;
+  const cur = curriculoDoPerfil(), prox = cur && reqBase(true);
+  // para cada turma do colega: como ela fica para você
+  const situacaoPara = e => {
+    const st = gStatus(e.sigla);
+    if(st === 'feita') return ['Você já fez', 'text-faint'];
+    if(minha(e)) return ['Mesma turma na sua grade', 'green'];
+    if(marcadas.includes(e.sigla)) return [`Na sua grade: ${(sel[e.sigla] || {})[e.tipo] || 'sem turma'}`, 'amber'];
+    if(oferta && !oferta.has(e.sigla)) return ['Não está no seu PDF de horários', 'text-faint'];
+    const trava = cur && cur.creditos[e.sigla] && st === 'falta' ? reqTrava(cur, e.sigla, prox) : [];
+    if(trava.length) return [`Bloqueada para você: precisa de ${trava.length > 2 ? trava.length + ' disciplinas' : trava.map(x => reqNome(cur, x.s)).join(' e ')}`, 'red'];
+    return [st === 'cursando' ? 'Você está cursando' : 'Você também pode fazer', 'blue'];
+  };
+  const nomeDe = e => { const h = STATE.historico.find(x => x.sigla === e.sigla); return h ? h.disciplina : (g.d.find(x => x[0] === e.sigla) || [])[1] || e.sigla; };
+  const iguais = lista.filter(minha).length, possiveis = lista.filter(e => { const [, c] = situacaoPara(e); return c === 'blue' || c === 'amber'; }).length;
+  document.getElementById('amTitulo').textContent = `Grade de ${g.n}`;
+  const semana = gSemanaHtml(lista, cor, minha);
+  document.getElementById('amBody').innerHTML = `
+    <p class="am-sub">${esc(g.t || 'Horários do semestre')} · recebida em ${fmtDate(localISO(new Date(g.em)))}. Os blocos com borda verde são turmas iguais às da sua grade.</p>
+    <div class="am-resumo">${iguais ? `<b>${iguais} ${iguais === 1 ? 'turma igual' : 'turmas iguais'}</b> à sua grade. ` : ''}${possiveis ? `Em <b>${possiveis}</b> ${possiveis === 1 ? 'outra' : 'outras'} dá para pegar a mesma turma de ${esc(g.n)}: toque em <b>Usar as mesmas turmas</b>.` : iguais ? 'As outras não servem para você agora.' : 'Nenhuma turma desta grade serve para você agora.'}${oferta ? '' : ' Para usar as turmas, envie no montador o PDF de horários do semestre.'}</div>
+    ${semana ? `<div class="panel gm-semana">${semana}</div>` : ''}
+    <div class="am-lista">${lista.map(e => { const [txt, c] = situacaoPara(e); return `<div class="am-item" style="--c:${cor(e)}"><span class="gm-dot"></span><span class="am-item__n"><b>${esc(nomeDe(e))}</b><small>${esc(e.sigla)} · ${e.t.id === 'única' ? 'turma única' : `${e.tipo === 'lab' ? 'laboratório' : 'turma'} ${esc(e.t.id)}`}${e.t.sala ? ' · sala ' + esc(e.t.sala) : ''}</small></span><span class="am-item__st" style="color:var(--${c})">${esc(txt)}</span></div>`; }).join('')}</div>`;
+  const usar = document.getElementById('amUsar');
+  usar.textContent = oferta ? 'Usar as mesmas turmas' : 'Abrir o montador';
+  usar.disabled = !!oferta && !possiveis;
+  document.getElementById('modalAmigo').classList.add('open');
+  document.getElementById('amBody').scrollTop = 0;
+}
+function fecharGradeAmigo(){ document.getElementById('modalAmigo').classList.remove('open'); }
+// as mesmas turmas do colega, nas disciplinas que você pode fazer e que estão no seu PDF
+function gUsarTurmasDe(g){
+  fecharGradeAmigo();
+  switchTab('horario');
+  abrirGrade();
+  if(!STATE.gradeOferta){ showToast('Envie aqui o PDF de horários do semestre para usar as turmas do colega.', 'info', 4500); return; }
+  const p = gPlano(), feitas = new Set(), fora = new Set();
+  g.d.forEach(([sg, , turma, lab]) => {
+    const d = GM.disc.get(sg), t = d && (lab ? d.lab : d.teoria).find(x => x.id === turma);
+    if(!t || gStatus(sg) === 'feita'){ fora.add(sg); return; }
+    if(!p.escolhidas.includes(sg)) p.escolhidas.push(sg);
+    p.sel[sg] = Object.assign({}, p.sel[sg], {[lab ? 'lab' : 'teoria']: turma});
+    feitas.add(sg);
+  });
+  [...feitas].forEach(sg => fora.delete(sg));
+  gMexeu(); renderGradeTudo();
+  const n = feitas.size;
+  showToast(n ? `Mesmas turmas de ${g.n} em ${n} ${n === 1 ? 'disciplina' : 'disciplinas'}${fora.size ? ` (${fora.size} não ${fora.size === 1 ? 'serve' : 'servem'} para você)` : ''}.` : `Nenhuma turma de ${g.n} existe no seu PDF de horários.`, n ? 'success' : 'info', 4500);
+}
+document.getElementById('amFechar').addEventListener('click', fecharGradeAmigo);
+document.getElementById('modalAmigo').addEventListener('click', e => { if(e.target === e.currentTarget) fecharGradeAmigo(); });
+document.getElementById('amUsar').addEventListener('click', () => { const g = (STATE.gradeAmigos || [])[AM_IDX]; if(g) gUsarTurmasDe(g); });
+document.getElementById('amApagar').addEventListener('click', async () => {
+  const g = (STATE.gradeAmigos || [])[AM_IDX];
+  if(!g || !confirm(`Apagar a grade de ${g.n} deste aparelho?`)) return;
+  STATE.gradeAmigos = STATE.gradeAmigos.filter(x => x !== g);
+  await storeSet('grade_amigos', STATE.gradeAmigos);
+  fecharGradeAmigo();
+  if(GM) renderGradeAmigos();
+});
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.getElementById('modalAmigo').classList.contains('open')) fecharGradeAmigo(); });
+document.getElementById('gmCompartilhar').addEventListener('click', async () => {
+  const url = gLinkDaGrade();
+  if(!url) return;
+  const texto = 'Minha grade no Centro de Controle: abra para ver a semana e pegar as mesmas turmas.';
+  if(navigator.share){
+    try{ await navigator.share({title: 'Minha grade', text: texto, url}); return; }
+    catch(err){ if(err && err.name === 'AbortError') return; }
+  }
+  try{ await navigator.clipboard.writeText(url); showToast('Link copiado: mande para quem vai montar a grade com você.', 'success', 3500); }
+  catch(err){ showToast('Não deu para copiar o link.', 'error'); }
+});
 
 // ---------------- Árvore do curso ----------------
 // O quadro de requisitos desenhado: cada período é uma linha. Tocar numa disciplina acende tudo o que
@@ -7900,7 +8061,13 @@ function gAplicarOpcao(){
 // mexeu à mão: as combinações deixam de valer
 function gMexeu(){ GM.opcoes = []; GM.modo = null; gSalvarPlano(); }
 
-function renderGradeTudo(){ renderGradeFonte(); renderGradeLista(); renderGradeMontagem(); }
+function renderGradeTudo(){ renderGradeFonte(); renderGradeAmigos(); renderGradeLista(); renderGradeMontagem(); }
+// as grades que colegas mandaram: um toque abre a semana de cada um
+function renderGradeAmigos(){
+  const el = document.getElementById('gmAmigos'), gs = STATE.gradeAmigos || [];
+  el.innerHTML = gs.length ? `<div class="gm-amigos"><span>Grades de colegas:</span>${gs.map((g, i) => `<button type="button" class="gm-amigo" data-gamigo="${i}">${ico('calendar')}${esc(g.n)}</button>`).join('')}</div>` : '';
+  el.querySelectorAll('[data-gamigo]').forEach(b => b.addEventListener('click', () => abrirGradeAmigo(Number(b.dataset.gamigo))));
+}
 function renderGradeFonte(){
   const of = STATE.gradeOferta, el = document.getElementById('gmFonte');
   const n = [...GM.disc.values()].reduce((s, d) => s + [...d.turmas.values()].reduce((m, t) => m + t.slots.length, 0), 0);
@@ -8026,10 +8193,14 @@ function renderGradeTurmas(){
   }));
 }
 function renderGradeSemana(){
-  const el = document.getElementById('gmSemana');
-  const mapa = gOcupado(gEscolhidas());
+  document.getElementById('gmSemana').innerHTML = gSemanaHtml(gEscolhidas(), e => gCor(e.sigla), () => false)
+    || '<div class="empty">A semana aparece aqui quando você escolher as turmas.</div>';
+}
+// a semana de uma lista de turmas [{sigla, tipo, t}]; cor(e) dá a cor do bloco, igual(e) marca um bloco
+function gSemanaHtml(lista, cor, igual){
+  const mapa = gOcupado(lista);
   const ix = Object.keys(mapa).map(k => GRADE_SLOTS.indexOf(k.split('|')[1])).filter(i => i >= 0);
-  if(!ix.length){ el.innerHTML = '<div class="empty">A semana aparece aqui quando você escolher as turmas.</div>'; return; }
+  if(!ix.length) return '';
   const linhas = GRADE_SLOTS.slice(Math.min(...ix), Math.max(...ix) + 1);
   const dias = WEEK_DAYS.filter(d => d !== 'Sábado' || Object.keys(mapa).some(k => k.startsWith('Sábado|')));
   let html = '<div></div>' + dias.map(d => `<div class="gm-gh">${GRADE_DIA[d]}</div>`).join('');
@@ -8039,10 +8210,10 @@ function renderGradeSemana(){
     html += `<div class="gm-gt${pausa ? ' is-pausa' : ''}">${gHM(gMin(h))}</div>`;
     dias.forEach(dia => {
       const es = mapa[dia + '|' + h] || [];
-      html += `<div class="gm-cel${es.length > 1 ? ' is-choque' : ''}${pausa ? ' is-pausa' : ''}">${es.map(e => `<div class="gm-bl" style="--c:${gCor(e.sigla)}"><b>${esc(gCod(e.sigla, e.t))}</b><span>${esc(e.t.sala || '')}</span></div>`).join('')}</div>`;
+      html += `<div class="gm-cel${es.length > 1 ? ' is-choque' : ''}${pausa ? ' is-pausa' : ''}">${es.map(e => `<div class="gm-bl${igual(e) ? ' is-igual' : ''}" style="--c:${cor(e)}"><b>${esc(gCod(e.sigla, e.t))}</b><span>${esc(e.t.sala || '')}</span></div>`).join('')}</div>`;
     });
   });
-  el.innerHTML = `<div class="gm-grade" style="grid-template-columns:44px repeat(${dias.length}, minmax(64px, 1fr))">${html}</div>`;
+  return `<div class="gm-grade" style="grid-template-columns:44px repeat(${dias.length}, minmax(64px, 1fr))">${html}</div>`;
 }
 function renderGradeAviso(){
   const el = document.getElementById('gmAviso'), p = gPlano();
@@ -8105,6 +8276,7 @@ function renderGradeResumo(){
     ${rs.map(r => `<tr><td><b>${esc(r.nome)}</b> <span class="gm-dim">${esc(r.sigla)}</span></td><td data-l="Turma">${esc(r.turma)}${r.lab ? ' <span class="gm-dim">(lab)</span>' : ''}</td><td class="mono">${esc(r.horarios)}</td><td data-l="Sala">${esc(r.sala || '—')}</td><td class="gm-dim" data-l="Prof.">${esc(r.prof || '—')}</td></tr>`).join('')}
   </tbody></table>` : '<div class="empty">As turmas que você escolher aparecem aqui.</div>';
   document.getElementById('gmCopiar').hidden = !rs.length;
+  document.getElementById('gmCompartilhar').hidden = !rs.length;
 }
 
 // lê o PDF no aparelho com o pdf.js (carregado só aqui; o service worker guarda para a próxima vez)
@@ -8710,6 +8882,7 @@ document.getElementById('btnExport').addEventListener('click', async () => {
     semestres: STATE.semestres,
     grade_oferta: STATE.gradeOferta,
     grade_plano: STATE.gradePlano,
+    grade_amigos: STATE.gradeAmigos,
     labs: STATE.labs,
     base_data: currentBaseData(),
   };
@@ -8764,13 +8937,13 @@ document.getElementById('fileImport').addEventListener('change', (e) => {
       const BACKUP_KEYS = ['config','historico_overrides','historico_custom','historico_removidos','tarefas',
         'lab_concluido','provas','faltas','faltas_limites','faltas_registro','relatorios_ocultos','relatorios_overrides','horas_comp',
         'horas_global','aulas_custom','turmas_custom','notas_parciais','metas_notas','tema','lembretes',
-        'pom_sessions','disc_notes','estudos_materiais','semestres','grade_oferta','grade_plano','labs'];
+        'pom_sessions','disc_notes','estudos_materiais','semestres','grade_oferta','grade_plano','grade_amigos','labs'];
       // o tipo de cada parte: lista, objeto, texto, ou "?" quando também pode ser vazio (null)
       const TIPO = {config:'obj', historico_overrides:'obj', historico_custom:'arr', historico_removidos:'arr', tarefas:'arr',
         lab_concluido:'obj', provas:'arr', faltas:'obj', faltas_limites:'obj', faltas_registro:'arr', relatorios_ocultos:'arr',
         relatorios_overrides:'obj', horas_comp:'arr', horas_global:'obj', aulas_custom:'arr?', turmas_custom:'obj?', notas_parciais:'obj',
         metas_notas:'obj', tema:'str', lembretes:'arr', pom_sessions:'arr', disc_notes:'obj', estudos_materiais:'arr', semestres:'arr',
-        grade_oferta:'obj?', grade_plano:'obj?', labs:'obj'};
+        grade_oferta:'obj?', grade_plano:'obj?', grade_amigos:'arr', labs:'obj'};
       const tipoOk = (v, t) => (t.endsWith('?') && v === null) || (t.startsWith('arr') ? Array.isArray(v)
         : t.startsWith('obj') ? (v !== null && typeof v === 'object' && !Array.isArray(v)) : typeof v === 'string');
       const ignoradas = BACKUP_KEYS.filter(k => k in backup && !tipoOk(backup[k], TIPO[k]));
@@ -11256,6 +11429,13 @@ function applyLaunchParams(){
   if(aba && TABS.some(t => t.id === aba)) switchTab(aba);
   if(params.get('acao') === 'nova-tarefa') setTimeout(() => openQuickAdd('tarefa'), 300);
   if(params.has('aba') || params.has('acao')) history.replaceState(null, '', location.pathname);
+  // link de grade de um colega (#grade=...): lê, tira do endereço e mostra
+  if(location.hash.startsWith('#grade=')){
+    const g = gLerLinkGrade(location.hash.slice(7));
+    history.replaceState(null, '', location.pathname + location.search);
+    if(g) receberGradeAmigo(g);
+    else showToast('Esse link de grade está incompleto ou foi alterado.', 'error', 4500);
+  }
 }
 </script>
 </body>
