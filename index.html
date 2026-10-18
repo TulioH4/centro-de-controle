@@ -4367,19 +4367,6 @@ function calcStudyStreak(){
   return streak;
 }
 
-// ---------------- Progresso semanal de tarefas ----------------
-// tarefas com prazo nesta semana inteira (domingo a sábado): quantas já foram feitas
-function calcWeeklyTaskProgress(){
-  const today = new Date(); today.setHours(0,0,0,0);
-  const weekStart = new Date(today); weekStart.setDate(weekStart.getDate()-today.getDay());
-  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
-  const weekStartIso = localISO(weekStart);
-  const weekEndIso = localISO(weekEnd);
-  const dueThisWeek = STATE.tarefas.filter(t => t.prazo && t.prazo >= weekStartIso && t.prazo <= weekEndIso);
-  const concluidas = dueThisWeek.filter(t => t.status === 'Concluído').length;
-  return {total: dueThisWeek.length, concluidas};
-}
-
 // ---------------- render: Painel ----------------
 function renderPainel(){
   const stats = cursoStatsCompute();
@@ -4438,7 +4425,6 @@ function renderPainel(){
 
   renderDayOverview();
   const streak = calcStudyStreak();
-  const weekProg = calcWeeklyTaskProgress();
   document.getElementById('resumoStats').innerHTML = `
     ${statCard('Aulas hoje', aulasHoje.length, 'blue')}
     ${statCard('Próxima aula', proxAula, 'gray', true)}
@@ -4448,7 +4434,6 @@ function renderPainel(){
     ${disciplinasRisco > 0 ? statCard('Risco de falta', disciplinasRisco+' disc.', 'red', true) : ''}
     ${discReprovando > 0 ? statCard('Reprovando em notas', discReprovando+' disc.', 'red', true) : ''}
     ${streak > 0 ? statCard('Sequência de estudos', streak+'d', 'amber', true) : ''}
-    ${weekProg.total > 0 ? statCard('Feitas na semana', weekProg.concluidas+' de '+weekProg.total, weekProg.concluidas===weekProg.total?'green':'blue', true) : ''}
     ${statCard(calPeriodo().estimado ? 'Semestre (estimado)' : 'Semestre', esc(calProgresso().txt), 'purple', true)}
   `;
   document.querySelectorAll('#resumoStats [data-count]').forEach(el => animateCount(el, Number(el.dataset.count)));
