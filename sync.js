@@ -4,6 +4,8 @@
 // offline. Every write under the app prefix is intercepted, timestamped and
 // pushed to the `kv` table (one row per key, last write wins). On start, on
 // focus and through Realtime, newer rows from other devices are applied back.
+// Lists of items (exams, tasks...) are merged item by item instead, so what a
+// device changed while offline is not lost (see "merging" below).
 (function(){
   const CONFIG = {
     url: 'https://ehcbkoxbqqwiibjyzhoy.supabase.co',
@@ -11,8 +13,9 @@
   };
   const PREFIX = 'centro_controle_';
   const META_KEY = PREFIX + '__sync_meta';
+  const BASE_SUFFIX = '__sync_base';
   // device-specific keys that must never travel between devices
-  const LOCAL_ONLY = [/^active_profile$/, /^notif_last_/, /^__sync_meta$/, /__probe__$/, /^cloud_skip$/];
+  const LOCAL_ONLY = [/^active_profile$/, /^notif_last_/, /^__sync_meta$/, /__probe__$/, /^cloud_skip$/, /__sync_base$/];
   const isSynced = fullKey => fullKey.startsWith(PREFIX) && !LOCAL_ONLY.some(re => re.test(fullKey.slice(PREFIX.length)));
 
   const ls = window.localStorage;
@@ -23,6 +26,113 @@
   let meta = {};
   try { meta = JSON.parse(ls.getItem(META_KEY) || '{}') || {}; } catch(e){ meta = {}; }
   const saveMeta = () => { try { rawSet.call(ls, META_KEY, JSON.stringify(meta)); } catch(e){} };
+
+  // ---- merging -----------------------------------------------------------------
+  // Each key holds a whole list (every exam, every task...), so "newest wins" would drop what a
+  // device changed while offline: the phone adds exam X offline, the PC adds exam Y, and X was
+  // gone once the phone reconnected. For the keys below, each device keeps the value of the last
+  // successful sync (the base) and a conflict is solved item by item, matching items by a field:
+  //   - new on one side (not in the base): kept;
+  //   - deleted on one side and untouched on the other: deleted;
+  //   - changed on one side only: that change;
+  //   - changed on both sides: the server's version;
+  //   - deleted on one side and changed on the other: kept, with the change (nothing typed is lost
+  //     without a trace; deleting it again is one tap).
+  // Other keys, a key with no base yet, or a list where some item has no id (or two share one)
+  // keep "newest wins".
+  const same = (a, b) => {
+    if (a === b) return true;
+    if (!a || !b || typeof a !== 'object' || typeof b !== 'object' || Array.isArray(a) !== Array.isArray(b)) return false;
+    const ka = Object.keys(a);
+    return ka.length === Object.keys(b).length && ka.every(k => Object.prototype.hasOwnProperty.call(b, k) && same(a[k], b[k]));
+  };
+  function mergeList(base, mine, theirs, idOf){
+    const index = list => {
+      if (!Array.isArray(list)) return null;
+      const m = new Map();
+      for (const x of list) { const id = idOf(x); if (id == null || m.has(id)) return null; m.set(id, x); }
+      return m;
+    };
+    // no base value: the key did not exist at the last sync, so everything on both sides is new.
+    // A whole key deleted on one side (null) is not merged: deleting a profile must not bring it back.
+    const B = base == null ? new Map() : index(base), L = index(mine), R = index(theirs);
+    if (!B || !L || !R) return undefined;
+    const pick = id => {
+      const b = B.get(id), l = L.get(id), r = R.get(id);
+      if (!B.has(id)) return R.has(id) ? r : l;                         // new (same id on both sides: the server's)
+      if (!L.has(id)) return !R.has(id) || same(r, b) ? undefined : r;  // deleted here
+      if (!R.has(id)) return same(l, b) ? undefined : l;                // deleted on the server
+      return same(l, b) ? r : same(r, b) ? l : r;                       // changed on both sides: the server's
+    };
+    // the server's order, with what is new here placed after the item it followed here
+    const out = [], ids = [];
+    R.forEach((x, id) => { const v = pick(id); if (v !== undefined) { out.push(v); ids.push(id); } });
+    let at = 0;
+    L.forEach((x, id) => {
+      if (R.has(id)) { const i = ids.indexOf(id); if (i >= 0) at = i + 1; return; }
+      const v = pick(id);
+      if (v !== undefined) { out.splice(at, 0, v); ids.splice(at, 0, id); at++; }
+    });
+    return out;
+  }
+  const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+  const byField = f => x => isObj(x) && (typeof x[f] === 'string' || typeof x[f] === 'number') ? x[f] : null;
+  const list = idOf => (b, l, r) => mergeList(b, l, r, idOf);
+  // an object: the lists inside it item by item, any other field taken from the side that changed it
+  const fields = lists => (b, l, r) => {
+    b = b == null ? {} : b;
+    if (!isObj(b) || !isObj(l) || !isObj(r)) return undefined;
+    const out = {};
+    const or = v => v == null ? [] : v;
+    for (const f of new Set([...Object.keys(r), ...Object.keys(l)])) {
+      const v = lists[f] ? lists[f](b[f], or(l[f]), or(r[f])) : same(l[f], b[f]) ? r[f] : same(r[f], b[f]) ? l[f] : r[f];
+      if (lists[f] && v === undefined) return undefined;
+      if (v !== undefined) out[f] = v;
+    }
+    return out;
+  };
+  // keys are "<profile>_<name>" (or just "<name>")
+  const MERGE = {
+    provas: list(byField('id')), tarefas: list(byField('id')), estudos_materiais: list(byField('id')),
+    lembretes: list(byField('id')), horas_comp: list(byField('id')), semestres: list(byField('id')),
+    historico_custom: list(byField('sigla')), pom_sessions: list(byField('ts')),
+    grade_amigos: list(byField('n')), // a classmate's timetable: one per name
+    calendario: fields({ eventos: list(byField('id')), ocultos: list(x => typeof x === 'string' ? x : null) }),
+  };
+  const mergerFor = k => { const n = Object.keys(MERGE).find(n => k === n || k.endsWith('_' + n)); return n ? MERGE[n] : null; };
+
+  // The base sits next to its key, on this device only. localStorage holds about 5 MB per site,
+  // so a base is only kept up to BASE_MAX characters (150 tasks are about 40 thousand, one study
+  // material about 17 thousand) and all of them go if the app's own data runs out of room.
+  const BASE_MAX = 200000;
+  const baseKey = k => PREFIX + k + BASE_SUFFIX;
+  function saveBase(k, value){
+    if (!mergerFor(k)) return;
+    const json = JSON.stringify(value === undefined ? null : value);
+    // a base that could not be updated is removed: an old one would merge the wrong way
+    try { if (json.length > BASE_MAX) rawRemove.call(ls, baseKey(k)); else rawSet.call(ls, baseKey(k), json); }
+    catch(e) { try { rawRemove.call(ls, baseKey(k)); } catch(e2){} }
+  }
+  function dropBases(){
+    const keys = [];
+    for (let i = 0; i < ls.length; i++) { const k = ls.key(i); if (k && k.startsWith(PREFIX) && k.endsWith(BASE_SUFFIX)) keys.push(k); }
+    keys.forEach(k => rawRemove.call(ls, k));
+    return keys.length > 0;
+  }
+  // this device's value combined with a newer one from the server, or undefined to take the server's
+  function mergeWithServer(k, theirs){
+    const merge = mergerFor(k);
+    if (!merge) return undefined;
+    let base, mine = null;
+    try {
+      const rawBase = ls.getItem(baseKey(k));
+      if (rawBase === null) return undefined;
+      base = JSON.parse(rawBase);
+      const raw = ls.getItem(PREFIX + k);
+      if (raw !== null) mine = JSON.parse(raw);
+      return merge(base, mine, theirs === undefined ? null : theirs);
+    } catch(e) { return undefined; }
+  }
 
   const state = { status: 'local', lastSync: null, error: null, user: null };
   const listeners = new Set();
@@ -47,7 +157,8 @@
     schedulePush();
   }
   Storage.prototype.setItem = function(k, v){
-    rawSet.call(this, k, v);
+    try { rawSet.call(this, k, v); }
+    catch(e) { if (this !== ls || !dropBases()) throw e; rawSet.call(this, k, v); } // out of room: the bases go first
     if (this === ls && !applying && isSynced(k)) touch(k);
   };
   Storage.prototype.removeItem = function(k){
@@ -74,14 +185,19 @@
     setStatus('syncing');
     // Never overwrite a newer version another device already sent (e.g. this one was offline
     // with an older change): those keys are left out and pulled instead, so every device ends
-    // up with the same value. The check asks only for keys and timestamps.
+    // up with the same value. A key that can be merged stays pending: the pull merges it and it
+    // is sent again. The check asks only for keys and timestamps.
     let staleFound = false;
+    const toMerge = new Set();
     try {
       for (let i = 0; i < keys.length; i += 100) {
         const { data, error } = await client.from('kv').select('key,updated_at').in('key', keys.slice(i, i + 100));
         if (error) throw error;
         (data || []).forEach(r => {
-          if (meta[r.key] && meta[r.key].dirty && Date.parse(r.updated_at) > meta[r.key].t) { meta[r.key].dirty = false; staleFound = true; }
+          if (!(meta[r.key] && meta[r.key].dirty && Date.parse(r.updated_at) > meta[r.key].t)) return;
+          staleFound = true;
+          if (mergerFor(r.key) && ls.getItem(baseKey(r.key)) !== null) toMerge.add(r.key);
+          else meta[r.key].dirty = false;
         });
       }
     } catch(e) {
@@ -89,7 +205,7 @@
       setStatus(navigator.onLine ? 'error' : 'offline', { error: e.message || String(e) });
       return;
     }
-    keys = keys.filter(k => meta[k] && meta[k].dirty);
+    keys = keys.filter(k => meta[k] && meta[k].dirty && !toMerge.has(k));
     if (!keys.length) {
       pushing = false;
       saveMeta();
@@ -112,6 +228,7 @@
       }
       // only clear keys that were not written again while the request was in flight
       keys.forEach(k => { if (meta[k] && meta[k].t === sentAt[k]) meta[k].dirty = false; });
+      rows.forEach(r => saveBase(r.key, r.value));
       saveMeta();
       setStatus('synced', { lastSync: Date.now(), error: null });
     } catch(e) {
@@ -133,12 +250,19 @@
     const remoteT = Date.parse(row.updated_at);
     const local = meta[k];
     if (local && local.t >= remoteT) return false;
+    // a change here that was not sent yet: lists are merged, anything else takes the server's
+    const merged = local && local.dirty ? mergeWithServer(k, row.value) : undefined;
+    const value = merged === undefined ? row.value : merged;
+    const send = merged !== undefined && !same(merged, row.value);
     applying = true;
     try {
-      if (row.value === null || row.value === undefined) ls.removeItem(PREFIX + k);
-      else ls.setItem(PREFIX + k, JSON.stringify(row.value));
+      if (value === null || value === undefined) ls.removeItem(PREFIX + k);
+      else ls.setItem(PREFIX + k, JSON.stringify(value));
     } finally { applying = false; }
-    meta[k] = { t: remoteT, dirty: false };
+    // the merge is a newer version than the server's, so it goes back up
+    meta[k] = send ? { t: Math.max(Date.now(), remoteT + 1), dirty: true } : { t: remoteT, dirty: false };
+    saveBase(k, row.value);
+    if (send) schedulePush(300);
     return true;
   }
 
@@ -158,6 +282,10 @@
           if (!r.key || !isSynced(PREFIX + r.key)) return;
           const local = meta[r.key];
           if (!local || local.t < Date.parse(r.updated_at)) newer.push(r.key);
+          // already in step with the server and no base yet (synced before merging existed): this is it
+          else if (!local.dirty && local.t === Date.parse(r.updated_at) && mergerFor(r.key) && ls.getItem(baseKey(r.key)) === null) {
+            try { const raw = ls.getItem(PREFIX + r.key); saveBase(r.key, raw === null ? null : JSON.parse(raw)); } catch(e){}
+          }
         });
         if (data.length < 1000) break;
       }
@@ -241,6 +369,7 @@
     return signIn(email, password);
   }
   async function signOut(){
+    if (hasDirty()) await pull(); // merges what another device changed in the same lists, so the push below sends it
     await push();
     if (hasDirty()) throw new Error('Ainda há alterações que não foram enviadas. Conecte-se à internet e tente de novo.');
     if (channel) { client.removeChannel(channel); channel = null; }

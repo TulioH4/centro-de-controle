@@ -94,7 +94,7 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 | Conta e sincronização | [Supabase](https://supabase.com/) (Auth + Postgres + Realtime), em `sync.js` |
 | Publicação | GitHub Pages via GitHub Actions |
 
-**Sincronização em resumo:** cada gravação local é marcada com horário e enviada para a tabela `kv` (uma linha por item). Ao abrir o app, ao voltar para ele e em tempo real, as alterações mais novas de outros aparelhos são aplicadas; ao voltar para o app, ele confere primeiro só os horários e baixa apenas os itens que mudaram. Em caso de conflito, vale a alteração mais recente de cada item.
+**Sincronização em resumo:** cada gravação local é marcada com horário e enviada para a tabela `kv` (uma linha por item). Ao abrir o app, ao voltar para ele e em tempo real, as alterações mais novas de outros aparelhos são aplicadas; ao voltar para o app, ele confere primeiro só os horários e baixa apenas os itens que mudaram. Em caso de conflito, as listas (provas, tarefas, eventos do calendário...) são combinadas item por item, então o que cada aparelho adicionou fica; nos outros dados vale a alteração mais recente.
 
 ## Desenvolvimento
 
