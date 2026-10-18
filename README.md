@@ -115,6 +115,12 @@ O build copia o app, troca os dados pelo modelo vazio, carimba o service worker 
 
 Para usar um projeto Supabase próprio, rode [`supabase/schema.sql`](supabase/schema.sql) e [`supabase/limits.sql`](supabase/limits.sql) no SQL Editor e troque a URL e a chave pública no início de [`sync.js`](sync.js). O `limits.sql` limita o espaço de cada conta (20 MB): como qualquer pessoa pode criar conta, sem ele uma só conta conseguiria encher o banco.
 
+Testes (Node e Edge ou Chrome; detalhes em [`tests/`](tests/README.md)):
+
+```bash
+node tests/rodar.js
+```
+
 ### Estrutura
 
 ```
@@ -126,5 +132,6 @@ dados_curso.template.js    modelo de dados vazio usado na publicação
 icons/                     ícones do app
 scripts/build-pwa.mjs      gera dist/ para publicar
 supabase/schema.sql        tabela e regras de acesso
+tests/                     testes de unidade e no navegador
 .github/workflows/         publicação automática no GitHub Pages
 ```

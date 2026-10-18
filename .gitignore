@@ -17,3 +17,6 @@ dist/
 # Local tooling
 .claude/
 __pycache__/
+
+# Test results
+tests/.saida/

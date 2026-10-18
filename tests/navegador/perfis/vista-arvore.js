@@ -1,0 +1,1 @@
+localStorage.setItem('centro_controle_mapa_vista', JSON.stringify('arvore'));
