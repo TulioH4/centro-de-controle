@@ -42,7 +42,7 @@ const CALENDARIO = [
 function calendario(STATE, aulas){
   const min = s => { const [h, m] = s.split(':').map(Number); return h * 60 + m; };
   return new Function('STATE', 'getAulas', 'aulaSigla', 'faltasPorAula',
-    CALENDARIO + ';return {calPascoa, calFeriadosNacionais, calSemAula, calPeriodo, calProgresso, calAulasRestantes, calProximos, calLembretes};')(
+    CALENDARIO + ';return {calPascoa, calFeriadosNacionais, calSemAula, calSemAulaHoje, calPeriodo, calProgresso, calAulasRestantes, calProximos, calLembretes};')(
     STATE, () => aulas || [], a => String(a.disciplina).split('-')[0], (i, f) => Math.max(1, Math.round((min(f) - min(i)) / 50)));
 }
 

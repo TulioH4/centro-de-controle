@@ -6138,9 +6138,13 @@ const calCfg = () => STATE.calendario || {inicio: '', fim: '', eventos: [], ocul
 const calEventos = () => calCfg().eventos.concat(calDatasOficiais());
 // período de aulas: o que a pessoa escreveu, o calendário oficial, ou uma estimativa pelo semestre do perfil
 function calPeriodo(){
-  const c = calCfg(), abs = semNum(STATE.config.semestre), hoje = new Date();
+  const c = calCfg(), hoje = new Date(), hojeIso = localISO(hoje), of = calOficial();
+  // com o calendário oficial vale o semestre de hoje (o primeiro deste ano que ainda não acabou): o do
+  // perfil pode estar atrasado. Sem ele, o semestre do perfil.
+  const kHoje = of ? Object.keys(of.semestres).map(Number).find(k => Math.floor(k / 2) === hoje.getFullYear() && hojeIso <= of.semestres[k].aulas[1]) : undefined;
+  const abs = kHoje !== undefined ? kHoje : semNum(STATE.config.semestre);
   const ano = abs !== null ? Math.floor(abs / 2) : hoje.getFullYear(), segundo = abs !== null ? abs % 2 === 1 : hoje.getMonth() >= 6;
-  const sem = ano * 2 + (segundo ? 1 : 0), of = calOficial(), ofSem = of && of.semestres[sem];
+  const sem = ano * 2 + (segundo ? 1 : 0), ofSem = of && of.semestres[sem];
   const est = ofSem ? ofSem.aulas : segundo ? [`${ano}-08-01`, `${ano}-12-15`] : [`${ano}-02-01`, `${ano}-06-30`];
   const inicio = c.inicio || est[0], fim = c.fim || est[1];
   return {inicio, fim: fim < inicio ? inicio : fim, sem, estimado: !ofSem && (!c.inicio || !c.fim),
