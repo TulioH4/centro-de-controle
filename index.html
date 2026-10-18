@@ -1696,7 +1696,10 @@
   .notif-top__btns{display:flex; gap:8px; flex-wrap:wrap;}
   .notif-quando-t{margin:22px 0 10px; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-faint);}
   .notif-quando{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px;}
-  .notif-q{display:flex; flex-direction:column; gap:6px; padding:14px; border-radius:16px; background:var(--lg-fill-hover, var(--panel-2)); box-shadow:inset 0 0 0 1px var(--line-soft);}
+  .notif-q{display:flex; flex-direction:column; gap:6px; padding:14px; border-radius:16px; background:var(--lg-fill-hover, var(--panel-2)); box-shadow:inset 0 0 0 1px var(--line-soft); position:relative; transition:opacity .2s;}
+  .notif-q .notif-q__sw{position:absolute; top:12px; right:12px;}
+  .notif-q.is-off{opacity:.55;}
+  .notif-q.is-off .notif-q__ic{filter:grayscale(1);}
   .notif-q__ic{width:30px; height:30px; border-radius:9px; display:grid; place-items:center; margin-bottom:4px; color:var(--c); background:var(--c-dim);}
   .notif-q b{font-size:13.5px; font-weight:650; color:var(--text);}
   .notif-q span:last-child{font-size:12.5px; line-height:1.45; color:var(--text-dim);}
@@ -2152,19 +2155,22 @@
   .fm-sem__h small{font-size:11.5px; font-weight:500; color:var(--text-faint); font-family:var(--mono);}
   .fm-sem.is-fim .fm-sem__h{color:var(--green);}
   .fm-chips{display:flex; flex-wrap:wrap; gap:6px; min-width:0;}
-  .fm-chip{max-width:100%; border:1px solid var(--line); background:var(--panel-2); color:var(--text); border-radius:999px; padding:3px 10px; font:inherit; font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .fm-chips{gap:8px;}
+  .fm-chip{width:122px; max-width:calc(50% - 4px); min-height:54px; display:flex; flex-direction:column; align-items:flex-start; gap:1px; padding:7px 9px;
+    border-radius:12px; border:1px solid var(--line); background:var(--panel-2); color:var(--text); font:inherit; text-align:left;}
   button.fm-chip{cursor:pointer;}
   button.fm-chip:hover{border-color:var(--blue);}
+  .fm-chip__c{font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text-dim); display:inline-flex; align-items:center; gap:3px;}
+  .fm-chip__n{font-size:11.5px; line-height:1.3; overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;}
   .fm-notas{display:flex; flex-direction:column; gap:6px;}
   @media (max-width:640px){ .fm-sem{grid-template-columns:minmax(0, 1fr);} .fm-quando{font-size:21px;} }
   /* Meu plano: disciplina fixada num semestre, escolha que quebra requisito, semestre acima do limite */
-  .fm-chip{display:inline-flex; align-items:center; gap:5px;}
-  .fm-chip > span{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;}
-  .fm-chip .i{width:12px; height:12px; flex-shrink:0;}
-  .fm-chip.is-fixo{border-color:var(--blue); color:var(--text);}
-  .fm-chip.is-fixo .i{color:var(--blue);}
+  .fm-chip .i{width:11px; height:11px; flex-shrink:0;}
+  .fm-chip.is-fixo{border-color:var(--blue);}
+  .fm-chip.is-fixo .fm-chip__c{color:var(--blue);}
   .fm-chip.is-erro{border-color:var(--red); background:var(--red-dim);}
-  .fm-chip.is-erro .i{color:var(--red);}
+  .fm-chip.is-erro .fm-chip__c{color:var(--red);}
+  .fm-mais{margin-top:2px;}
   .fm-sem__h small.is-excede{color:var(--amber);}
   .fm-conta{font-size:12.5px; color:var(--text-faint); margin-top:2px;}
   .fm-alerta{color:var(--red) !important;}
@@ -2285,6 +2291,7 @@
   .cal-tag.is-ev{background:var(--purple-dim, var(--blue-dim)); color:var(--purple, var(--blue));}
   /* conquistas (Mapa de Sucesso) */
   .cq-titulo{display:flex; align-items:center; gap:10px;}
+  #conquistasPanel:not(:empty){margin-top:34px;}
   .cq-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px;}
   .cq{display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:16px; background:var(--panel-2); border:1px solid var(--line-soft); min-width:0;}
   .cq-ic{width:38px; height:38px; border-radius:12px; display:grid; place-items:center; flex-shrink:0; background:var(--line-soft); color:var(--text-faint);}
@@ -3619,6 +3626,8 @@ function sanearDados(){
   c.disciplinasAtuais = textos(c.disciplinasAtuais).filter(siglaOk);
   ['aluno', 'curso', 'instituicao', 'semestre', 'curriculo'].forEach(k => { c[k] = txt(c[k]); });
   c.creditosSemestre = Math.round(num(c.creditosSemestre, 0, 60, 0));
+  c.notifTopicos = mapa(c.notifTopicos, v => typeof v === 'boolean' ? v : undefined);
+  Object.keys(c.notifTopicos).forEach(k => { if(!['dia', 'vespera', 'semana', 'prova2h'].includes(k)) delete c.notifTopicos[k]; });
   // "Meu plano": sigla → número absoluto do semestre (ano × 2 + 0 ou 1)
   c.planoCurso = mapa(c.planoCurso, v => { const n = num(v, 3000, 5000, NaN); return Number.isNaN(n) ? undefined : Math.round(n); });
   Object.keys(c.planoCurso).forEach(k => { if(!siglaOk(k) || !/^[A-Za-z0-9-]{1,16}$/.test(k)) delete c.planoCurso[k]; });
@@ -3682,7 +3691,8 @@ function sanearDados(){
     const cal = STATE.calendario = obj(STATE.calendario);
     cal.inicio = dataOk(cal.inicio); cal.fim = dataOk(cal.fim);
     cal.eventos = lista(cal.eventos).map(e => ({id: /^[\w-]{1,40}$/.test(txt(e.id)) ? txt(e.id) : 'ev' + Math.random().toString(36).slice(2, 10),
-      nome: txt(e.nome).slice(0, 80), tipo: CAL_TIPOS[e.tipo] ? e.tipo : 'outro', de: dataOk(e.de), ate: dataOk(e.ate)})).filter(e => e.de && e.nome).slice(0, 200);
+      nome: txt(e.nome).slice(0, 80), tipo: CAL_TIPOS[e.tipo] ? e.tipo : 'outro', de: dataOk(e.de), ate: dataOk(e.ate)}))
+      .map(e => Object.assign(e, {ate: e.ate && e.ate > e.de ? e.ate : ''})).filter(e => e.de && e.nome).slice(0, 200);
     cal.ocultos = textos(cal.ocultos).filter(dataOk).slice(0, 200);
   }
   if(STATE.conquistas !== null) STATE.conquistas = mapa(STATE.conquistas, v => v === 'antes' || dataOk(v) ? v : undefined);
@@ -4622,10 +4632,11 @@ function renderDayOverview(){
   const amanhaD = calSoma(now, 1), temAulaNoDia = dia => getAulas().some(a => a.dia === dia && a.inicio && a.inicio !== '—');
   const semAulaAmanha = calSemAula(localISO(amanhaD));
   if(semAulaAmanha && temAulaNoDia(DAY_NAMES[amanhaD.getDay()])) frases.push(`Amanhã não tem aula: <b>${esc(semAulaAmanha)}</b>.`);
-  const ev = calProximos(7).find(e => e.tipo !== 'feriado');
+  // (feriado nacional e dia sem aula de um dia só já entram em "amanhã não tem aula")
+  const ev = calProximos(7).find(e => !e.nacional && (e.tipo !== 'feriado' || (e.ate && e.ate !== e.de)));
   if(ev){
     const d = daysUntil(ev.de), fimEv = ev.ate && ev.ate !== ev.de ? ev.ate : '';
-    frases.push(d > 0 ? `<b>${esc(ev.nome)}</b> começa ${diasLabel(d)}.`
+    frases.push(d > 0 ? (fimEv ? `<b>${esc(ev.nome)}</b> começa ${diasLabel(d)}.` : d === 1 ? `Amanhã: <b>${esc(ev.nome)}</b>.` : `<b>${esc(ev.nome)}</b> ${diasLabel(d)}.`)
       : fimEv && daysUntil(fimEv) > 0 ? `<b>${esc(ev.nome)}</b>: até ${fmtCurta(fimEv)}.`
       : fimEv ? `<b>${esc(ev.nome)}</b>: hoje é o último dia.` : `Hoje: <b>${esc(ev.nome)}</b>.`);
   }
@@ -5862,7 +5873,7 @@ function renderFormatura(){
   if(faltam && !plano.sobra.length && n > plano.minimo){
     for(let l = limite + 2; l <= Math.min(60, limite + 12); l += 2){
       const m = reqPlano(cur, l, {fixos: prev.fixos}).sems.length;
-      if(m < n){ atalho = `Com até ${l} créditos por semestre, seriam ${m} ${m === 1 ? 'semestre' : 'semestres'}.`; break; }
+      if(m < n){ atalho = `Com ${l} créditos por semestre: ${m} ${m === 1 ? 'semestre' : 'semestres'}`; break; }
     }
   }
   const opcoes = [...new Set([12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, limite])].sort((a, b) => a - b);
@@ -5872,7 +5883,7 @@ function renderFormatura(){
   const chip = sg => {
     const fixo = plano.fixos[sg] !== undefined, erro = !!plano.violacoes[sg];
     const t = `${nome(sg)} (${sg}), ${cur.creditos[sg]} ${cur.creditos[sg] === 1 ? 'crédito' : 'créditos'}${fixo ? ', fixada por você' : ''}${erro ? ', sem os requisitos antes' : ''}`;
-    const cls = `fm-chip${fixo ? ' is-fixo' : ''}${erro ? ' is-erro' : ''}`, dentro = `${fixo || erro ? ico(erro ? 'alert' : 'pin') : ''}<span>${esc(nome(sg))}</span>`;
+    const cls = `fm-chip${fixo ? ' is-fixo' : ''}${erro ? ' is-erro' : ''}`, dentro = `<span class="fm-chip__c">${fixo || erro ? ico(erro ? 'alert' : 'pin') : ''}${esc(sg)}</span><span class="fm-chip__n">${esc(nome(sg))}</span>`;
     return noHist.has(sg) ? `<button type="button" class="${cls}" data-disc-chip="${esc(sg)}" title="${esc(t)}">${dentro}</button>` : `<span class="${cls}" title="${esc(t)}">${dentro}</span>`;
   };
   // escolhas que quebram requisito, no topo das notas
@@ -5880,10 +5891,13 @@ function renderFormatura(){
   const nFix = Object.keys(plano.fixos).length;
   // disciplinas do curso que faltam e estão fora do quadro (estágio, trilha...): ficam fora da conta
   const foraDoQuadro = cur.semestres.flat().map(([sg]) => sg).filter(sg => !cur.creditos[sg] && noHist.has(sg) && situacao(STATE.historico.find(i => i.sigla === sg)) !== 'Aprovado');
-  const notas = [];
-  if(plano.minimo >= 2 && plano.cadeia.length > 1) notas.push(`Sequência mais longa do que falta: ${esc(plano.cadeia.map((c, i) => (i ? (c.junto ? ' + ' : ' → ') : '') + nome(c.s)).join(''))}. Com qualquer limite de créditos, ela leva ${plano.minimo} semestres${plano.cadeia.some(c => c.junto) ? ' (as ligadas por + vão no mesmo semestre)' : ''}.`);
-  if(atalho) notas.push(atalho);
-  if(foraDoQuadro.length) notas.push(`Ficam fora desta conta, por não estarem no quadro de créditos: ${esc(foraDoQuadro.map(nome).join(', '))}.`);
+  // à vista só uma linha curta; o resto fica em "Como a previsão é feita"
+  const fatos = [], extras = [];
+  if(plano.minimo >= 2 && plano.cadeia.length > 1) fatos.push(`Caminho mais longo: ${esc(plano.cadeia.map((c, i) => (i ? (c.junto ? ' + ' : ' → ') : '') + nome(c.s)).join(''))} (${plano.minimo} semestres)`);
+  if(atalho) fatos.push(atalho);
+  const notas = fatos.length ? [fatos.join('. ') + '.'] : [];
+  if(plano.cadeia.some(c => c.junto)) extras.push('No caminho mais longo, as disciplinas ligadas por + vão no mesmo semestre.');
+  if(foraDoQuadro.length) extras.push(`Ficam fora da conta, por não estarem no quadro de créditos: ${esc(foraDoQuadro.map(nome).join(', '))}.`);
   // o que está em jogo neste semestre: reprovar em qual delas adia a formatura
   let jogo = '';
   if(nCurs && prev.fim !== null){
@@ -5896,8 +5910,8 @@ function renderFormatura(){
       : nCurs === 1 ? 'Se reprovar na que está cursando, ainda dá para encaixar depois sem mudar a previsão.' : `Se reprovar em uma das ${nCurs}, ainda dá para encaixar depois sem mudar a previsão.`);
     jogo = `<div class="fm-jogo${pesam.length ? ' is-alerta' : ''}"><div class="stat__label">${ico(pesam.length ? 'alert' : 'check')} O que está em jogo neste semestre</div><p>${frases.join(' ')}</p></div>`;
   }
-  notas.push(`Feita com os pré e co-requisitos do currículo ${esc(cur.versao)}. A oferta de cada semestre e o limite da matrícula podem mudar a ordem. No mapa abaixo, ${ico('lock')} marca as disciplinas que ainda dependem de outras.`);
-  if(prev.inicioAbs !== null && faltam) notas.push(`<b>Meu plano:</b> toque numa disciplina para escolher em que semestre fazê-la; a previsão organiza o resto em volta.`);
+  if(prev.inicioAbs !== null && faltam) extras.unshift('Toque numa disciplina para escolher em que semestre fazê-la (Meu plano); a previsão organiza o resto em volta.');
+  extras.push(`Feita com os pré e co-requisitos do currículo ${esc(cur.versao)}. A oferta de cada semestre e o limite da matrícula podem mudar a ordem. No mapa, ${ico('lock')} marca as disciplinas que ainda dependem de outras.`);
   notas.unshift(...avisos);
   const conta = prev.fim !== null && prev.atual !== null && faltam ? reqContagem(prev.atual + prev.fim) : '';
   el.innerHTML = `<div class="panel panel--pad fm">
@@ -5926,7 +5940,8 @@ function renderFormatura(){
       <div class="fm-sem__h">${esc(reqMaiuscula(rot[i]))}<small${sm.creditos > limite ? ' class="is-excede"' : ''}>${sm.creditos} créditos${sm.creditos > limite ? `, acima de ${limite}` : ''}</small></div>
       <div class="fm-chips">${sm.siglas.length ? sm.siglas.map(chip).join('') : '<span class="gm-nota">Nenhuma disciplina: as escolhidas para depois ainda esperam.</span>'}</div>
     </div>`).join('')}</div>` : ''}
-    <div class="fm-notas">${notas.map(t => `<p class="gm-nota">${t}</p>`).join('')}</div>
+    ${notas.length ? `<div class="fm-notas">${notas.map(t => `<p class="gm-nota">${t}</p>`).join('')}</div>` : ''}
+    <details class="gm-mais fm-mais"><summary>Como a previsão é feita</summary><div class="fm-notas">${extras.map(t => `<p class="gm-nota">${t}</p>`).join('')}</div></details>
     ${nFix ? `<div class="fm-acoes"><span class="gm-nota">${ico('pin')} ${nFix === 1 ? '1 disciplina fixada' : `${nFix} disciplinas fixadas`} por você.</span><button type="button" class="link-btn" id="fmLimparPlano">Voltar tudo para o automático</button></div>` : ''}
   </div>`;
   const limpar = document.getElementById('fmLimparPlano');
@@ -6159,10 +6174,20 @@ function renderCalendarioConfig(){
     ${nac.length ? `<div class="section-label" style="margin:22px 0 10px;">Feriados nacionais no semestre</div>
     <div class="cal-nacs">${nac.map(f => { const temAula = c.ocultos.includes(f.iso);
       return `<label class="cal-nac"><input type="checkbox" data-cal-nac="${f.iso}"${temAula ? ' checked' : ''}><span><b>${fmtCurta(f.iso)} · ${esc(f.nome)}</b><small>${f.dia}, ${temAula ? 'com aula' : 'sem aula'}</small></span></label>`; }).join('')}</div>
-    <p class="gm-nota" style="margin-top:8px;">Marque o feriado em que a faculdade dá aula normalmente.</p>` : ''}`;
+    <p class="gm-nota" style="margin-top:8px;">Marque o feriado em que a faculdade dá aula normalmente. Carnaval e Corpus Christi são ponto facultativo: cada faculdade decide.</p>` : ''}`;
   const data = id => document.getElementById(id).value;
-  document.getElementById('calInicio').addEventListener('change', e => calSalvar(cc => { cc.inicio = /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : ''; }));
-  document.getElementById('calFim').addEventListener('change', e => calSalvar(cc => { cc.fim = /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : ''; }));
+  // o último dia não pode vir antes do primeiro
+  const mudaData = (campo, e) => {
+    const v = /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : '', outro = campo === 'inicio' ? c.fim : c.inicio;
+    if(v && outro && (campo === 'inicio' ? v > outro : v < outro)){
+      showToast('O último dia de aula precisa vir depois do primeiro.', 'error', 3500);
+      e.target.value = c[campo] || '';
+      return;
+    }
+    calSalvar(cc => { cc[campo] = v; });
+  };
+  document.getElementById('calInicio').addEventListener('change', e => mudaData('inicio', e));
+  document.getElementById('calFim').addEventListener('change', e => mudaData('fim', e));
   document.getElementById('calEvAdd').addEventListener('click', () => {
     const nome = document.getElementById('calEvNome').value.trim().slice(0, 80), de = data('calEvDe'), ate = data('calEvAte'), tipo = data('calEvTipo');
     if(!nome){ showToast('Escreva o que é (ex.: Rematrícula).', 'error'); document.getElementById('calEvNome').focus(); return; }
@@ -6189,7 +6214,7 @@ const CONQUISTAS = [
   {id: 'nota90', ico: 'award', nome: 'Nota 90', desc: 'Uma disciplina aprovada com 90 ou mais'},
   {id: 'nota100', ico: 'award', nome: 'Nota máxima', desc: 'Uma disciplina aprovada com 100'},
   {id: 'semestreLimpo', ico: 'check', nome: 'Semestre limpo', desc: 'Um semestre encerrado sem nenhuma reprovação'},
-  {id: 'presenca', ico: 'calendar', nome: 'Presença total', desc: 'Um semestre encerrado sem nenhuma falta'},
+  {id: 'presenca', ico: 'calendar', nome: 'Presença total', desc: 'Um semestre encerrado sem nenhuma falta registrada'},
   {id: 'foco1', ico: 'timer', nome: 'Primeiro foco', desc: 'A primeira sessão de estudo no Pomodoro'},
   {id: 'seq7', ico: 'timer', nome: 'Uma semana seguida', desc: '7 dias seguidos estudando', un: 'dias'},
   {id: 'seq30', ico: 'timer', nome: 'Um mês seguido', desc: '30 dias seguidos estudando', un: 'dias'},
@@ -6230,7 +6255,9 @@ function cqAvaliar(){
   marca('nota90', maior >= 90); marca('nota100', maior >= 100);
   const sems = (STATE.semestres || []).filter(x => Array.isArray(x.disciplinas) && x.disciplinas.length);
   marca('semestreLimpo', sems.some(x => x.disciplinas.every(d => d.passou !== false)));
-  marca('presenca', sems.some(x => x.disciplinas.every(d => !(Number(d.faltas) > 0))));
+  const registraFaltas = (STATE.faltasRegistro || []).length > 0 || Object.values(STATE.faltas || {}).some(f => f && f.faltas > 0)
+    || sems.some(x => x.disciplinas.some(d => Number(d.faltas) > 0));
+  marca('presenca', registraFaltas && sems.some(x => x.disciplinas.every(d => !(Number(d.faltas) > 0))));
   const sess = STATE.pomSessions || [], horas = Math.floor(sess.reduce((a, x) => a + (Number(x.duracaoMin) || 0), 0) / 60), seq = cqMelhorSequencia();
   marca('foco1', sess.length > 0);
   [['seq7', 7, seq], ['seq30', 30, seq], ['horas10', 10, horas], ['horas50', 50, horas], ['horas100', 100, horas]].forEach(([id, meta, v]) => marca(id, v >= meta, [Math.min(v, meta), meta]));
@@ -6247,6 +6274,7 @@ let _cqTimer = null;
 function agendarConquistas(){ clearTimeout(_cqTimer); _cqTimer = setTimeout(cqAtualizar, 1200); }
 // guarda as que apareceram agora e avisa; na primeira vez, guarda as que já valiam sem avisar
 async function cqAtualizar(){
+  if(_initInProgress){ agendarConquistas(); return; }
   if(!ACTIVE_PROFILE_ID || !Array.isArray(STATE.historico) || !STATE.config || !Array.isArray(STATE.tarefas)) return;
   let av;
   try{ av = cqAvaliar(); }catch(e){ return; }
@@ -6490,7 +6518,7 @@ function arvSelecionar(cur){
   arvDesenhar();
   info.classList.remove('is-alerta');
   if(!sel){
-    info.innerHTML = `<p><b>Árvore do curso.</b> Cada linha é um período. Toque numa disciplina para acender o que ela exige (acima) e o que ela libera (abaixo).</p>
+    info.innerHTML = `<p><b>Árvore do curso.</b> Toque numa disciplina para ver o que ela exige e o que libera.</p>
       <div class="arv-estados"><span><i class="arv-q is-ok"></i>Aprovada</span><span><i class="arv-q is-cur"></i>Cursando</span><span><i class="arv-q is-livre"></i>Pode cursar no próximo semestre</span><span><i class="arv-q is-bloq"></i>Ainda bloqueada</span></div>`;
     return;
   }
@@ -6635,7 +6663,7 @@ function renderFaltas(){
   // anel: r = 27 no viewBox 64, perímetro 2πr
   const ANEL = 2 * Math.PI * 27;
   // aulas que ainda restam no semestre (horário da semana, sem feriados)
-  const restantes = calAulasRestantes(), fimAulas = calPeriodo().fim, porHoraAula = (STATE.config.faltasPorAula || 'hora-aula') !== 'aula';
+  const periodo = calPeriodo(), restantes = calAulasRestantes(), fimAulas = periodo.fim, porHoraAula = (STATE.config.faltasPorAula || 'hora-aula') !== 'aula';
   grid.innerHTML = disc.map(d => {
     const limite = faltaLimite(d.sigla, d.ch);
     const temCustom = STATE.faltasLimites && STATE.faltasLimites[d.sigla] != null;
@@ -6648,7 +6676,7 @@ function renderFaltas(){
     const restam = Math.max(0, limite - faltas);
     const [titulo, sub] = pct >= 100 ? ['Limite atingido', `${limite} faltas permitidas`]
       : restam === 1 ? ['Mais 1 falta reprova', `limite de ${limite} faltas`]
-      : [`Restam ${restam} faltas`, 'até o limite'];
+      : [`Restam ${restam} faltas`, restantes[d.sigla] && restantes[d.sigla].aulas ? `${restantes[d.sigla].aulas} ${restantes[d.sigla].aulas === 1 ? 'aula' : 'aulas'} pela frente` : 'até o limite'];
     return `<div class="panel falta-card ${nivel}" style="--accent:var(--${cor}); --c:var(--${cor}); --c-dim:var(--${cor}-dim)">
       <div class="fc-head">
         <div class="disc" title="${esc(d.nome)} (${esc(d.sigla)})">${esc(d.nome)}</div>
@@ -6665,11 +6693,18 @@ function renderFaltas(){
         <div class="fc-info">
           <b${restam === 1 && pct < 100 ? ' style="color:var(--red)"' : ''}>${titulo}</b>
           <span class="fc-sub">${sub}</span>
-          ${presencaPct !== null ? `<span class="fc-pres">${presencaPct}% de presença</span>` : ''}
-          ${(() => { const ra = restantes[d.sigla]; if(!ra || !ra.aulas) return '';
-            // em quantas das aulas que restam ainda dá para faltar (cada aula vale ra.ha / ra.aulas faltas)
-            const pode = pct >= 100 ? 0 : Math.min(ra.aulas, Math.floor(restam / (ra.ha / ra.aulas)));
-            return `<span class="fc-pres">Ainda há ${ra.aulas} ${ra.aulas === 1 ? 'aula' : 'aulas'}${porHoraAula ? ` (${ra.ha} h-aula)` : ''} até ${fmtCurta(fimAulas)}${pct < 100 ? `; dá para faltar em ${pode === ra.aulas ? 'todas' : 'até ' + pode}` : ''}.</span>`; })()}
+          ${(() => {
+            // presença e aulas que ainda restam numa linha; o detalhe (até quando, em quantas dá para faltar) fica no title
+            const ra = restantes[d.sigla], partes = [];
+            if(presencaPct !== null) partes.push(`${presencaPct}% de presença`);
+            let dica = '';
+            if(ra && ra.aulas){
+              const pode = pct >= 100 ? 0 : Math.min(ra.aulas, Math.floor(restam / (ra.ha / ra.aulas)));
+              dica = `${ra.aulas} ${ra.aulas === 1 ? 'aula' : 'aulas'}${porHoraAula ? ` (${ra.ha} h-aula)` : ''} até ${fmtCurta(fimAulas)}${periodo.estimado ? ' (data estimada)' : ''}`
+                + (pct < 100 ? (pode === 0 ? '. Não dá para faltar em nenhuma.' : `. Dá para faltar em ${pode === ra.aulas ? 'todas' : 'até ' + pode}.`) : '.');
+            }
+            return partes.length ? `<span class="fc-pres"${dica ? ` title="${esc(dica)}"` : ''}>${partes.join(' · ')}</span>` : '';
+          })()}
         </div>
       </div>
       <div class="fc-actions">
@@ -9341,14 +9376,15 @@ function scheduleDeadlineNotifications(){
       new Notification(title, opts);
     }catch(err){}
   };
-  STATE.provas.filter(p => p.data === today || p.data === tomorrow).forEach(p => {
+  const top = notifTopicos(), quer = d => d === today ? top.dia : top.vespera;
+  STATE.provas.filter(p => (p.data === today || p.data === tomorrow) && quer(p.data)).forEach(p => {
     const when = p.data === today ? 'hoje' : 'amanhã';
     show(`${examLabel(p)} ${when}`, {
       body: [p.hora ? 'às ' + p.hora : '', p.local || ''].filter(Boolean).join(', ') || 'Horário não informado',
       tag: 'prova-' + p.data + '-' + p.disciplina
     });
   });
-  STATE.tarefas.filter(t => t.status !== 'Concluído' && (t.prazo === today || t.prazo === tomorrow)).forEach(t => {
+  STATE.tarefas.filter(t => t.status !== 'Concluído' && (t.prazo === today || t.prazo === tomorrow) && quer(t.prazo)).forEach(t => {
     const when = t.prazo === today ? 'hoje' : 'amanhã';
     show(`Vence ${when}: ${t.nome}`, {
       body: (t.categoria || '') + (t.disciplina ? ', ' + t.disciplina : ''),
@@ -9373,6 +9409,7 @@ function saveReminderSnapshot(){
       tarefas: STATE.tarefas.filter(t => t.status !== 'Concluído' && t.prazo).map(t => ({nome: t.nome, prazo: t.prazo})),
       rels,
       eventos: calLembretes(),
+      topicos: notifTopicos(),
     };
     try{
       const c = await caches.open('lembretes-data');
@@ -9442,10 +9479,15 @@ function statusRow(estado, titulo, texto, botoes, icone = 'bell'){
 // Painel de notificações: o estado no topo, os momentos dos avisos em cartões
 // e, por último, o atalho para levar provas e prazos à agenda do celular.
 // momentos: [ícone, cor, título, texto]
+// tipos de aviso; cada um liga e desliga na chave do seu cartão (config.notifTopicos, todos ligados por padrão)
+const NOTIF_TOPICOS = ['dia', 'vespera', 'semana', 'prova2h'];
+const notifTopicos = () => { const t = (STATE.config && STATE.config.notifTopicos) || {}; return Object.fromEntries(NOTIF_TOPICOS.map(k => [k, t[k] !== false])); };
 function notifQuando(momentos, nota){
+  const ligado = notifTopicos();
   return `<div class="notif-quando-t">Quando os avisos chegam</div>
-    <div class="notif-quando">${momentos.map(([icone, cor, titulo, texto]) => `
-      <div class="notif-q" style="--c:var(--${cor}); --c-dim:var(--${cor}-dim)">
+    <div class="notif-quando">${momentos.map(([chave, icone, cor, titulo, texto]) => `
+      <div class="notif-q${ligado[chave] ? '' : ' is-off'}" style="--c:var(--${cor}); --c-dim:var(--${cor}-dim)">
+        <input type="checkbox" class="switch notif-q__sw" data-notif-top="${chave}" aria-label="Avisos: ${titulo}"${ligado[chave] ? ' checked' : ''}>
         <span class="notif-q__ic">${ico(icone)}</span><b>${titulo}</b><span>${texto}</span>
       </div>`).join('')}</div>
     <p class="notif-note">${nota}</p>
@@ -9460,10 +9502,10 @@ async function renderNotifPanel(){
   const p = document.getElementById('notifPanel');
   if(!p) return;
   const quando = notifQuando([
-    ['sun', 'amber', 'Às 7h', 'O resumo do dia: provas, tarefas que vencem, entregas e o que estiver atrasado.'],
-    ['moon', 'purple', 'Às 20h', 'O que vem amanhã, para dar tempo de se preparar.'],
-    ['calendar', 'green', 'Domingo, 20h', 'O resumo da semana que vem, no lugar do aviso de amanhã.'],
-    ['timer', 'red', '2h antes da prova', 'Com o horário e a sala.'],
+    ['dia', 'sun', 'amber', 'Às 7h', 'O resumo do dia: provas, tarefas que vencem, entregas e o que estiver atrasado.'],
+    ['vespera', 'moon', 'purple', 'Às 20h', 'O que vem amanhã, para dar tempo de se preparar.'],
+    ['semana', 'calendar', 'green', 'Domingo, 20h', 'O resumo da semana que vem, no lugar do aviso de amanhã.'],
+    ['prova2h', 'timer', 'red', '2h antes da prova', 'Com o horário e a sala.'],
   ], 'Dias sem nada para lembrar não geram notificação.');
   const row = statusRow;
   if(!pushSupported()){
@@ -9509,14 +9551,23 @@ async function renderNotifPanel(){
     renderNotifPanel();
   };
 }
+// a chave de cada tipo de aviso: guarda na configuração (vale nos outros aparelhos) e avisa o service worker
+document.getElementById('notifPanel').addEventListener('change', async e => {
+  const sw = e.target.closest('[data-notif-top]');
+  if(!sw || !NOTIF_TOPICOS.includes(sw.dataset.notifTop)) return;
+  STATE.config.notifTopicos = Object.assign({}, STATE.config.notifTopicos, {[sw.dataset.notifTop]: sw.checked});
+  sw.closest('.notif-q').classList.toggle('is-off', !sw.checked);
+  await storeSet('config', STATE.config);
+  saveReminderSnapshot();
+});
 function renderLocalNotifPanel(){
   const p = document.getElementById('notifPanel');
   if(!p) return;
   const quando = notifQuando([
-    ['sun', 'amber', 'No dia', 'Provas, tarefas que vencem, entregas do laboratório e o que estiver atrasado.'],
-    ['moon', 'purple', 'Na véspera', 'A partir das 17h, o que vem amanhã.'],
-    ['calendar', 'green', 'Domingo', 'A partir das 17h, o resumo da semana que vem.'],
-    ['timer', 'red', '2h antes da prova', 'Com o horário e a sala.'],
+    ['dia', 'sun', 'amber', 'No dia', 'Provas, tarefas que vencem, entregas do laboratório e o que estiver atrasado.'],
+    ['vespera', 'moon', 'purple', 'Na véspera', 'A partir das 17h, o que vem amanhã.'],
+    ['semana', 'calendar', 'green', 'Domingo', 'A partir das 17h, o resumo da semana que vem.'],
+    ['prova2h', 'timer', 'red', '2h antes da prova', 'Com o horário e a sala.'],
   ], 'Os avisos chegam com o app aberto; no Android, com o app instalado, o celular também confere sozinho de tempos em tempos. Cada aviso aparece uma vez só, e dias sem nada não geram notificação.');
   const row = statusRow;
   if(!('Notification' in window)){

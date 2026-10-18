@@ -103,6 +103,8 @@ async function checkReminders() {
     eventos: (snap.eventos || []).filter(e => e.d === d),
   });
   const notes = [];
+  // kinds of reminder the person switched off in the app (all on by default)
+  const top = Object.assign({ dia: true, vespera: true, semana: true, prova2h: true }, snap.topicos || {});
 
   // today: once a day, whenever the first check of the day happens
   const h = doDia(hoje);
@@ -114,11 +116,15 @@ async function checkReminders() {
     body: [provasHoje[0].local ? `Local: ${provasHoje[0].local}` : 'Você se preparou pra isso, vai com calma.', ...outrosHoje].join('\n') });
   else if (provasHoje.length > 1) notes.push({ tag: `dia-${hoje}`, url: './', title: `Hoje tem ${provasHoje.length} provas`,
     body: [...provasHoje.map(provaTxt), ...outrosHoje].join('\n') });
-  else if (outrosHoje.length) notes.push({ tag: `dia-${hoje}`, url: './?aba=tarefas', title: outrosHoje.length === 1 ? outrosHoje[0] : 'Seu dia hoje',
-    body: outrosHoje.length === 1 ? 'Não esquece.' : outrosHoje.join('\n') });
+  else if (outrosHoje.length) {
+    const soData = outrosHoje.length === h.eventos.length;
+    notes.push({ tag: `dia-${hoje}`, url: soData ? './' : './?aba=tarefas', title: outrosHoje.length === 1 ? outrosHoje[0] : 'Seu dia hoje',
+      body: outrosHoje.length === 1 ? (soData ? 'As datas do semestre ficam no app.' : 'Não esquece.') : outrosHoje.join('\n') });
+  }
 
   // Sunday, from 17h: the week ahead (it already covers Monday, so no separate heads-up)
-  if (agora >= 17 * 60 && now.getDay() === 0) {
+  // (with the weekly summary off, Sunday gets the usual heads-up for tomorrow)
+  if (agora >= 17 * 60 && now.getDay() === 0 && top.semana) {
     const semana = resumoSemana(snap, now);
     if (semana) notes.push(semana);
   }
@@ -130,8 +136,11 @@ async function checkReminders() {
       body: ['Vale uma revisada hoje e uma boa noite de sono.', ...outros].join('\n') });
     else if (a.provas.length > 1) notes.push({ tag: `vespera-${hoje}`, url: './?aba=provas', title: `Amanhã tem ${a.provas.length} provas`,
       body: [...a.provas.map(provaTxt), ...outros].join('\n') });
-    else if (outros.length) notes.push({ tag: `vespera-${hoje}`, url: './?aba=tarefas', title: outros.length === 1 ? outros[0] : 'Para amanhã',
-      body: outros.length === 1 ? 'Dá tempo de adiantar hoje.' : outros.join('\n') });
+    else if (outros.length) {
+      const soData = outros.length === a.eventos.length;
+      notes.push({ tag: `vespera-${hoje}`, url: soData ? './' : './?aba=tarefas', title: outros.length === 1 ? outros[0] : 'Para amanhã',
+        body: outros.length === 1 ? (soData ? 'As datas do semestre ficam no app.' : 'Dá tempo de adiantar hoje.') : outros.join('\n') });
+    }
   }
 
   // exam starting in two hours or less
@@ -141,8 +150,10 @@ async function checkReminders() {
       title: `${p.tipo || 'Prova'} de ${semSigla(p.disciplina)} daqui a pouco`, body: `Começa${hora(p.hora)}${p.local ? `, ${p.local}` : ''}. Boa prova!` });
   });
 
+  const ligado = n => n.tag.startsWith('dia-') ? top.dia : n.tag.startsWith('vespera-') ? top.vespera
+    : n.tag.startsWith('semana-') ? top.semana : n.tag.startsWith('prova-') ? top.prova2h : true;
   let changed = false;
-  for (const n of notes) {
+  for (const n of notes.filter(ligado)) {
     if (sent[n.tag]) continue;
     await self.registration.showNotification(n.title, { body: n.body, tag: n.tag, icon: './icons/icon-192.png', data: { url: n.url } });
     sent[n.tag] = Date.now(); changed = true;

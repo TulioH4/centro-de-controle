@@ -49,9 +49,13 @@ const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 export function collect(kv) {
   const ids = new Set(Array.isArray(kv.profiles) ? kv.profiles.map((p) => p && p.id).filter(Boolean) : []);
   Object.keys(kv).forEach((k) => { const m = /^(.+)_(tarefas|provas)$/.exec(k); if (m) ids.add(m[1]); });
-  const all = { tarefas: [], provas: [], rels: [] };
+  // kinds of reminder (app: Configurações > Notificações); a kind goes out if any profile keeps it on
+  const all = { tarefas: [], provas: [], rels: [], topicos: { dia: false, vespera: false, semana: false, prova2h: false } };
+  if (!ids.size) all.topicos = { dia: true, vespera: true, semana: true, prova2h: true };
   for (const id of ids) {
     const arr = (v) => (Array.isArray(v) ? v : []);
+    const tp = ((kv[`${id}_config`] || {}).notifTopicos) || {};
+    Object.keys(all.topicos).forEach((k) => { if (tp[k] !== false) all.topicos[k] = true; });
     all.tarefas.push(...arr(kv[`${id}_tarefas`]).filter((t) => t && t.status !== 'Concluído' && t.prazo));
     all.provas.push(...arr(kv[`${id}_provas`]).filter((p) => p && p.data));
     const base = kv[`${id}_base_data`] || {};
@@ -77,7 +81,8 @@ export function plan(all, now) {
   const relsDia = (d) => all.rels.filter((r) => r.fim === d);
   const lista = (itens) => itens.join('\n');
 
-  if (agora >= 7 * 60 && agora < 12 * 60) {
+  const top = all.topicos || { dia: true, vespera: true, semana: true, prova2h: true };
+  if (top.dia && agora >= 7 * 60 && agora < 12 * 60) {
     const provas = provasDia(hoje).filter((p) => !p.hora || minutes(p.hora) > agora);
     const outros = [
       ...tarefasDia(hoje).map((t) => `Vence hoje: ${t.nome}`),
@@ -100,7 +105,7 @@ export function plan(all, now) {
 
   // Sunday 20:00: the week ahead (it already covers Monday, so no separate heads-up)
   const domingo = new Date(hoje + 'T12:00:00Z').getUTCDay() === 0;
-  if (agora >= 20 * 60 && domingo) {
+  if (top.semana && agora >= 20 * 60 && domingo) {
     const dias = Array.from({ length: 7 }, (_, i) => addDays(hoje, i + 1));
     const quando = (d) => (d === amanha ? 'Amanhã' : DIAS[new Date(d + 'T12:00:00Z').getUTCDay()]);
     const provas = all.provas.filter((p) => dias.includes(p.data))
@@ -117,7 +122,7 @@ export function plan(all, now) {
       msgs.push({ tag: `semana-${hoje}`, title: `Sua semana: ${partes.join(' e ')}`, url: './',
         body: lista(linhas.length > 5 ? [...linhas.slice(0, 4), `e mais ${linhas.length - 4}`] : linhas) });
     }
-  } else if (agora >= 20 * 60) {
+  } else if (top.vespera && agora >= 20 * 60) {
     const provas = provasDia(amanha);
     const outros = [
       ...tarefasDia(amanha).map((t) => `Vence amanhã: ${t.nome}`),
@@ -135,7 +140,7 @@ export function plan(all, now) {
     }
   }
 
-  provasDia(hoje).filter((p) => p.hora).forEach((p) => {
+  if (top.prova2h) provasDia(hoje).filter((p) => p.hora).forEach((p) => {
     const falta = minutes(p.hora) - agora;
     if (falta > 0 && falta <= 120) {
       msgs.push({
