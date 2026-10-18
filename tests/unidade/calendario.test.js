@@ -45,6 +45,10 @@ v.igual(inatel({semestre: '1º semestre de 2026'}).calPeriodo().inicio, '2026-07
 v.igual(emDia(2026, 6, 2, () => { const p = inatel({semestre: '4º período'}); return [p.calPeriodo().inicio, p.calPeriodo().fim, p.calSemAulaHoje()]; }), ['2026-02-09', '2026-07-04', null], '02/07: ainda no 1º semestre');
 v.igual(emDia(2026, 6, 15, () => inatel({semestre: '1º semestre de 2026'}).calSemAulaHoje()), 'o semestre ainda não começou', 'entre os semestres');
 v.igual(emDia(2026, 11, 20, () => { const p = inatel({}); return [p.calPeriodo().fim, p.calSemAulaHoje()]; }), ['2026-12-12', 'o período de aulas acabou'], 'depois do fim das aulas de dezembro');
+v.igual(emDia(2026, 11, 20, () => inatel({semestre: '2º semestre de 2025'}).calSemAulaHoje()), 'o período de aulas acabou', 'dezembro com o perfil um ano atrasado');
+v.igual(emDia(2026, 11, 20, () => inatel({semestre: '1º semestre de 2027'}).calPeriodo().inicio), '2027-02-01', 'dezembro com o perfil já no semestre seguinte');
+v.igual(emDia(2027, 2, 10, () => { const p = inatel({semestre: '2º semestre de 2026'}); return [p.calPeriodo().estimado, p.calSemAulaHoje()]; }), [true, null], 'março de 2027 com o perfil de 2026 não esconde as aulas');
+v.igual(emDia(2025, 11, 10, () => inatel({semestre: '1º semestre de 2026'}).calSemAulaHoje()), 'o semestre ainda não começou', 'dezembro de 2025 com o perfil já em 2026');
 v.igual(emDia(2025, 9, 1, () => inatel({semestre: '2º semestre de 2025'}).calPeriodo().estimado), true, '2025 não usa o calendário de 2026');
 // a data que a pessoa escreve vem na frente; um feriado marcado "com aula" deixa de contar
 const i3 = inatel({}, {inicio: '', fim: '2026-12-05', eventos: [], ocultos: ['2026-11-02']});
