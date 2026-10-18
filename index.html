@@ -1908,6 +1908,7 @@
   .auth-title{margin:4px 0 0; font-size:22px; font-weight:700; letter-spacing:-.02em; text-align:center;}
   .auth-sub{margin:0 0 6px; font-size:13.5px; color:var(--text-dim); text-align:center; line-height:1.5;}
   .auth-card .field input{font-size:15px; padding:11px 12px;}
+  .auth-card [hidden]{display:none;}
   .auth-msg{margin:0; min-height:18px; font-size:13px; color:var(--text-dim); line-height:1.45;}
   .auth-msg.is-error{color:var(--red);}
   .auth-msg.is-ok{color:var(--green);}
@@ -2691,11 +2692,12 @@
     <img src="icons/icon.svg" alt="" class="auth-logo" width="56" height="56">
     <h1 class="auth-title">Centro de Controle</h1>
     <p class="auth-sub" id="authSub">Entre para ter os mesmos dados no computador e no celular.</p>
-    <div class="field"><label for="authEmail">E-mail</label><input id="authEmail" type="email" autocomplete="email" inputmode="email" required></div>
-    <div class="field"><label for="authPass">Senha</label><input id="authPass" type="password" autocomplete="current-password" minlength="6" required></div>
+    <div class="field" id="authEmailField"><label for="authEmail">E-mail</label><input id="authEmail" type="email" autocomplete="email" inputmode="email" required></div>
+    <div class="field"><label for="authPass" id="authPassLabel">Senha</label><input id="authPass" type="password" autocomplete="current-password" minlength="6" required></div>
     <p class="auth-msg" id="authMsg" role="alert" aria-live="polite"></p>
     <button type="submit" class="btn btn-primary auth-submit" id="authSubmit">Entrar</button>
     <button type="button" class="auth-link" id="authSwitch">Não tem conta? Criar conta</button>
+    <button type="button" class="auth-link auth-link--quiet" id="authForgot">Esqueci a senha</button>
     <button type="button" class="auth-link auth-link--quiet" id="authSkip">Usar sem conta, só neste aparelho</button>
   </form>
 </div>
@@ -11768,8 +11770,23 @@ startup();
 async function startup(){
   const cloud = window.Sync && Sync.enabled;
   if(cloud){
+    // link do e-mail de "Esqueci a senha": sai do endereço na hora (leva a sessão de recuperação)
+    const rec = Sync.readRecoveryLink(location.hash);
+    if(rec) history.replaceState(null, '', location.pathname + location.search);
     let user = null;
     try{ user = await Sync.restoreSession(); }catch(e){}
+    if(rec && rec.email){
+      document.getElementById('loading').style.display = 'none';
+      _recLink = rec;
+      showAuthScreen('nova');
+      return;
+    }
+    if(rec && rec.error && !user){
+      document.getElementById('loading').style.display = 'none';
+      showAuthScreen('login');
+      setAuthMessage(rec.error, 'error');
+      return;
+    }
     if(!user && !lsGet('cloud_skip', false)){
       document.getElementById('loading').style.display = 'none';
       showAuthScreen('login');
@@ -11795,22 +11812,29 @@ async function startCloud(){
 // LOGIN + SYNC UI
 // ============================================================
 let _authMode = 'login';
+// link do e-mail de "Esqueci a senha" (lido do endereço na abertura): {email, access_token, refresh_token}
+let _recLink = null;
 function showAuthScreen(mode){
   _authMode = mode || 'login';
   const screen = document.getElementById('authScreen');
-  const signup = _authMode === 'signup';
-  document.getElementById('authSubmit').textContent = signup ? 'Criar conta' : 'Entrar';
-  document.getElementById('authSwitch').textContent = signup ? 'Já tem conta? Entrar' : 'Não tem conta? Criar conta';
-  document.getElementById('authSub').textContent = signup
-    ? 'Crie uma conta para guardar seus dados na nuvem e usar no computador e no celular.'
+  const signup = _authMode === 'signup', nova = _authMode === 'nova';
+  document.getElementById('authSubmit').textContent = nova ? 'Salvar nova senha' : signup ? 'Criar conta' : 'Entrar';
+  document.getElementById('authSwitch').textContent = nova ? 'Cancelar' : signup ? 'Já tem conta? Entrar' : 'Não tem conta? Criar conta';
+  document.getElementById('authSub').textContent = nova ? `Nova senha da conta ${_recLink.email}.`
+    : signup ? 'Crie uma conta para guardar seus dados na nuvem e usar no computador e no celular.'
     : 'Entre para ter os mesmos dados no computador e no celular.';
-  document.getElementById('authPass').setAttribute('autocomplete', signup ? 'new-password' : 'current-password');
+  document.getElementById('authEmailField').hidden = nova;
+  document.getElementById('authPassLabel').textContent = nova ? 'Nova senha' : 'Senha';
+  document.getElementById('authForgot').hidden = _authMode !== 'login';
+  document.getElementById('authSkip').hidden = nova;
+  document.getElementById('authPass').value = '';
+  document.getElementById('authPass').setAttribute('autocomplete', signup || nova ? 'new-password' : 'current-password');
   document.getElementById('authMsg').textContent = '';
   document.getElementById('authMsg').className = 'auth-msg';
   document.getElementById('app').style.display = 'none';
   document.getElementById('profileScreen').style.display = 'none';
   screen.style.display = 'flex';
-  setTimeout(() => document.getElementById('authEmail').focus(), 50);
+  setTimeout(() => document.getElementById(nova ? 'authPass' : 'authEmail').focus(), 50);
 }
 function setAuthMessage(text, kind){
   const el = document.getElementById('authMsg');
@@ -11818,7 +11842,22 @@ function setAuthMessage(text, kind){
   el.className = 'auth-msg' + (kind ? ' is-' + kind : '');
 }
 
-document.getElementById('authSwitch').addEventListener('click', () => showAuthScreen(_authMode === 'login' ? 'signup' : 'login'));
+document.getElementById('authSwitch').addEventListener('click', () => {
+  if(_authMode === 'nova'){ _recLink = null; showAuthScreen('login'); return; }
+  showAuthScreen(_authMode === 'login' ? 'signup' : 'login');
+});
+// manda o link de nova senha para o e-mail escrito acima
+document.getElementById('authForgot').addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value.trim(), b = document.getElementById('authForgot');
+  if(!email){ setAuthMessage('Escreva seu e-mail acima e toque de novo em "Esqueci a senha".', 'error'); document.getElementById('authEmail').focus(); return; }
+  b.disabled = true;
+  setAuthMessage('Enviando o link…');
+  try{
+    await Sync.requestPasswordReset(email);
+    setAuthMessage('Pronto. Se a conta existir, chega um link no seu e-mail em alguns minutos (veja também o spam).', 'ok');
+  }catch(err){ setAuthMessage(err.message, 'error'); }
+  finally{ b.disabled = false; }
+});
 document.getElementById('authSkip').addEventListener('click', async () => {
   lsSet('cloud_skip', true);
   document.getElementById('authScreen').style.display = 'none';
@@ -11828,13 +11867,16 @@ document.getElementById('authForm').addEventListener('submit', async e => {
   e.preventDefault();
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPass').value;
-  if(!email || !pass){ setAuthMessage('Preencha e-mail e senha.', 'error'); return; }
+  const nova = _authMode === 'nova';
+  if(nova && pass.length < 6){ setAuthMessage('A senha precisa ter pelo menos 6 caracteres.', 'error'); return; }
+  if(!nova && (!email || !pass)){ setAuthMessage('Preencha e-mail e senha.', 'error'); return; }
   const btn = document.getElementById('authSubmit');
   btn.disabled = true;
-  setAuthMessage(_authMode === 'signup' ? 'Criando conta…' : 'Entrando…');
+  setAuthMessage(nova ? 'Salvando…' : _authMode === 'signup' ? 'Criando conta…' : 'Entrando…');
   try{
-    // criar conta já entra direto, sem e-mail de confirmação
-    if(_authMode === 'signup') await Sync.signUp(email, pass);
+    // criar conta já entra direto, sem e-mail de confirmação; trocar a senha também já entra
+    if(nova){ await Sync.finishPasswordReset(_recLink, pass); _recLink = null; showToast('Senha trocada.', 'success', 2500); }
+    else if(_authMode === 'signup') await Sync.signUp(email, pass);
     else await Sync.signIn(email, pass);
     try{ localStorage.removeItem(LS_PREFIX + 'cloud_skip'); }catch(err){}
     document.getElementById('authScreen').style.display = 'none';

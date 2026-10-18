@@ -304,6 +304,49 @@
     return _signOut();
   }
 
+  // ---- forgotten password ------------------------------------------------------
+  // The e-mail link comes back to the app with a recovery session in the address
+  // (#access_token=...&refresh_token=...&type=recovery). detectSessionInUrl stays off,
+  // so the app reads the link itself, shows which account it belongs to, and only uses
+  // it when the person sets the new password there.
+  const RESET_MESSAGES = [
+    [/only request this after|security purposes/i, 'Espere um minuto antes de pedir outro link.'],
+    [/not authorized|not allowed/i, 'O servidor ainda não envia e-mail para esse endereço.'],
+    [/different from the old/i, 'A nova senha precisa ser diferente da antiga.'],
+    [/jwt|refresh token|expired|invalid.*token/i, 'O link expirou. Peça outro em "Esqueci a senha".'],
+  ];
+  const resetFriendly = e => {
+    const msg = (e && e.message) || String(e), hit = RESET_MESSAGES.find(([re]) => re.test(msg));
+    return new Error(hit ? hit[1] : friendly(e));
+  };
+  async function requestPasswordReset(email){
+    if (!client) throw new Error('Sem conexão com o servidor. Verifique a internet.');
+    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    if (error) throw resetFriendly(error);
+  }
+  // reads the address only: {email, access_token, refresh_token}, {error} or null
+  function readRecoveryLink(hash){
+    const q = new URLSearchParams(String(hash || '').replace(/^#/, ''));
+    if (q.get('error') || q.get('error_code')) return { error: 'Esse link não vale mais. Peça outro em "Esqueci a senha".' };
+    if (q.get('type') !== 'recovery' || !q.get('access_token') || !q.get('refresh_token')) return null;
+    let email = '';
+    try { email = String(JSON.parse(atob(q.get('access_token').split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).email || ''); } catch (e) {}
+    return email ? { email, access_token: q.get('access_token'), refresh_token: q.get('refresh_token') } : { error: 'Esse link não vale mais. Peça outro em "Esqueci a senha".' };
+  }
+  async function finishPasswordReset(link, password){
+    if (!client) throw new Error('Sem conexão com o servidor. Verifique a internet.');
+    // a device signed in to another account keeps it: its data must not move to this one
+    if (state.user && state.user.email && state.user.email.toLowerCase() !== link.email.toLowerCase())
+      throw new Error(`Este aparelho está na conta ${state.user.email}. Saia dela antes de trocar a senha de outra.`);
+    const s = await client.auth.setSession({ access_token: link.access_token, refresh_token: link.refresh_token });
+    if (s.error) throw resetFriendly(s.error);
+    const u = await client.auth.updateUser({ password });
+    if (u.error) throw resetFriendly(u.error);
+    state.user = u.data.user || (s.data && s.data.user) || null;
+    if (state.user) setStatus(navigator.onLine ? 'synced' : 'offline');
+    return state.user;
+  }
+
   window.Sync = {
     enabled,
     get state(){ return Object.assign({}, state); },
@@ -313,5 +356,6 @@
     hasPending: hasDirty,
     restoreSession, signIn, signUp, signOut: signOutAndUnsubscribe, pull, push, startBackground,
     currentPushSub, savePush, deletePush, testPush,
+    requestPasswordReset, readRecoveryLink, finishPasswordReset,
   };
 })();

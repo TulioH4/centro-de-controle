@@ -29,7 +29,14 @@ const TESTES = [
   {nome: 'ataque-requisitos', perfil: [...REQ, 'ataque-requisitos.tail.js']},
   {nome: 'ataque-plano', teste: 'ataque-requisitos', perfil: [...REQ, 'ataque-requisitos.tail.js', 'ataque-plano.tail.js']},
   {nome: 'ataque-calendario', perfil: [...REQ, 'ataque-calendario.tail.js']},
+  // link do e-mail de "Esqueci a senha" (sessão de mentira da conta teste@exemplo.com) e um link expirado
+  {nome: 'senha', perfil: ['sem-conta.js'], hash: '#access_token=' + jwtFalso('teste@exemplo.com') + '&refresh_token=abc&expires_in=3600&token_type=bearer&type=recovery'},
+  {nome: 'senha-expirada', perfil: ['sem-conta.js'], hash: '#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired'},
 ];
+function jwtFalso(email){
+  const b = o => Buffer.from(JSON.stringify(o)).toString('base64url');
+  return b({alg: 'HS256', typ: 'JWT'}) + '.' + b({email, exp: 4102444800}) + '.assinatura';
+}
 
 const ler = (...p) => fs.readFileSync(path.join(...p), 'utf8');
 const apagar = p => { try{ fs.rmSync(p, {recursive: true, force: true, maxRetries: 5, retryDelay: 300}); }catch(e){} };
@@ -151,7 +158,7 @@ async function navegador(filtro){
   let ok = true, i = 0;
   const um = async () => {
     for(let t; (t = lista[i++]);){
-      const html = await abrir(nav, `http://127.0.0.1:${porta}/t/${t.nome}/index.html`, t);
+      const html = await abrir(nav, `http://127.0.0.1:${porta}/t/${t.nome}/index.html${t.hash || ''}`, t);
       const m = html.match(/<pre id="__audit">([\s\S]*?)<\/pre>/);
       let r = null, p;
       try{ r = m && JSON.parse(desfaz(m[1])); }catch(e){}

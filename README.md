@@ -77,6 +77,7 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 ## Seus dados
 
 - **Com conta:** os dados ficam na sua conta (Supabase), protegidos por regras que só permitem a cada usuário ler e gravar os próprios registros. O app trabalha sempre com uma cópia local, então abre na hora e funciona sem internet; as alterações sobem em segundo plano e aparecem nos outros aparelhos em poucos segundos.
+- **Esqueceu a senha:** na tela de entrar, escreva o e-mail e toque em *Esqueci a senha*. O link que chega abre o app já na tela da nova senha, mostrando de qual conta ela é.
 - **Cada pessoa, sua conta:** para outra pessoa usar o app no mesmo aparelho, basta sair e entrar com a conta dela.
 - **Sem conta:** tudo fica só no navegador daquele aparelho.
 - **Backup:** em *Configurações → Backup dos dados*, exporte ou importe um arquivo `.json` com tudo do perfil.
@@ -93,7 +94,7 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 | Conta e sincronização | [Supabase](https://supabase.com/) (Auth + Postgres + Realtime), em `sync.js` |
 | Publicação | GitHub Pages via GitHub Actions |
 
-**Sincronização em resumo:** cada gravação local é marcada com horário e enviada para a tabela `kv` (uma linha por item). Ao abrir o app, ao voltar para ele e em tempo real, as alterações mais novas de outros aparelhos são aplicadas; ao voltar para o app, ele confere primeiro só os horários e baixa apenas os itens que mudaram. Em caso de conflito, vale a alteração mais recente de cada item.
+**Sincronização em resumo:** cada gravação local é marcada com horário e enviada para a tabela `kv` (uma linha por item). Ao abrir o app, ao voltar para ele e em tempo real, as alterações mais novas de outros aparelhos são aplicadas; ao voltar para o app, ele confere primeiro só os horários e baixa apenas os itens que mudaram. Em caso de conflito, as listas (provas, tarefas, eventos do calendário...) são combinadas item por item, então o que cada aparelho adicionou fica; nos outros dados vale a alteração mais recente.
 
 ## Desenvolvimento
 
