@@ -997,12 +997,24 @@
   /* ===== MINI CALENDAR ===== */
 
   /* ===== DISC RISCO RANKING ===== */
-  .risco-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
+  /* disciplina | faltas (barra = quanto do limite já foi) | nota; no celular, faltas e nota descem para a 2ª linha */
+  .risco-row{display:grid;grid-template-columns:44px minmax(0,1fr) 170px 150px;align-items:center;column-gap:14px;row-gap:6px;padding:9px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
   .risco-row:last-child{border-bottom:none;}
-  .risco-sigla{font-family:var(--mono);font-weight:700;width:52px;flex-shrink:0;}
-  .risco-nome{flex:1;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .risco-bar-wrap{width:80px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;flex-shrink:0;}
+  .risco-sigla{font-family:var(--mono);font-weight:700;}
+  .risco-nome{min-width:0;display:flex;align-items:center;gap:8px;color:var(--text-dim);}
+  .risco-nome > span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .risco-m{display:flex;align-items:center;gap:8px;min-width:0;font-size:11.5px;white-space:nowrap;}
+  .risco-k{font-size:10.5px;color:var(--text-faint);}
+  .risco-v{font-weight:600;}
+  .risco-m .risco-bar-wrap{flex:1;min-width:30px;}
+  .risco-m--f .risco-v{min-width:5ch;text-align:right;}
+  .risco-bar-wrap{height:5px;border-radius:3px;background:var(--line);overflow:hidden;}
   .risco-bar-fill{height:100%;border-radius:3px;}
+  @media (max-width:640px){
+    .risco-row{grid-template-columns:40px minmax(0,1fr) 120px;column-gap:10px;}
+    .risco-nome{grid-column:2 / -1;}
+    .risco-m--f{grid-column:2;}
+  }
 
   /* ===== FALTA FORECAST ===== */
 
@@ -4303,15 +4315,16 @@ function renderDiscRisco(){
     const pesoTotal = entradas.reduce((s,e)=>s+(Number(e.peso)||1),0);
     const somaW = preenchidas.reduce((s,e)=>s+Number(e.valor)*(Number(e.peso)||1),0);
     const pesoVazias = vazias.reduce((s,e)=>s+(Number(e.peso)||1),0);
+    // (o que falta na nota, lido depois de "Nota")
     let notaRisk = 0, notaLabel = '';
     if(preenchidas.length && pesoVazias === 0){
       const mf = pesoTotal>0 ? somaW/pesoTotal : 0;
-      if(mf < notaMin){ notaRisk = 1; notaLabel = `Nota final: ${fmtNum(mf)}`; }
+      if(mf < notaMin){ notaRisk = 1; notaLabel = `ficou em ${fmtNum(mf)}`; }
     } else if(preenchidas.length && pesoVazias > 0){
       const precisa = (notaMin*pesoTotal - somaW)/pesoVazias;
-      if(precisa > 100){ notaRisk = 1; notaLabel = 'Matematicamente reprovado'; }
-      else if(precisa > 85){ notaRisk = 0.8; notaLabel = `Precisa de ${precisa.toFixed(0)} nas próximas`; }
-      else if(precisa > notaMin){ notaRisk = 0.5; notaLabel = `Precisa de ${precisa.toFixed(0)}`; }
+      if(precisa > 100){ notaRisk = 1; notaLabel = 'não dá mais'; }
+      else if(precisa > 85){ notaRisk = 0.8; notaLabel = `precisa de ${precisa.toFixed(0)}`; }
+      else if(precisa > notaMin){ notaRisk = 0.5; notaLabel = `precisa de ${precisa.toFixed(0)}`; }
     }
 
     const totalRisk = Math.max(faltasPct * 0.6, notaRisk * 0.4);
@@ -4326,16 +4339,15 @@ function renderDiscRisco(){
   // as que, reprovando, adiam a formatura (curso com quadro de requisitos)
   const curR = curriculoDoPerfil(), pesos = curR ? reqPesos(curR) : {};
   panel.innerHTML = risks.map(r => {
-    const faltasCls = r.faltasPct >= 1 ? 'red' : r.faltasPct >= 0.75 ? 'amber' : 'green';
-    const barPct = Math.min(100, Math.round(r.totalRisk * 100));
-    const barColor = r.totalRisk >= 0.7 ? 'var(--red)' : r.totalRisk >= 0.4 ? 'var(--amber)' : 'var(--blue)';
+    const faltasCor = r.faltasPct >= 1 ? 'var(--red)' : r.faltasPct >= 0.75 ? 'var(--amber)' : 'var(--green)';
+    const notaCor = r.notaRisk >= 1 ? 'var(--red)' : 'var(--amber)';
+    // o código fica com a pior das duas cores
+    const cor = r.faltasPct >= 1 || r.notaRisk >= 1 ? 'var(--red)' : r.faltasPct >= 0.75 || r.notaLabel ? 'var(--amber)' : 'var(--text)';
     return `<div class="risco-row">
-      <span class="risco-sigla" style="color:${barColor}">${esc(r.sigla)}</span>
-      <span class="risco-nome" title="${esc(r.nome)}">${esc(r.nome)}</span>
-      ${pesos[r.sigla] > 0 ? `<span class="risco-form" title="Reprovar nesta adia a formatura em ${pesos[r.sigla]} ${pesos[r.sigla] === 1 ? 'semestre' : 'semestres'}">adia a formatura</span>` : ''}
-      <span style="font-size:11px;color:var(--${faltasCls});font-family:var(--mono);width:42px;text-align:right;flex-shrink:0;">${r.faltasCount}/${r.limite}</span>
-      ${r.notaLabel ? `<span style="font-size:10.5px;color:var(--text-faint);white-space:nowrap;flex-shrink:0;">${esc(r.notaLabel)}</span>` : ''}
-      <div class="risco-bar-wrap"><div class="risco-bar-fill" style="width:${barPct}%;background:${barColor};"></div></div>
+      <span class="risco-sigla" style="color:${cor}">${esc(r.sigla)}</span>
+      <span class="risco-nome" title="${esc(r.nome)}"><span>${esc(r.nome)}</span>${pesos[r.sigla] > 0 ? `<span class="risco-form" title="Reprovar nesta adia a formatura em ${pesos[r.sigla]} ${pesos[r.sigla] === 1 ? 'semestre' : 'semestres'}">adia a formatura</span>` : ''}</span>
+      <span class="risco-m risco-m--f"><span class="risco-k">Faltas</span><span class="risco-bar-wrap"><span class="risco-bar-fill" style="display:block;width:${Math.min(100, Math.round(r.faltasPct * 100))}%;background:${faltasCor};"></span></span><span class="risco-v mono" style="color:${faltasCor}">${r.faltasCount}/${r.limite}</span></span>
+      <span class="risco-m">${r.notaLabel ? `<span class="risco-k">Nota</span><span class="risco-v" style="color:${notaCor}">${esc(r.notaLabel)}</span>` : ''}</span>
     </div>`;
   }).join('');
 }
