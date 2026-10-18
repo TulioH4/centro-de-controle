@@ -21,7 +21,7 @@ Tiram a lógica do `index.html`, `sync.js` e `sw.js` e testam sem navegador.
 
 - **previsao**: centenas de históricos aleatórios. O plano até a formatura tem que respeitar todos os pré e co-requisitos e o limite de créditos, incluir tudo o que falta e nunca prever menos semestres que a cadeia mais longa. Também confere os créditos de cada período do quadro do Inatel.
 - **plano**: o "Meu plano" com disciplinas fixadas pela pessoa em semestres aleatórios.
-- **calendario**: feriados móveis de 2025 a 2028 e as aulas que restam até o fim do período, contadas à mão.
+- **calendario**: feriados móveis de 2025 a 2028, as aulas que restam até o fim do período (contadas à mão) e o calendário oficial do Inatel 2026.
 - **sync**: um Supabase de mentira. Um aparelho que ficou sem internet com uma alteração velha não sobrescreve a versão mais nova que outro aparelho mandou.
 - **service-worker**: os lembretes do celular com cada tipo de aviso ligado ou desligado.
 

@@ -2277,7 +2277,7 @@
   .cal-ev-row:first-child{border-top:none;}
   .cal-ev-data{font-size:12px; color:var(--text-dim); flex:0 0 96px;}
   .cal-ev-nome{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
-  .cal-ev-nome b{font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .cal-ev-nome b{font-weight:600; color:var(--text); overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow-wrap:anywhere;}
   .cal-ev-nome small{font-size:11.5px; color:var(--text-faint);}
   .cal-add{display:grid; grid-template-columns:minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap:10px; align-items:end; margin-top:12px;}
   .cal-nacs{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px;}
@@ -6036,9 +6036,11 @@ function reqDetalheHtml(sigla, item){
 // Datas do semestre (primeiro e último dia de aula), feriados nacionais (calculados, inclusive os que
 // dependem da Páscoa) e as datas que a pessoa coloca: sem aula (feriado da cidade, recesso), semana
 // de provas, rematrícula. Com isso o app conta as aulas que restam e sabe quando não tem aula.
-const CAL_TIPOS = {feriado: 'Sem aula (feriado ou recesso)', provas: 'Semana de provas', matricula: 'Rematrícula', outro: 'Outra data'};
+// (sem protótipo: um tipo "constructor" vindo de um backup não passa por válido)
+const CAL_TIPOS = Object.assign(Object.create(null), {feriado: 'Sem aula (feriado ou recesso)', provas: 'Semana de provas', matricula: 'Matrícula', outro: 'Outra data',
+  prazo: 'Prazo', evento: 'Evento'});
 // nomes curtos para o seletor (cabe na metade da tela do celular)
-const CAL_TIPOS_CURTOS = {feriado: 'Sem aula', provas: 'Semana de provas', matricula: 'Rematrícula', outro: 'Outra data'};
+const CAL_TIPOS_CURTOS = {feriado: 'Sem aula', provas: 'Semana de provas', matricula: 'Matrícula', outro: 'Outra data'};
 const fmtCurta = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
 const calSoma = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 // domingo de Páscoa (algoritmo de Meeus/Jones/Butcher)
@@ -6059,21 +6061,98 @@ function calFeriadosNacionais(ano){
   [[-48, 'Carnaval'], [-47, 'Carnaval'], [-2, 'Sexta-feira Santa'], [60, 'Corpus Christi']].forEach(([n, nome]) => { f[localISO(calSoma(pascoa, n))] = nome; });
   return (_calNac[ano] = f);
 }
+// Calendário oficial da graduação do Inatel 2026 (aprovado pelo Conselho Diretor, alterado em 23/02/2026).
+// Vale sozinho nos perfis do Inatel; o que a pessoa escreve vem na frente. "semAula": os dias SEDA e SED.
+// Em cada semestre (o número de semNum): o período de aulas e as datas [de, até, nome, tipo, curso];
+// a semana de um curso só aparece para quem faz aquele curso.
+const CAL_INATEL = {
+  semAula: {2026: [
+    ['01-01', 'Confraternização Universal'], ['02-16', 'Carnaval'], ['02-17', 'Carnaval'], ['02-18', 'Cinzas'],
+    ['04-02', 'Semana Santa'], ['04-03', 'Semana Santa'], ['04-04', 'Semana Santa'], ['04-05', 'Páscoa'], ['04-21', 'Tiradentes'],
+    ['05-01', 'Dia do Trabalho'], ['05-22', 'Dia da Padroeira'], ['05-23', 'Sem expediente didático'], ['05-24', 'Feriado municipal'],
+    ['06-04', 'Corpus Christi'], ['09-07', 'Independência'], ['10-12', 'Nossa Senhora Aparecida'], ['10-13', 'Dia do Professor'],
+    ['11-02', 'Finados'], ['11-15', 'Proclamação da República'], ['11-20', 'Consciência Negra'], ['12-25', 'Natal'],
+  ]},
+  semestres: {
+    4052: {aulas: ['2026-02-09', '2026-07-04'], datas: [
+      ['2026-01-22', '2026-01-24', 'Matrícula', 'matricula'],
+      ['2026-02-09', '', 'Início das aulas', 'outro'],
+      ['2026-02-20', '2026-02-21', 'Alteração de matrícula', 'matricula'],
+      ['2026-03-10', '2026-03-12', 'Semana da Automação e Elétrica', 'evento', /automa|eletric/],
+      ['2026-04-14', '2026-04-18', 'Semana das Telecomunicações', 'evento', /telecom/],
+      ['2026-04-25', '', 'Fetin Day', 'evento'],
+      ['2026-05-13', '2026-05-17', 'Semana das Engenharias de Computação e Software', 'evento', /comput|software/],
+      ['2026-05-25', '', 'Último dia para desistir ou trancar', 'prazo'],
+      ['2026-05-27', '2026-05-29', 'Incitel', 'evento'],
+      ['2026-06-01', '', 'Último dia do relatório de estágio', 'prazo'],
+      ['2026-07-04', '', 'Fim das aulas', 'outro'],
+      ['2026-07-04', '', 'Último dia para trocar de curso', 'prazo'],
+      ['2026-07-08', '2026-07-09', 'Provas substitutivas', 'provas'],
+      ['2026-07-10', '', 'Último dia para sair as notas', 'outro'],
+    ]},
+    4053: {aulas: ['2026-07-27', '2026-12-12'], datas: [
+      ['2026-07-23', '2026-07-25', 'Matrícula', 'matricula'],
+      ['2026-07-27', '', 'Início das aulas', 'outro'],
+      ['2026-08-07', '2026-08-08', 'Alteração de matrícula', 'matricula'],
+      ['2026-08-11', '2026-08-13', 'Semana da Engenharia Biomédica', 'evento', /biomed/],
+      ['2026-09-24', '2026-09-26', 'Fetin', 'evento'],
+      ['2026-10-27', '2026-10-29', 'Semana da Produção', 'evento', /producao/],
+      ['2026-11-10', '2026-11-12', 'Semana do Empreendedor', 'evento'],
+      ['2026-11-23', '', 'Último dia para desistir ou trancar', 'prazo'],
+      ['2026-11-23', '', 'Último dia do relatório de estágio', 'prazo'],
+      ['2026-12-12', '', 'Fim das aulas', 'outro'],
+      ['2026-12-12', '', 'Último dia para trocar de curso', 'prazo'],
+      ['2026-12-16', '2026-12-17', 'Provas substitutivas', 'provas'],
+      ['2026-12-18', '', 'Último dia para sair as notas', 'outro'],
+    ]},
+  },
+};
+const calSemAcento = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+// o calendário oficial deste perfil (só o do Inatel, por enquanto), ou null
+function calOficial(){
+  const c = STATE.config || {};
+  return c.curriculo === 'inatel-producao' || /inatel|instituto nacional de telecomunicacoes/.test(calSemAcento(c.instituicao)) ? CAL_INATEL : null;
+}
+// dias sem aula do ano: os do calendário oficial, ou os feriados nacionais quando ele não tem aquele ano
+const _calOf = {};
+function calFeriados(ano){
+  const of = calOficial();
+  if(!of || !of.semAula[ano]) return calFeriadosNacionais(ano);
+  if(!_calOf[ano]){ const f = _calOf[ano] = Object.create(null); of.semAula[ano].forEach(([md, nome]) => { f[`${ano}-${md}`] = nome; }); }
+  return _calOf[ano];
+}
+// datas do calendário oficial (de um semestre, ou de todos), sem as semanas dos outros cursos
+function calDatasOficiais(sem){
+  const of = calOficial(), out = [];
+  if(!of) return out;
+  const curso = calSemAcento(STATE.config.curso);
+  Object.keys(of.semestres).forEach(k => {
+    if(sem !== undefined && Number(k) !== sem) return;
+    of.semestres[k].datas.forEach(([de, ate, nome, tipo, soCurso], i) => {
+      if(!soCurso || soCurso.test(curso)) out.push({id: `of${k}-${i}`, de, ate, nome, tipo, oficial: true});
+    });
+  });
+  return out;
+}
 const calCfg = () => STATE.calendario || {inicio: '', fim: '', eventos: [], ocultos: []};
-// período de aulas: o que a pessoa escreveu, ou uma estimativa pelo semestre do perfil
+// as datas da pessoa e as do calendário oficial
+const calEventos = () => calCfg().eventos.concat(calDatasOficiais());
+// período de aulas: o que a pessoa escreveu, o calendário oficial, ou uma estimativa pelo semestre do perfil
 function calPeriodo(){
   const c = calCfg(), abs = semNum(STATE.config.semestre), hoje = new Date();
   const ano = abs !== null ? Math.floor(abs / 2) : hoje.getFullYear(), segundo = abs !== null ? abs % 2 === 1 : hoje.getMonth() >= 6;
-  const est = segundo ? [`${ano}-08-01`, `${ano}-12-15`] : [`${ano}-02-01`, `${ano}-06-30`];
+  const sem = ano * 2 + (segundo ? 1 : 0), of = calOficial(), ofSem = of && of.semestres[sem];
+  const est = ofSem ? ofSem.aulas : segundo ? [`${ano}-08-01`, `${ano}-12-15`] : [`${ano}-02-01`, `${ano}-06-30`];
   const inicio = c.inicio || est[0], fim = c.fim || est[1];
-  return {inicio, fim: fim < inicio ? inicio : fim, estimado: !c.inicio || !c.fim};
+  return {inicio, fim: fim < inicio ? inicio : fim, sem, estimado: !ofSem && (!c.inicio || !c.fim),
+    oficial: ofSem && (!c.inicio || !c.fim) ? {inicio: ofSem.aulas[0], fim: ofSem.aulas[1]} : null};
 }
-// por que não tem aula num dia (um "sem aula" do calendário ou feriado nacional): o nome, ou null
+// por que não tem aula num dia (um "sem aula" do calendário, dia sem aula do oficial ou feriado nacional): o nome, ou null
 function calSemAula(iso){
   const c = calCfg();
   const ev = c.eventos.find(e => e.tipo === 'feriado' && iso >= e.de && iso <= (e.ate || e.de));
   if(ev) return ev.nome;
-  const nac = calFeriadosNacionais(Number(iso.slice(0, 4)))[iso];
+  const nac = calFeriados(Number(iso.slice(0, 4)))[iso];
   return nac && !c.ocultos.includes(iso) ? nac : null;
 }
 // hoje: feriado, recesso, ou fora do período de aulas (só quando as datas foram escritas)
@@ -6084,13 +6163,14 @@ function calSemAulaHoje(){
   return null;
 }
 // as datas do semestre (que não são "sem aula") que caem num dia
-const calEventosDoDia = iso => calCfg().eventos.filter(e => e.tipo !== 'feriado' && iso >= e.de && iso <= (e.ate || e.de));
-// o que vem nos próximos dias: datas do semestre e feriados nacionais, por data
+const calEventosDoDia = iso => calEventos().filter(e => e.tipo !== 'feriado' && iso >= e.de && iso <= (e.ate || e.de));
+// o que vem nos próximos dias: datas do semestre e dias sem aula (feriados), por data
+// ("nacional": um dia sem aula que já vem no app, não um que a pessoa escreveu)
 function calProximos(dias){
   const c = calCfg(), hoje = new Date(), hojeIso = localISO(hoje), ate = localISO(calSoma(hoje, dias)), out = [];
-  c.eventos.forEach(e => { if((e.ate || e.de) >= hojeIso && e.de <= ate) out.push(Object.assign({}, e)); });
+  calEventos().forEach(e => { if((e.ate || e.de) >= hojeIso && e.de <= ate) out.push(Object.assign({}, e)); });
   for(let d = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()); localISO(d) <= ate; d = calSoma(d, 1)){
-    const iso = localISO(d), nome = calFeriadosNacionais(d.getFullYear())[iso];
+    const iso = localISO(d), nome = calFeriados(d.getFullYear())[iso];
     if(nome && !c.ocultos.includes(iso)) out.push({de: iso, ate: '', nome, tipo: 'feriado', nacional: true});
   }
   return out.sort((a, b) => a.de.localeCompare(b.de));
@@ -6133,9 +6213,9 @@ function calLembretes(){
       if(temAula(DAY_NAMES[d.getDay()])) out.push({d: e.de, txt: `${e.nome}, sem aula`});
       return;
     }
-    // lido depois de "Hoje:", "Amanhã:" ou do dia da semana
+    // lido depois de "Hoje:", "Amanhã:" ou do dia da semana (de um evento, só o começo)
     out.push({d: e.de, txt: e.ate && e.ate !== e.de ? `${e.nome} começa` : e.nome});
-    if(e.ate && e.ate !== e.de) out.push({d: e.ate, txt: `${e.nome} termina`});
+    if(e.ate && e.ate !== e.de && e.tipo !== 'evento') out.push({d: e.ate, txt: `${e.nome} termina`});
   });
   return out.slice(0, 60);
 }
@@ -6150,26 +6230,28 @@ async function calSalvar(mudar){
 function renderCalendarioConfig(){
   const el = document.getElementById('calPanel');
   if(!el) return;
-  const c = calCfg(), per = calPeriodo(), prog = calProgresso();
-  // feriados nacionais dentro do período (os de domingo não mudam nada)
+  const c = calCfg(), per = calPeriodo(), prog = calProgresso(), of = calOficial();
+  // dias sem aula dentro do período (os de domingo não mudam nada)
   const nac = [];
   for(let d = new Date(per.inicio + 'T00:00:00'), n = 0; localISO(d) <= per.fim && n < 400; d = calSoma(d, 1), n++){
-    const iso = localISO(d), nome = calFeriadosNacionais(d.getFullYear())[iso];
+    const iso = localISO(d), nome = calFeriados(d.getFullYear())[iso];
     if(nome && d.getDay() !== 0) nac.push({iso, nome, dia: DAY_NAMES[d.getDay()]});
   }
-  const eventos = [...c.eventos].sort((a, b) => a.de.localeCompare(b.de));
+  // as da pessoa e as do calendário oficial deste semestre que ainda não passaram (essas não se apagam)
+  const hojeIso = localISO(new Date());
+  const eventos = c.eventos.concat(calDatasOficiais(per.sem).filter(e => (e.ate || e.de) >= hojeIso)).sort((a, b) => a.de.localeCompare(b.de));
   el.innerHTML = `
-    <p class="help-text" style="margin:0 0 14px;">Com as datas, o app conta as aulas que restam e sabe quando não tem aula. Os feriados nacionais já vêm marcados.</p>
+    <p class="help-text" style="margin:0 0 14px;">${of ? 'O calendário do Inatel já vem carregado: dias sem aula, prazos e eventos.' : 'Com as datas, o app conta as aulas que restam e sabe quando não tem aula. Os feriados nacionais já vêm marcados.'}</p>
     <div class="cal-datas">
-      <div class="field"><label for="calInicio">Primeiro dia de aula</label><input id="calInicio" type="date" value="${esc(c.inicio)}"></div>
-      <div class="field"><label for="calFim">Último dia de aula</label><input id="calFim" type="date" value="${esc(c.fim)}"></div>
+      <div class="field"><label for="calInicio">Primeiro dia de aula</label><input id="calInicio" type="date" value="${esc(c.inicio || (per.oficial ? per.oficial.inicio : ''))}"></div>
+      <div class="field"><label for="calFim">Último dia de aula</label><input id="calFim" type="date" value="${esc(c.fim || (per.oficial ? per.oficial.fim : ''))}"></div>
     </div>
     <p class="gm-nota" style="margin:8px 0 0;">${per.estimado ? `Sem as duas datas, o app estima de ${fmtDate(per.inicio)} a ${fmtDate(per.fim)}. ` : ''}${esc(prog.txt)}.</p>
     <div class="section-label" style="margin:22px 0 10px;">Datas do semestre</div>
     <div class="cal-evs">${eventos.length ? eventos.map(e => `<div class="cal-ev-row">
       <span class="cal-ev-data mono">${fmtCurta(e.de)}${e.ate && e.ate !== e.de ? ' a ' + fmtCurta(e.ate) : ''}</span>
-      <span class="cal-ev-nome"><b>${esc(e.nome)}</b><small>${CAL_TIPOS[e.tipo]}</small></span>
-      <button type="button" class="btn btn-ghost btn-sm" data-cal-del="${esc(e.id)}" aria-label="Apagar ${esc(e.nome)}">✕</button>
+      <span class="cal-ev-nome"><b>${esc(e.nome)}</b><small>${e.oficial ? (e.tipo === 'outro' ? 'Inatel' : CAL_TIPOS[e.tipo] + ' · Inatel') : CAL_TIPOS[e.tipo]}</small></span>
+      ${e.oficial ? '' : `<button type="button" class="btn btn-ghost btn-sm" data-cal-del="${esc(e.id)}" aria-label="Apagar ${esc(e.nome)}">✕</button>`}
     </div>`).join('') : '<p class="gm-nota">Nenhuma ainda. Coloque a rematrícula, a semana de provas, recessos e os feriados da cidade.</p>'}</div>
     <div class="cal-add">
       <div class="field"><label for="calEvNome">O que é</label><input id="calEvNome" maxlength="80" placeholder="Ex.: Rematrícula"></div>
@@ -6178,10 +6260,10 @@ function renderCalendarioConfig(){
       <div class="field"><label for="calEvAte">Até (se for mais de um dia)</label><input id="calEvAte" type="date"></div>
       <button type="button" class="btn btn-primary" id="calEvAdd">Adicionar</button>
     </div>
-    ${nac.length ? `<div class="section-label" style="margin:22px 0 10px;">Feriados nacionais no semestre</div>
+    ${nac.length ? `<div class="section-label" style="margin:22px 0 10px;">${of ? 'Sem aula no semestre' : 'Feriados nacionais no semestre'}</div>
     <div class="cal-nacs">${nac.map(f => { const temAula = c.ocultos.includes(f.iso);
       return `<label class="cal-nac"><input type="checkbox" data-cal-nac="${f.iso}"${temAula ? ' checked' : ''}><span><b>${fmtCurta(f.iso)} · ${esc(f.nome)}</b><small>${f.dia}, ${temAula ? 'com aula' : 'sem aula'}</small></span></label>`; }).join('')}</div>
-    <p class="gm-nota" style="margin-top:8px;">Marque os que têm aula. Carnaval e Corpus Christi são ponto facultativo.</p>` : ''}`;
+    <p class="gm-nota" style="margin-top:8px;">${of ? 'Marque se tiver aula.' : 'Marque os que têm aula. Carnaval e Corpus Christi são ponto facultativo.'}</p>` : ''}`;
   const data = id => document.getElementById(id).value;
   // o último dia não pode vir antes do primeiro
   const mudaData = (campo, e) => {
