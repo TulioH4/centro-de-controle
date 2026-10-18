@@ -533,6 +533,9 @@
   .fc-info{display:flex; flex-direction:column; gap:3px; min-width:0;}
   .fc-info b{font-size:16px; font-weight:650; color:var(--text);}
   .fc-info .fc-sub{font-size:12.5px; color:var(--text-dim);}
+  .fc-sub--btn{align-self:flex-start; border:none; background:none; padding:0; font:inherit; text-align:left; cursor:pointer;
+    text-decoration:underline dotted; text-decoration-color:var(--line); text-underline-offset:3px;}
+  .fc-sub--btn:hover{color:var(--text);}
   .fc-info .fc-pres{margin-top:6px; font-size:12px; color:var(--text-faint); font-variant-numeric:tabular-nums;}
   .falta-card.is-warn .fc-info b, .falta-card.is-over .fc-info b{color:var(--c);}
   .fc-actions{display:grid; grid-template-columns:44px 1fr; gap:8px;}
@@ -5852,6 +5855,7 @@ function reqRotulos(n, comecaAgora){
   return out;
 }
 const reqMaiuscula = t => t.charAt(0).toUpperCase() + t.slice(1);
+let FM_MAIS_ABERTO = false; // "Como a previsão é feita" aberto (sobrevive aos redesenhos)
 function renderFormatura(){
   const el = document.getElementById('formaturaPanel');
   if(!el) return;
@@ -5867,7 +5871,7 @@ function renderFormatura(){
   if(!faltam && !nCurs){ quando = 'Disciplinas concluídas'; sub = 'Você já foi aprovado em todas as disciplinas do quadro do curso.'; }
   else if(!faltam){ quando = reqMaiuscula(String(STATE.config.semestre || 'Neste semestre')); sub = `As que você está cursando são as últimas do quadro. Passando nelas, acabou.`; }
   else if(plano.sobra.length){ quando = 'Sem previsão'; sub = 'Algumas disciplinas não cabem em nenhum semestre com esses requisitos.'; }
-  else { quando = reqMaiuscula(reqRotuloEm(prev.fim)); sub = `Em ${n} ${n === 1 ? 'semestre' : 'semestres'}${nCurs ? ' depois deste' : ''}, com até ${limite} créditos por semestre${contando}.`; }
+  else { quando = reqMaiuscula(reqRotuloEm(prev.fim)); sub = `Em ${n} ${n === 1 ? 'semestre' : 'semestres'}${nCurs ? ' depois deste' : ''}, com até ${limite} créditos por semestre.`; }
   // com um pouco mais de créditos por semestre, termina antes?
   let atalho = '';
   if(faltam && !plano.sobra.length && n > plano.minimo){
@@ -5911,6 +5915,7 @@ function renderFormatura(){
     jogo = `<div class="fm-jogo${pesam.length ? ' is-alerta' : ''}"><div class="stat__label">${ico(pesam.length ? 'alert' : 'check')} O que está em jogo neste semestre</div><p>${frases.join(' ')}</p></div>`;
   }
   if(prev.inicioAbs !== null && faltam) extras.unshift('Toque numa disciplina para escolher em que semestre fazê-la (Meu plano); a previsão organiza o resto em volta.');
+  if(contando) extras.unshift(`A conta supõe que você passe ${contando.replace(/^, contando que você passe /, '')}.`);
   extras.push(`Feita com os pré e co-requisitos do currículo ${esc(cur.versao)}. A oferta de cada semestre e o limite da matrícula podem mudar a ordem. No mapa, ${ico('lock')} marca as disciplinas que ainda dependem de outras.`);
   notas.unshift(...avisos);
   const conta = prev.fim !== null && prev.atual !== null && faltam ? reqContagem(prev.atual + prev.fim) : '';
@@ -5941,7 +5946,7 @@ function renderFormatura(){
       <div class="fm-chips">${sm.siglas.length ? sm.siglas.map(chip).join('') : '<span class="gm-nota">Nenhuma disciplina: as escolhidas para depois ainda esperam.</span>'}</div>
     </div>`).join('')}</div>` : ''}
     ${notas.length ? `<div class="fm-notas">${notas.map(t => `<p class="gm-nota">${t}</p>`).join('')}</div>` : ''}
-    <details class="gm-mais fm-mais"><summary>Como a previsão é feita</summary><div class="fm-notas">${extras.map(t => `<p class="gm-nota">${t}</p>`).join('')}</div></details>
+    <details class="gm-mais fm-mais"${FM_MAIS_ABERTO ? ' open' : ''}><summary>Como a previsão é feita</summary><div class="fm-notas">${extras.map(t => `<p class="gm-nota">${t}</p>`).join('')}</div></details>
     ${nFix ? `<div class="fm-acoes"><span class="gm-nota">${ico('pin')} ${nFix === 1 ? '1 disciplina fixada' : `${nFix} disciplinas fixadas`} por você.</span><button type="button" class="link-btn" id="fmLimparPlano">Voltar tudo para o automático</button></div>` : ''}
   </div>`;
   const limpar = document.getElementById('fmLimparPlano');
@@ -5951,6 +5956,8 @@ function renderFormatura(){
     await storeSet('config', STATE.config);
     renderMapaSucesso();
   });
+  const mais = el.querySelector('.fm-mais');
+  if(mais) mais.addEventListener('toggle', () => { FM_MAIS_ABERTO = mais.open; });
   const sel = document.getElementById('fmLimite');
   if(sel) sel.addEventListener('change', async () => {
     STATE.config.creditosSemestre = Number(sel.value);
@@ -6152,7 +6159,7 @@ function renderCalendarioConfig(){
   }
   const eventos = [...c.eventos].sort((a, b) => a.de.localeCompare(b.de));
   el.innerHTML = `
-    <p class="help-text" style="margin:0 0 14px;">Com as datas do semestre, o app conta as aulas que ainda restam em cada disciplina (na aba Faltas), mostra a semana do semestre no Painel e sabe quando não tem aula. Os feriados nacionais já vêm marcados.</p>
+    <p class="help-text" style="margin:0 0 14px;">Com as datas, o app conta as aulas que restam e sabe quando não tem aula. Os feriados nacionais já vêm marcados.</p>
     <div class="cal-datas">
       <div class="field"><label for="calInicio">Primeiro dia de aula</label><input id="calInicio" type="date" value="${esc(c.inicio)}"></div>
       <div class="field"><label for="calFim">Último dia de aula</label><input id="calFim" type="date" value="${esc(c.fim)}"></div>
@@ -6174,7 +6181,7 @@ function renderCalendarioConfig(){
     ${nac.length ? `<div class="section-label" style="margin:22px 0 10px;">Feriados nacionais no semestre</div>
     <div class="cal-nacs">${nac.map(f => { const temAula = c.ocultos.includes(f.iso);
       return `<label class="cal-nac"><input type="checkbox" data-cal-nac="${f.iso}"${temAula ? ' checked' : ''}><span><b>${fmtCurta(f.iso)} · ${esc(f.nome)}</b><small>${f.dia}, ${temAula ? 'com aula' : 'sem aula'}</small></span></label>`; }).join('')}</div>
-    <p class="gm-nota" style="margin-top:8px;">Marque o feriado em que a faculdade dá aula normalmente. Carnaval e Corpus Christi são ponto facultativo: cada faculdade decide.</p>` : ''}`;
+    <p class="gm-nota" style="margin-top:8px;">Marque os que têm aula. Carnaval e Corpus Christi são ponto facultativo.</p>` : ''}`;
   const data = id => document.getElementById(id).value;
   // o último dia não pode vir antes do primeiro
   const mudaData = (campo, e) => {
@@ -6677,6 +6684,15 @@ function renderFaltas(){
     const [titulo, sub] = pct >= 100 ? ['Limite atingido', `${limite} faltas permitidas`]
       : restam === 1 ? ['Mais 1 falta reprova', `limite de ${limite} faltas`]
       : [`Restam ${restam} faltas`, restantes[d.sigla] && restantes[d.sigla].aulas ? `${restantes[d.sigla].aulas} ${restantes[d.sigla].aulas === 1 ? 'aula' : 'aulas'} pela frente` : 'até o limite'];
+    // aulas que ainda restam: até quando e em quantas dá para faltar, num toque (o title não aparece no celular)
+    const ra = restantes[d.sigla];
+    let dica = '';
+    if(ra && ra.aulas){
+      const pode = pct >= 100 ? 0 : Math.min(ra.aulas, Math.floor(restam / (ra.ha / ra.aulas)));
+      dica = `${ra.aulas} ${ra.aulas === 1 ? 'aula' : 'aulas'}${porHoraAula ? ` (${ra.ha} h-aula)` : ''} até ${fmtCurta(fimAulas)}${periodo.estimado ? ' (data estimada)' : ''}`
+        + (pct < 100 ? (pode === 0 ? '. Não dá para faltar em nenhuma.' : `. Dá para faltar em ${pode === ra.aulas ? 'todas' : 'até ' + pode}.`) : '.');
+    }
+    const subAulas = !!dica && /pela frente$/.test(sub);
     return `<div class="panel falta-card ${nivel}" style="--accent:var(--${cor}); --c:var(--${cor}); --c-dim:var(--${cor}-dim)">
       <div class="fc-head">
         <div class="disc" title="${esc(d.nome)} (${esc(d.sigla)})">${esc(d.nome)}</div>
@@ -6692,19 +6708,8 @@ function renderFaltas(){
         </div>
         <div class="fc-info">
           <b${restam === 1 && pct < 100 ? ' style="color:var(--red)"' : ''}>${titulo}</b>
-          <span class="fc-sub">${sub}</span>
-          ${(() => {
-            // presença e aulas que ainda restam numa linha; o detalhe (até quando, em quantas dá para faltar) fica no title
-            const ra = restantes[d.sigla], partes = [];
-            if(presencaPct !== null) partes.push(`${presencaPct}% de presença`);
-            let dica = '';
-            if(ra && ra.aulas){
-              const pode = pct >= 100 ? 0 : Math.min(ra.aulas, Math.floor(restam / (ra.ha / ra.aulas)));
-              dica = `${ra.aulas} ${ra.aulas === 1 ? 'aula' : 'aulas'}${porHoraAula ? ` (${ra.ha} h-aula)` : ''} até ${fmtCurta(fimAulas)}${periodo.estimado ? ' (data estimada)' : ''}`
-                + (pct < 100 ? (pode === 0 ? '. Não dá para faltar em nenhuma.' : `. Dá para faltar em ${pode === ra.aulas ? 'todas' : 'até ' + pode}.`) : '.');
-            }
-            return partes.length ? `<span class="fc-pres"${dica ? ` title="${esc(dica)}"` : ''}>${partes.join(' · ')}</span>` : '';
-          })()}
+          ${subAulas ? `<button type="button" class="fc-sub fc-sub--btn" data-fc-dica="${esc(dica)}" title="${esc(dica)}">${sub}</button>` : `<span class="fc-sub">${sub}</span>`}
+          ${presencaPct !== null ? `<span class="fc-pres">${presencaPct}% de presença</span>` : ''}
         </div>
       </div>
       <div class="fc-actions">
@@ -6725,6 +6730,7 @@ function renderFaltas(){
     val.addEventListener('animationend', () => val.classList.remove('bump'), {once:true});
   }
 
+  grid.querySelectorAll('[data-fc-dica]').forEach(b => b.addEventListener('click', () => showToast(b.dataset.fcDica, 'info', 5000)));
   document.querySelectorAll('[data-f-inc]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const s = btn.dataset.fInc;
@@ -11774,7 +11780,8 @@ function renderSyncUI(s){
                  s.lastSync ? `Última sincronização às ${hhmm(s.lastSync)}.` : 'Seus dados são salvos na nuvem automaticamente.';
   panel.innerHTML = statusRow('is-' + s.status, esc(s.user.email), `${SYNC_LABEL[s.status] || 'Conectado'}. ${detail}`,
     `<button class="btn btn-sm" id="btnSyncNow">Sincronizar agora</button><button class="btn btn-sm btn-ghost" id="btnSyncLogout">Sair</button>`, 'cloud');
-  document.getElementById('btnSyncNow').onclick = async () => { await Sync.push(); if(await Sync.pull()) refreshFromSync(); };
+  // primeiro baixa o que outros aparelhos mandaram, depois envia o daqui
+  document.getElementById('btnSyncNow').onclick = async () => { const mudou = await Sync.pull(); await Sync.push(); if(mudou) refreshFromSync(); };
   document.getElementById('btnSyncLogout').onclick = async () => {
     if(!confirm('Sair da conta? Os dados ficam salvos na nuvem e serão removidos deste aparelho.')) return;
     try{ await Sync.signOut(); location.reload(); }

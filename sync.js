@@ -68,10 +68,35 @@
     if (!client || !state.user) return;
     if (!navigator.onLine) { setStatus('offline'); return; }
     if (pushing) { schedulePush(800); return; }
-    const keys = Object.keys(meta).filter(k => meta[k].dirty);
+    let keys = Object.keys(meta).filter(k => meta[k].dirty);
     if (!keys.length) return;
     pushing = true;
     setStatus('syncing');
+    // Never overwrite a newer version another device already sent (e.g. this one was offline
+    // with an older change): those keys are left out and pulled instead, so every device ends
+    // up with the same value. The check asks only for keys and timestamps.
+    let staleFound = false;
+    try {
+      for (let i = 0; i < keys.length; i += 100) {
+        const { data, error } = await client.from('kv').select('key,updated_at').in('key', keys.slice(i, i + 100));
+        if (error) throw error;
+        (data || []).forEach(r => {
+          if (meta[r.key] && meta[r.key].dirty && Date.parse(r.updated_at) > meta[r.key].t) { meta[r.key].dirty = false; staleFound = true; }
+        });
+      }
+    } catch(e) {
+      pushing = false;
+      setStatus(navigator.onLine ? 'error' : 'offline', { error: e.message || String(e) });
+      return;
+    }
+    keys = keys.filter(k => meta[k] && meta[k].dirty);
+    if (!keys.length) {
+      pushing = false;
+      saveMeta();
+      setStatus('synced', { lastSync: Date.now(), error: null });
+      if (staleFound) pullAndNotify();
+      return;
+    }
     const sentAt = {};
     const rows = keys.map(k => {
       sentAt[k] = meta[k].t;
@@ -94,8 +119,12 @@
     } finally {
       pushing = false;
       if (hasDirty() && state.status === 'synced') schedulePush(1500);
+      if (staleFound) pullAndNotify();
     }
   }
+  // after skipping stale keys: bring the newer versions in and let the app redraw
+  let onRemote = null;
+  async function pullAndNotify(){ if (await pull() && onRemote) onRemote(); }
 
   // ---- pull ------------------------------------------------------------------
   function applyRow(row){
@@ -156,13 +185,14 @@
   function startBackground(onRemoteChange){
     if (!client || !state.user || started) return;
     started = true;
+    onRemote = onRemoteChange;
     channel = client.channel('kv-' + state.user.id)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kv', filter: 'user_id=eq.' + state.user.id }, payload => {
         const row = payload.new && payload.new.key ? payload.new : null;
         if (row && applyRow(row)) { saveMeta(); onRemoteChange(); }
       })
       .subscribe();
-    window.addEventListener('online', async () => { await push(); if (await pull()) onRemoteChange(); });
+    window.addEventListener('online', async () => { const changed = await pull(); await push(); if (changed) onRemoteChange(); });
     window.addEventListener('offline', () => setStatus('offline'));
     document.addEventListener('visibilitychange', async () => {
       if (document.visibilityState === 'hidden') { push(); return; }
