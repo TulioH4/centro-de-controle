@@ -75,13 +75,17 @@ function resumoSemana(snap, now) {
     ...(snap.tarefas || []).filter(t => dias.includes(t.prazo)).map(t => ({ d: t.prazo, txt: t.nome })),
     ...(snap.rels || []).filter(r => dias.includes(r.fim)).map(r => ({ d: r.fim, txt: `entrega do ${r.nome}` })),
   ].sort((a, b) => a.d.localeCompare(b.d));
-  if (!provas.length && !prazos.length) return null;
+  // datas do calendário acadêmico (rematrícula, semana de provas, dia sem aula), contadas à parte
+  const datas = (snap.eventos || []).filter(e => dias.includes(e.d)).sort((a, b) => a.d.localeCompare(b.d));
+  if (!provas.length && !prazos.length && !datas.length) return null;
   const partes = [];
   if (provas.length) partes.push(provas.length === 1 ? '1 prova' : `${provas.length} provas`);
   if (prazos.length) partes.push(prazos.length === 1 ? '1 prazo' : `${prazos.length} prazos`);
-  const linhas = [...provas.map(p => `${quando(p.data)}: ${provaTxt(p)}`), ...prazos.map(x => `${quando(x.d)}: ${x.txt}`)];
+  if (datas.length) partes.push(datas.length === 1 ? '1 data do calendário' : `${datas.length} datas do calendário`);
+  const linhas = [...provas.map(p => `${quando(p.data)}: ${provaTxt(p)}`), ...[...prazos, ...datas].sort((a, b) => a.d.localeCompare(b.d)).map(x => `${quando(x.d)}: ${x.txt}`)];
   const corpo = linhas.length > 5 ? [...linhas.slice(0, 4), `e mais ${linhas.length - 4}`] : linhas;
-  return { tag: `semana-${isoDay(now)}`, url: './', title: `Sua semana: ${partes.join(' e ')}`, body: corpo.join('\n') };
+  const juntar = l => l.length < 2 ? l.join('') : `${l.slice(0, -1).join(', ')} e ${l[l.length - 1]}`;
+  return { tag: `semana-${isoDay(now)}`, url: './', title: `Sua semana: ${juntar(partes)}`, body: corpo.join('\n') };
 }
 
 async function checkReminders() {
@@ -96,6 +100,7 @@ async function checkReminders() {
     provas: (snap.provas || []).filter(p => p.data === d).sort((a, b) => String(a.hora || '').localeCompare(String(b.hora || ''))),
     tarefas: (snap.tarefas || []).filter(t => t.prazo === d),
     rels: (snap.rels || []).filter(r => r.fim === d),
+    eventos: (snap.eventos || []).filter(e => e.d === d),
   });
   const notes = [];
 
@@ -103,7 +108,7 @@ async function checkReminders() {
   const h = doDia(hoje);
   const provasHoje = h.provas.filter(p => !p.hora || mins(p.hora) > agora);
   const atrasadas = (snap.tarefas || []).filter(t => t.prazo < hoje);
-  const outrosHoje = [...h.tarefas.map(t => `Vence hoje: ${t.nome}`), ...h.rels.map(r => `Entrega hoje: ${r.nome}`)];
+  const outrosHoje = [...h.tarefas.map(t => `Vence hoje: ${t.nome}`), ...h.rels.map(r => `Entrega hoje: ${r.nome}`), ...h.eventos.map(e => `Hoje: ${e.txt}`)];
   if (atrasadas.length) outrosHoje.push(atrasadas.length === 1 ? `Atrasada: ${atrasadas[0].nome}` : `${atrasadas.length} tarefas atrasadas`);
   if (provasHoje.length === 1) notes.push({ tag: `dia-${hoje}`, url: './', title: `Hoje tem ${provaTxt(provasHoje[0])}`,
     body: [provasHoje[0].local ? `Local: ${provasHoje[0].local}` : 'Você se preparou pra isso, vai com calma.', ...outrosHoje].join('\n') });
@@ -120,7 +125,7 @@ async function checkReminders() {
   // other days, from 17h: tomorrow
   else if (agora >= 17 * 60) {
     const a = doDia(amanha);
-    const outros = [...a.tarefas.map(t => `Vence amanhã: ${t.nome}`), ...a.rels.map(r => `Entrega amanhã: ${r.nome}`)];
+    const outros = [...a.tarefas.map(t => `Vence amanhã: ${t.nome}`), ...a.rels.map(r => `Entrega amanhã: ${r.nome}`), ...a.eventos.map(e => `Amanhã: ${e.txt}`)];
     if (a.provas.length === 1) notes.push({ tag: `vespera-${hoje}`, url: './?aba=provas', title: `Amanhã tem ${provaTxt(a.provas[0])}`,
       body: ['Vale uma revisada hoje e uma boa noite de sono.', ...outros].join('\n') });
     else if (a.provas.length > 1) notes.push({ tag: `vespera-${hoje}`, url: './?aba=provas', title: `Amanhã tem ${a.provas.length} provas`,

@@ -2261,6 +2261,42 @@
   .dd-req__n{flex:1; min-width:0; color:var(--text);}
   .dd-req__n small{display:block; color:var(--text-faint); font-size:11px; margin-top:1px;}
   .dd-req__t{font-size:11.5px; font-weight:600; flex-shrink:0; text-align:right;}
+  /* calendário acadêmico (Configurações) */
+  .cal-datas{display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;}
+  .cal-evs{display:flex; flex-direction:column;}
+  .cal-ev-row{display:flex; align-items:center; gap:12px; padding:8px 0; border-top:1px solid var(--line-soft); min-width:0;}
+  .cal-ev-row:first-child{border-top:none;}
+  .cal-ev-data{font-size:12px; color:var(--text-dim); flex:0 0 96px;}
+  .cal-ev-nome{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
+  .cal-ev-nome b{font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .cal-ev-nome small{font-size:11.5px; color:var(--text-faint);}
+  .cal-add{display:grid; grid-template-columns:minmax(0, 1.4fr) minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr) auto; gap:10px; align-items:end; margin-top:12px;}
+  .cal-nacs{display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px;}
+  .cal-nac{display:flex; align-items:center; gap:10px; padding:8px 11px; border-radius:var(--r); background:var(--panel-2); border:1px solid var(--line-soft); cursor:pointer; min-width:0;}
+  .cal-nac input{accent-color:var(--blue); width:16px; height:16px; flex-shrink:0; margin:0;}
+  .cal-nac span{display:flex; flex-direction:column; min-width:0; font-size:12.5px;}
+  .cal-nac b{font-weight:600; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .cal-nac small{font-size:11px; color:var(--text-faint);}
+  @media (max-width:880px){ .cal-add{grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);} .cal-add .field:first-child{grid-column:1 / -1;} .cal-add .btn{grid-column:1 / -1;} }
+  /* calendário de provas: feriados e datas do semestre no mês */
+  .navday.is-feriado .num{color:var(--red);}
+  .cal-tag{font-size:9.5px; line-height:1.25; border-radius:4px; padding:1px 4px; margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;}
+  .cal-tag.is-feriado{background:var(--red-dim); color:var(--red);}
+  .cal-tag.is-ev{background:var(--purple-dim, var(--blue-dim)); color:var(--purple, var(--blue));}
+  /* conquistas (Mapa de Sucesso) */
+  .cq-titulo{display:flex; align-items:center; gap:10px;}
+  .cq-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:10px;}
+  .cq{display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:16px; background:var(--panel-2); border:1px solid var(--line-soft); min-width:0;}
+  .cq-ic{width:38px; height:38px; border-radius:12px; display:grid; place-items:center; flex-shrink:0; background:var(--line-soft); color:var(--text-faint);}
+  .cq-ic .i{width:20px; height:20px;}
+  .cq.is-ok .cq-ic{background:var(--amber-dim); color:var(--amber); box-shadow:0 0 0 1px color-mix(in srgb, var(--amber) 35%, transparent);}
+  .cq-txt{display:flex; flex-direction:column; gap:2px; min-width:0; flex:1;}
+  .cq-txt b{font-size:13.5px; font-weight:650; color:var(--text);}
+  .cq:not(.is-ok) .cq-txt b{color:var(--text-dim);}
+  .cq-txt small{font-size:12px; color:var(--text-faint); line-height:1.4;}
+  .cq-txt .cq-data{color:var(--amber); font-weight:600;}
+  .cq-barra{height:5px; border-radius:3px; background:var(--line-soft); overflow:hidden; margin-top:6px;}
+  .cq-barra span{display:block; height:100%; background:var(--blue); border-radius:3px;}
   /* aulas de hoje: a aula que passou fica apagada, mas o botão Faltei continua legível */
   .row-item.past{opacity:1;}
   .row-item.past > .time, .row-item.past > .info{opacity:.45;}
@@ -2911,6 +2947,7 @@
       <div id="formaturaPanel" hidden></div>
       <div id="mapaTimeline"></div>
       <div id="mapaArvore" hidden></div>
+      <div id="conquistasPanel"></div>
     </section>
 
     <!-- FALTAS -->
@@ -3107,6 +3144,9 @@
         <p class="help-text" style="margin:0 0 14px;">Marque as disciplinas deste semestre. São elas que aparecem no Painel e nas abas Faltas e Notas. A mudança vale na hora, sem precisar salvar.</p>
         <div id="cAtuaisLista"></div>
       </div>
+
+      <div class="section-label" id="calSecao">Calendário acadêmico</div>
+      <div class="panel panel--pad" id="calPanel" style="--accent:var(--blue)"></div>
 
       <div class="section-label">Fim de semestre</div>
       <div class="panel panel--pad" id="semPanel" style="--accent:var(--purple)"></div>
@@ -3491,6 +3531,7 @@ async function storeGet(key, fallback){
 }
 async function storeSet(key, value){
   if(typeof REMINDER_KEYS !== 'undefined' && REMINDER_KEYS.includes(key)) saveReminderSnapshot();
+  if(key !== 'conquistas') agendarConquistas();
   const pk = profiledKey(key);
   try{
     if(!window.storage) throw 0;
@@ -3635,6 +3676,16 @@ function sanearDados(){
     STATE.gradePlano = pl;
   }
   STATE.gradeAmigos = (Array.isArray(STATE.gradeAmigos) ? STATE.gradeAmigos : []).map(gAmigoValido).filter(Boolean).slice(0, 5);
+  // calendário acadêmico e conquistas
+  const dataOk = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : '';
+  if(STATE.calendario !== null){
+    const cal = STATE.calendario = obj(STATE.calendario);
+    cal.inicio = dataOk(cal.inicio); cal.fim = dataOk(cal.fim);
+    cal.eventos = lista(cal.eventos).map(e => ({id: /^[\w-]{1,40}$/.test(txt(e.id)) ? txt(e.id) : 'ev' + Math.random().toString(36).slice(2, 10),
+      nome: txt(e.nome).slice(0, 80), tipo: CAL_TIPOS[e.tipo] ? e.tipo : 'outro', de: dataOk(e.de), ate: dataOk(e.ate)})).filter(e => e.de && e.nome).slice(0, 200);
+    cal.ocultos = textos(cal.ocultos).filter(dataOk).slice(0, 200);
+  }
+  if(STATE.conquistas !== null) STATE.conquistas = mapa(STATE.conquistas, v => v === 'antes' || dataOk(v) ? v : undefined);
 }
 
 // ---------------- init ----------------
@@ -3699,6 +3750,8 @@ async function init(opts = {}){
   STATE.gradeOferta = await storeGet('grade_oferta', null);
   STATE.gradePlano = await storeGet('grade_plano', null);
   STATE.gradeAmigos = await storeGet('grade_amigos', []); // grades que colegas mandaram por link
+  STATE.calendario = await storeGet('calendario', null); // datas do semestre, feriados e eventos
+  STATE.conquistas = await storeGet('conquistas', null); // {id: data em que foi conquistada}
   STATE.geminiKey = await storeGet('gemini_key', '');
   STATE.geminiModel = await storeGet('gemini_model', '');
   applyTheme(STATE.tema);
@@ -3770,6 +3823,7 @@ async function init(opts = {}){
   document.getElementById('app').style.display = 'flex';
   linkFieldLabels(document);
   pomRestore();
+  agendarConquistas();
   if(!opts.silent) applyLaunchParams();
   } finally {
     _initInProgress = false;
@@ -4029,6 +4083,7 @@ function closeMoreSheet(){
     notas_parciais:'notasParciais', metas_notas:'metasNotas', lembretes:'lembretes', pom_sessions:'pomSessions',
     disc_notes:'discNotes', estudos_materiais:'estudos', semestres:'semestres',
     grade_oferta:'gradeOferta', grade_plano:'gradePlano', grade_amigos:'gradeAmigos',
+    calendario:'calendario', conquistas:'conquistas',
   };
   const SYNC_KEYS = new Set([...Object.keys(CAMPOS), 'config', 'tema', 'labs']);
   // várias chaves mudam juntas (o "Faltei" grava faltas e o registro; a nuvem traz várias de uma vez):
@@ -4304,14 +4359,18 @@ function renderPainel(){
   const now = new Date();
   const proximaProva = upcomingProvas(1)[0];
   const nowHM = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  const aulasHoje = getAulas().filter(a => a.dia === todayName()).sort((a,b)=>a.inicio.localeCompare(b.inicio));
+  // feriado, recesso ou fora do período de aulas: hoje não tem aula, mesmo com aulas no horário da semana
+  const semAulaHoje = calSemAulaHoje();
+  const aulasHoje = semAulaHoje ? [] : getAulas().filter(a => a.dia === todayName()).sort((a,b)=>a.inicio.localeCompare(b.inicio));
   const tarefasAtrasadas = STATE.tarefas.filter(t => t.status!=='Concluído' && t.prazo && daysUntil(t.prazo) < 0).length;
   const tarefas7d = STATE.tarefas.filter(t => t.status!=='Concluído' && t.prazo && daysUntil(t.prazo) >= 0 && daysUntil(t.prazo) <= 7).length;
   const disciplinasRisco = countDisciplinasEmRisco();
 
   const proximaOuAtual = aulasHoje.find(a => a.fim > nowHM);
   let proxAula;
-  if(!aulasHoje.length){
+  if(semAulaHoje){
+    proxAula = `Sem aula hoje: ${esc(semAulaHoje)}`;
+  } else if(!aulasHoje.length){
     proxAula = 'Nenhuma aula hoje';
   } else if(!proximaOuAtual){
     proxAula = 'Aulas de hoje encerradas';
@@ -4363,6 +4422,7 @@ function renderPainel(){
     ${discReprovando > 0 ? statCard('Reprovando em notas', discReprovando+' disc.', 'red', true) : ''}
     ${streak > 0 ? statCard('Sequência de estudos', streak+'d', 'amber', true) : ''}
     ${weekProg.total > 0 ? statCard('Tarefas da semana', weekProg.concluidas+'/'+weekProg.total, weekProg.concluidas===weekProg.total?'green':'blue', true) : ''}
+    ${statCard(calPeriodo().estimado ? 'Semestre (estimado)' : 'Semestre', esc(calProgresso().txt), 'purple', true)}
   `;
   document.querySelectorAll('#resumoStats [data-count]').forEach(el => animateCount(el, Number(el.dataset.count)));
 
@@ -4380,7 +4440,7 @@ function renderPainel(){
       <div class="info"><div class="t">${esc(a.disciplina)}</div><div class="s">${esc(a.local)}</div></div>
       <span class="row-end">${state==='now' ? '<span class="badge badge-amber">agora</span>' : ''}${chip}</span>
     </div>`;
-  }).join('') : `<div class="empty">Nenhuma aula hoje</div>`;
+  }).join('') : `<div class="empty">${semAulaHoje ? `Sem aula hoje: ${esc(semAulaHoje)}` : 'Nenhuma aula hoje'}</div>`;
   document.querySelectorAll('#aulasHojeList [data-faltei]').forEach(b => b.addEventListener('click', () => alternarFalta(b.dataset.faltei)));
 
   const relOficiais = relatoriosOficiais();
@@ -4558,6 +4618,17 @@ function renderDayOverview(){
     frases.push(`O <b>${esc(r.nome)}</b> do laboratório entrega ${d === 0 ? 'hoje' : d === 1 ? 'amanhã' : 'depois de amanhã'}.`);
   }
 
+  // calendário acadêmico: sem aula amanhã (quando teria aula) e a próxima data do semestre
+  const amanhaD = calSoma(now, 1), temAulaNoDia = dia => getAulas().some(a => a.dia === dia && a.inicio && a.inicio !== '—');
+  const semAulaAmanha = calSemAula(localISO(amanhaD));
+  if(semAulaAmanha && temAulaNoDia(DAY_NAMES[amanhaD.getDay()])) frases.push(`Amanhã não tem aula: <b>${esc(semAulaAmanha)}</b>.`);
+  const ev = calProximos(7).find(e => e.tipo !== 'feriado');
+  if(ev){
+    const d = daysUntil(ev.de), fimEv = ev.ate && ev.ate !== ev.de ? ev.ate : '';
+    frases.push(d > 0 ? `<b>${esc(ev.nome)}</b> começa ${diasLabel(d)}.`
+      : fimEv && daysUntil(fimEv) > 0 ? `<b>${esc(ev.nome)}</b>: até ${fmtCurta(fimEv)}.`
+      : fimEv ? `<b>${esc(ev.nome)}</b>: hoje é o último dia.` : `Hoje: <b>${esc(ev.nome)}</b>.`);
+  }
   if(!frases.length){
     const prox = upcomingProvas().find(p => daysUntil(p.data) > 1);
     frases.push(prox && daysUntil(prox.data) <= 7
@@ -5530,6 +5601,7 @@ function renderMapaSucesso(){
   el.querySelectorAll('[data-disc-chip]').forEach(chip => {
     chip.addEventListener('click', () => showDiscDetail(chip.dataset.discChip));
   });
+  renderConquistas();
 }
 
 // ---------------- Requisitos, créditos e previsão de formatura ----------------
@@ -5938,6 +6010,275 @@ function reqDetalheHtml(sigla, item){
     </div>` : '');
 }
 
+// ---------------- Calendário acadêmico ----------------
+// Datas do semestre (primeiro e último dia de aula), feriados nacionais (calculados, inclusive os que
+// dependem da Páscoa) e as datas que a pessoa coloca: sem aula (feriado da cidade, recesso), semana
+// de provas, rematrícula. Com isso o app conta as aulas que restam e sabe quando não tem aula.
+const CAL_TIPOS = {feriado: 'Sem aula (feriado ou recesso)', provas: 'Semana de provas', matricula: 'Rematrícula', outro: 'Outra data'};
+// nomes curtos para o seletor (cabe na metade da tela do celular)
+const CAL_TIPOS_CURTOS = {feriado: 'Sem aula', provas: 'Semana de provas', matricula: 'Rematrícula', outro: 'Outra data'};
+const fmtCurta = iso => `${iso.slice(8, 10)}/${iso.slice(5, 7)}`;
+const calSoma = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+// domingo de Páscoa (algoritmo de Meeus/Jones/Butcher)
+function calPascoa(ano){
+  const a = ano % 19, b = Math.floor(ano / 100), c = ano % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451);
+  return new Date(ano, Math.floor((h + l - 7 * m + 114) / 31) - 1, ((h + l - 7 * m + 114) % 31) + 1);
+}
+// feriados nacionais do ano (e os pontos facultativos em que as faculdades costumam parar): {data: nome}
+const _calNac = {};
+function calFeriadosNacionais(ano){
+  if(_calNac[ano]) return _calNac[ano];
+  const f = Object.create(null), pascoa = calPascoa(ano);
+  [['01-01', 'Confraternização Universal'], ['04-21', 'Tiradentes'], ['05-01', 'Dia do Trabalho'], ['09-07', 'Independência'],
+   ['10-12', 'Nossa Senhora Aparecida'], ['11-02', 'Finados'], ['11-15', 'Proclamação da República'], ['11-20', 'Consciência Negra'],
+   ['12-25', 'Natal']].forEach(([md, nome]) => { f[`${ano}-${md}`] = nome; });
+  [[-48, 'Carnaval'], [-47, 'Carnaval'], [-2, 'Sexta-feira Santa'], [60, 'Corpus Christi']].forEach(([n, nome]) => { f[localISO(calSoma(pascoa, n))] = nome; });
+  return (_calNac[ano] = f);
+}
+const calCfg = () => STATE.calendario || {inicio: '', fim: '', eventos: [], ocultos: []};
+// período de aulas: o que a pessoa escreveu, ou uma estimativa pelo semestre do perfil
+function calPeriodo(){
+  const c = calCfg(), abs = semNum(STATE.config.semestre), hoje = new Date();
+  const ano = abs !== null ? Math.floor(abs / 2) : hoje.getFullYear(), segundo = abs !== null ? abs % 2 === 1 : hoje.getMonth() >= 6;
+  const est = segundo ? [`${ano}-08-01`, `${ano}-12-15`] : [`${ano}-02-01`, `${ano}-06-30`];
+  const inicio = c.inicio || est[0], fim = c.fim || est[1];
+  return {inicio, fim: fim < inicio ? inicio : fim, estimado: !c.inicio || !c.fim};
+}
+// por que não tem aula num dia (um "sem aula" do calendário ou feriado nacional): o nome, ou null
+function calSemAula(iso){
+  const c = calCfg();
+  const ev = c.eventos.find(e => e.tipo === 'feriado' && iso >= e.de && iso <= (e.ate || e.de));
+  if(ev) return ev.nome;
+  const nac = calFeriadosNacionais(Number(iso.slice(0, 4)))[iso];
+  return nac && !c.ocultos.includes(iso) ? nac : null;
+}
+// hoje: feriado, recesso, ou fora do período de aulas (só quando as datas foram escritas)
+function calSemAulaHoje(){
+  const hoje = localISO(new Date()), per = calPeriodo(), motivo = calSemAula(hoje);
+  if(motivo) return motivo;
+  if(!per.estimado && (hoje < per.inicio || hoje > per.fim)) return hoje < per.inicio ? 'o semestre ainda não começou' : 'o período de aulas acabou';
+  return null;
+}
+// as datas do semestre (que não são "sem aula") que caem num dia
+const calEventosDoDia = iso => calCfg().eventos.filter(e => e.tipo !== 'feriado' && iso >= e.de && iso <= (e.ate || e.de));
+// o que vem nos próximos dias: datas do semestre e feriados nacionais, por data
+function calProximos(dias){
+  const c = calCfg(), hoje = new Date(), hojeIso = localISO(hoje), ate = localISO(calSoma(hoje, dias)), out = [];
+  c.eventos.forEach(e => { if((e.ate || e.de) >= hojeIso && e.de <= ate) out.push(Object.assign({}, e)); });
+  for(let d = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate()); localISO(d) <= ate; d = calSoma(d, 1)){
+    const iso = localISO(d), nome = calFeriadosNacionais(d.getFullYear())[iso];
+    if(nome && !c.ocultos.includes(iso)) out.push({de: iso, ate: '', nome, tipo: 'feriado', nacional: true});
+  }
+  return out.sort((a, b) => a.de.localeCompare(b.de));
+}
+// a semana do semestre: {txt, semana, total, faltamDias}
+function calProgresso(){
+  const {inicio, fim} = calPeriodo(), hoje = localISO(new Date()), dia = s => new Date(s + 'T00:00:00');
+  const total = Math.max(1, Math.ceil((Math.round((dia(fim) - dia(inicio)) / 864e5) + 1) / 7));
+  if(hoje < inicio){ const n = daysUntil(inicio); return {txt: `Começa ${n === 1 ? 'amanhã' : `em ${n} dias`}`, total}; }
+  if(hoje > fim) return {txt: 'Período de aulas encerrado', total};
+  const semana = Math.min(total, Math.floor(Math.round((dia(hoje) - dia(inicio)) / 864e5) / 7) + 1);
+  return {txt: `Semana ${semana} de ${total}`, semana, total, faltamDias: daysUntil(fim)};
+}
+// aulas que ainda restam de cada disciplina até o fim do período (pelo horário da semana, sem os dias
+// sem aula; as de hoje que ainda não começaram contam): {sigla: {aulas, ha}}
+function calAulasRestantes(){
+  const {inicio, fim} = calPeriodo(), out = Object.create(null), agora = new Date(), hojeIso = localISO(agora);
+  const hm = String(agora.getHours()).padStart(2, '0') + ':' + String(agora.getMinutes()).padStart(2, '0');
+  const aulas = getAulas().filter(a => a.inicio && a.inicio !== '—').map(a => ({a, sigla: aulaSigla(a)})).filter(x => x.sigla);
+  if(!aulas.length) return out;
+  const de = hojeIso > inicio ? hojeIso : inicio;
+  for(let d = new Date(de + 'T00:00:00'), n = 0; localISO(d) <= fim && n < 400; d = calSoma(d, 1), n++){
+    const iso = localISO(d), nome = DAY_NAMES[d.getDay()];
+    if(calSemAula(iso)) continue;
+    aulas.forEach(({a, sigla}) => {
+      if(a.dia !== nome || (iso === hojeIso && a.inicio <= hm)) return;
+      const o = out[sigla] = out[sigla] || {aulas: 0, ha: 0};
+      o.aulas++; o.ha += faltasPorAula(a.inicio, a.fim);
+    });
+  }
+  return out;
+}
+// lembretes do celular (o service worker avisa no dia, na véspera e no resumo da semana)
+function calLembretes(){
+  const out = [], temAula = nome => getAulas().some(a => a.dia === nome && a.inicio && a.inicio !== '—');
+  calProximos(45).forEach(e => {
+    if(e.tipo === 'feriado'){
+      // sem aula: só avisa se naquele dia da semana teria aula
+      const d = new Date(e.de + 'T00:00:00');
+      if(temAula(DAY_NAMES[d.getDay()])) out.push({d: e.de, txt: `${e.nome}, sem aula`});
+      return;
+    }
+    // lido depois de "Hoje:", "Amanhã:" ou do dia da semana
+    out.push({d: e.de, txt: e.ate && e.ate !== e.de ? `${e.nome} começa` : e.nome});
+    if(e.ate && e.ate !== e.de) out.push({d: e.ate, txt: `${e.nome} termina`});
+  });
+  return out.slice(0, 60);
+}
+async function calSalvar(mudar){
+  const c = STATE.calendario = Object.assign({inicio: '', fim: '', eventos: [], ocultos: []}, STATE.calendario || {});
+  c.eventos = [...c.eventos]; c.ocultos = [...c.ocultos];
+  mudar(c);
+  await storeSet('calendario', c);
+  renderCalendarioConfig(); renderPainel(); renderFaltas();
+  if(STATE.calMonth) renderCalendarGrid();
+}
+function renderCalendarioConfig(){
+  const el = document.getElementById('calPanel');
+  if(!el) return;
+  const c = calCfg(), per = calPeriodo(), prog = calProgresso();
+  // feriados nacionais dentro do período (os de domingo não mudam nada)
+  const nac = [];
+  for(let d = new Date(per.inicio + 'T00:00:00'), n = 0; localISO(d) <= per.fim && n < 400; d = calSoma(d, 1), n++){
+    const iso = localISO(d), nome = calFeriadosNacionais(d.getFullYear())[iso];
+    if(nome && d.getDay() !== 0) nac.push({iso, nome, dia: DAY_NAMES[d.getDay()]});
+  }
+  const eventos = [...c.eventos].sort((a, b) => a.de.localeCompare(b.de));
+  el.innerHTML = `
+    <p class="help-text" style="margin:0 0 14px;">Com as datas do semestre, o app conta as aulas que ainda restam em cada disciplina (na aba Faltas), mostra a semana do semestre no Painel e sabe quando não tem aula. Os feriados nacionais já vêm marcados.</p>
+    <div class="cal-datas">
+      <div class="field"><label for="calInicio">Primeiro dia de aula</label><input id="calInicio" type="date" value="${esc(c.inicio)}"></div>
+      <div class="field"><label for="calFim">Último dia de aula</label><input id="calFim" type="date" value="${esc(c.fim)}"></div>
+    </div>
+    <p class="gm-nota" style="margin:8px 0 0;">${per.estimado ? `Sem as duas datas, o app estima de ${fmtDate(per.inicio)} a ${fmtDate(per.fim)}. ` : ''}${esc(prog.txt)}.</p>
+    <div class="section-label" style="margin:22px 0 10px;">Datas do semestre</div>
+    <div class="cal-evs">${eventos.length ? eventos.map(e => `<div class="cal-ev-row">
+      <span class="cal-ev-data mono">${fmtCurta(e.de)}${e.ate && e.ate !== e.de ? ' a ' + fmtCurta(e.ate) : ''}</span>
+      <span class="cal-ev-nome"><b>${esc(e.nome)}</b><small>${CAL_TIPOS[e.tipo]}</small></span>
+      <button type="button" class="btn btn-ghost btn-sm" data-cal-del="${esc(e.id)}" aria-label="Apagar ${esc(e.nome)}">✕</button>
+    </div>`).join('') : '<p class="gm-nota">Nenhuma ainda. Coloque a rematrícula, a semana de provas, recessos e os feriados da cidade.</p>'}</div>
+    <div class="cal-add">
+      <div class="field"><label for="calEvNome">O que é</label><input id="calEvNome" maxlength="80" placeholder="Ex.: Rematrícula"></div>
+      <div class="field"><label for="calEvTipo">Tipo</label><select id="calEvTipo">${Object.entries(CAL_TIPOS_CURTOS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></div>
+      <div class="field"><label for="calEvDe">De</label><input id="calEvDe" type="date"></div>
+      <div class="field"><label for="calEvAte">Até (se for mais de um dia)</label><input id="calEvAte" type="date"></div>
+      <button type="button" class="btn btn-primary" id="calEvAdd">Adicionar</button>
+    </div>
+    ${nac.length ? `<div class="section-label" style="margin:22px 0 10px;">Feriados nacionais no semestre</div>
+    <div class="cal-nacs">${nac.map(f => { const temAula = c.ocultos.includes(f.iso);
+      return `<label class="cal-nac"><input type="checkbox" data-cal-nac="${f.iso}"${temAula ? ' checked' : ''}><span><b>${fmtCurta(f.iso)} · ${esc(f.nome)}</b><small>${f.dia}, ${temAula ? 'com aula' : 'sem aula'}</small></span></label>`; }).join('')}</div>
+    <p class="gm-nota" style="margin-top:8px;">Marque o feriado em que a faculdade dá aula normalmente.</p>` : ''}`;
+  const data = id => document.getElementById(id).value;
+  document.getElementById('calInicio').addEventListener('change', e => calSalvar(cc => { cc.inicio = /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : ''; }));
+  document.getElementById('calFim').addEventListener('change', e => calSalvar(cc => { cc.fim = /^\d{4}-\d{2}-\d{2}$/.test(e.target.value) ? e.target.value : ''; }));
+  document.getElementById('calEvAdd').addEventListener('click', () => {
+    const nome = document.getElementById('calEvNome').value.trim().slice(0, 80), de = data('calEvDe'), ate = data('calEvAte'), tipo = data('calEvTipo');
+    if(!nome){ showToast('Escreva o que é (ex.: Rematrícula).', 'error'); document.getElementById('calEvNome').focus(); return; }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(de)){ showToast('Escolha a data.', 'error'); document.getElementById('calEvDe').focus(); return; }
+    calSalvar(cc => { cc.eventos.push({id: 'ev' + Date.now().toString(36), nome, tipo: CAL_TIPOS[tipo] ? tipo : 'outro', de, ate: /^\d{4}-\d{2}-\d{2}$/.test(ate) && ate > de ? ate : ''}); });
+    showToast('Data adicionada ao calendário.', 'success', 1800);
+  });
+  el.querySelectorAll('[data-cal-del]').forEach(b => b.addEventListener('click', () => calSalvar(cc => { cc.eventos = cc.eventos.filter(x => x.id !== b.dataset.calDel); })));
+  el.querySelectorAll('[data-cal-nac]').forEach(cb => cb.addEventListener('change', () => calSalvar(cc => {
+    cc.ocultos = cc.ocultos.filter(x => x !== cb.dataset.calNac);
+    if(cb.checked) cc.ocultos.push(cb.dataset.calNac);
+  })));
+}
+
+// ---------------- Conquistas ----------------
+// Marcos do curso, das notas, do estudo e da organização. Cada uma é calculada dos dados; a data em
+// que apareceu pela primeira vez fica guardada (as que já valiam quando o recurso chegou ficam sem data).
+const CONQUISTAS = [
+  {id: 'periodo1', ico: 'check', nome: 'Primeiro período', desc: 'Todas as disciplinas do 1º período aprovadas'},
+  {id: 'quarto', ico: 'trend', nome: 'Um quarto do curso', desc: '25% do curso aprovado'},
+  {id: 'metade', ico: 'trend', nome: 'Metade do curso', desc: '50% do curso aprovado'},
+  {id: 'reta', ico: 'trend', nome: 'Reta final', desc: '75% do curso aprovado'},
+  {id: 'formado', ico: 'cap', nome: 'Curso completo', desc: 'Todas as disciplinas aprovadas'},
+  {id: 'nota90', ico: 'award', nome: 'Nota 90', desc: 'Uma disciplina aprovada com 90 ou mais'},
+  {id: 'nota100', ico: 'award', nome: 'Nota máxima', desc: 'Uma disciplina aprovada com 100'},
+  {id: 'semestreLimpo', ico: 'check', nome: 'Semestre limpo', desc: 'Um semestre encerrado sem nenhuma reprovação'},
+  {id: 'presenca', ico: 'calendar', nome: 'Presença total', desc: 'Um semestre encerrado sem nenhuma falta'},
+  {id: 'foco1', ico: 'timer', nome: 'Primeiro foco', desc: 'A primeira sessão de estudo no Pomodoro'},
+  {id: 'seq7', ico: 'timer', nome: 'Uma semana seguida', desc: '7 dias seguidos estudando', un: 'dias'},
+  {id: 'seq30', ico: 'timer', nome: 'Um mês seguido', desc: '30 dias seguidos estudando', un: 'dias'},
+  {id: 'horas10', ico: 'clock', nome: '10 horas de estudo', desc: '10 horas de foco no Pomodoro', un: 'horas'},
+  {id: 'horas50', ico: 'clock', nome: '50 horas de estudo', desc: '50 horas de foco no Pomodoro', un: 'horas'},
+  {id: 'horas100', ico: 'clock', nome: '100 horas de estudo', desc: '100 horas de foco no Pomodoro', un: 'horas'},
+  {id: 'tarefas10', ico: 'list', nome: '10 tarefas feitas', desc: '10 tarefas concluídas', un: 'tarefas'},
+  {id: 'tarefas50', ico: 'list', nome: '50 tarefas feitas', desc: '50 tarefas concluídas', un: 'tarefas'},
+  {id: 'lab', ico: 'flask', nome: 'Laboratório em dia', desc: 'Todos os relatórios do laboratório entregues', un: 'relatórios'},
+  {id: 'gradePdf', ico: 'grid', nome: 'Grade pelo PDF', desc: 'Montou a grade com o PDF de horários'},
+  {id: 'planejador', ico: 'pin', nome: 'Planejador', desc: 'Escolheu o semestre de uma disciplina no seu plano'},
+  {id: 'turma', ico: 'calendar', nome: 'Turma junta', desc: 'Recebeu a grade de um colega'},
+];
+// a maior sequência de dias seguidos com sessão de Pomodoro
+function cqMelhorSequencia(){
+  const dias = [...new Set((STATE.pomSessions || []).map(s => { const d = new Date(s.ts); return isNaN(d) ? '' : localISO(d); }).filter(Boolean))].sort();
+  let melhor = 0, atual = 0, antes = null;
+  dias.forEach(d => { atual = antes && localISO(calSoma(new Date(antes + 'T00:00:00'), 1)) === d ? atual + 1 : 1; melhor = Math.max(melhor, atual); antes = d; });
+  return melhor;
+}
+// cada conquista agora: {id: {ok, prog: [quanto, meta] | null, un}}
+function cqAvaliar(){
+  const out = Object.create(null), marca = (id, ok, prog, un) => { out[id] = {ok: !!ok, prog: prog || null, un: un || (CONQUISTAS.find(c => c.id === id) || {}).un || ''}; };
+  const b1 = buildSemestresCurriculares().find(x => x.numero === 1);
+  const ap1 = b1 ? b1.disciplinas.filter(d => situacao(d) === 'Aprovado').length : 0;
+  marca('periodo1', b1 && ap1 === b1.disciplinas.length, b1 ? [ap1, b1.disciplinas.length] : null, 'disciplinas');
+  // quanto do curso: créditos (curso com quadro de créditos) ou disciplinas
+  const cur = curriculoDoPerfil();
+  let feito, total, un;
+  if(cur){ const b = reqBase(false), todas = Object.keys(cur.creditos); total = reqCred(cur, todas); feito = reqCred(cur, todas.filter(sg => b.aprov.has(sg))); un = 'créditos'; }
+  else { const st = cursoStatsCompute(); total = st.total; feito = st.counts.Aprovado; un = 'disciplinas'; }
+  [['quarto', .25], ['metade', .5], ['reta', .75], ['formado', 1]].forEach(([id, f]) => {
+    const meta = Math.ceil(total * f);
+    marca(id, total > 0 && feito >= meta, total ? [Math.min(feito, meta), meta] : null, un);
+  });
+  const notas = STATE.historico.filter(i => situacao(i) === 'Aprovado').map(i => Number(String(i.nota ?? '').replace(',', '.'))).filter(n => Number.isFinite(n));
+  const maior = notas.length ? Math.max(...notas) : 0;
+  marca('nota90', maior >= 90); marca('nota100', maior >= 100);
+  const sems = (STATE.semestres || []).filter(x => Array.isArray(x.disciplinas) && x.disciplinas.length);
+  marca('semestreLimpo', sems.some(x => x.disciplinas.every(d => d.passou !== false)));
+  marca('presenca', sems.some(x => x.disciplinas.every(d => !(Number(d.faltas) > 0))));
+  const sess = STATE.pomSessions || [], horas = Math.floor(sess.reduce((a, x) => a + (Number(x.duracaoMin) || 0), 0) / 60), seq = cqMelhorSequencia();
+  marca('foco1', sess.length > 0);
+  [['seq7', 7, seq], ['seq30', 30, seq], ['horas10', 10, horas], ['horas50', 50, horas], ['horas100', 100, horas]].forEach(([id, meta, v]) => marca(id, v >= meta, [Math.min(v, meta), meta]));
+  const feitas = STATE.tarefas.filter(t => t.status === 'Concluído').length;
+  [['tarefas10', 10], ['tarefas50', 50]].forEach(([id, meta]) => marca(id, feitas >= meta, [Math.min(feitas, meta), meta]));
+  const rels = relatoriosOficiais(), entregues = rels.filter(x => relatorioStatus(x).label === 'Concluído').length;
+  marca('lab', rels.length > 0 && entregues === rels.length, rels.length ? [entregues, rels.length] : null);
+  marca('gradePdf', !!STATE.gradeOferta);
+  marca('planejador', Object.keys(STATE.config.planoCurso || {}).length > 0);
+  marca('turma', (STATE.gradeAmigos || []).length > 0);
+  return out;
+}
+let _cqTimer = null;
+function agendarConquistas(){ clearTimeout(_cqTimer); _cqTimer = setTimeout(cqAtualizar, 1200); }
+// guarda as que apareceram agora e avisa; na primeira vez, guarda as que já valiam sem avisar
+async function cqAtualizar(){
+  if(!ACTIVE_PROFILE_ID || !Array.isArray(STATE.historico) || !STATE.config || !Array.isArray(STATE.tarefas)) return;
+  let av;
+  try{ av = cqAvaliar(); }catch(e){ return; }
+  const primeira = !STATE.conquistas, reg = Object.assign({}, STATE.conquistas || {}), novas = [];
+  CONQUISTAS.forEach(c => { if(av[c.id] && av[c.id].ok && !reg[c.id]){ reg[c.id] = primeira ? 'antes' : localISO(new Date()); if(!primeira) novas.push(c); } });
+  if(!primeira && !novas.length) return;
+  STATE.conquistas = reg;
+  await storeSet('conquistas', reg);
+  renderConquistas();
+  if(novas.length) showToast(novas.length === 1 ? `Conquista: ${novas[0].nome}!` : `${novas.length} conquistas novas: ${novas.map(c => c.nome).join(', ')}!`, 'success', 6000,
+    {label: 'Ver', fn: () => { switchTab('mapa'); setTimeout(() => { const p = document.getElementById('conquistasPanel'); if(p) p.scrollIntoView({behavior: 'smooth', block: 'start'}); }, 250); }});
+}
+function renderConquistas(){
+  const el = document.getElementById('conquistasPanel');
+  if(!el) return;
+  let av;
+  try{ av = cqAvaliar(); }catch(e){ el.innerHTML = ''; return; }
+  const reg = STATE.conquistas || {};
+  const itens = CONQUISTAS.map(c => ({c, ok: !!reg[c.id] || av[c.id].ok, data: reg[c.id], ...av[c.id]}));
+  // as mais novas primeiro; as que já valiam quando o recurso chegou ("antes") vêm depois
+  const quando = x => x.data && x.data !== 'antes' ? x.data : '';
+  const feitas = itens.filter(x => x.ok).sort((a, b) => quando(b).localeCompare(quando(a)));
+  const faltam = itens.filter(x => !x.ok).sort((a, b) => (b.prog ? b.prog[0] / b.prog[1] : 0) - (a.prog ? a.prog[0] / a.prog[1] : 0));
+  const card = x => `<div class="cq${x.ok ? ' is-ok' : ''}"><span class="cq-ic" aria-hidden="true">${ico(x.c.ico)}</span><div class="cq-txt">
+      <b>${esc(x.c.nome)}</b><small>${esc(x.c.desc)}</small>
+      ${x.ok ? (x.data && x.data !== 'antes' ? `<small class="cq-data">Conquistada em ${fmtDate(x.data)}</small>` : '<small class="cq-data">Conquistada</small>')
+        : x.prog && x.prog[1] ? `<div class="cq-barra" role="img" aria-label="${x.prog[0]} de ${x.prog[1]} ${esc(x.un)}"><span style="width:${Math.round(x.prog[0] / x.prog[1] * 100)}%"></span></div><small>${x.prog[0]} de ${x.prog[1]} ${esc(x.un)}</small>` : ''}
+    </div></div>`;
+  el.innerHTML = `<div class="section-label cq-titulo">Conquistas <span class="meta-chip"><b>${feitas.length}</b>/${itens.length}</span></div>
+    <div class="panel panel--pad"><div class="cq-grid">${[...feitas, ...faltam].map(card).join('')}</div></div>`;
+}
+
 // ---------------- Grade compartilhada com colegas ----------------
 // O montador gera um link com a grade (disciplinas, turmas e horários) depois do "#": essa parte do
 // endereço não vai para o servidor. Quem abre vê a semana do colega e pode usar as mesmas turmas.
@@ -6293,6 +6634,8 @@ function renderFaltas(){
 
   // anel: r = 27 no viewBox 64, perímetro 2πr
   const ANEL = 2 * Math.PI * 27;
+  // aulas que ainda restam no semestre (horário da semana, sem feriados)
+  const restantes = calAulasRestantes(), fimAulas = calPeriodo().fim, porHoraAula = (STATE.config.faltasPorAula || 'hora-aula') !== 'aula';
   grid.innerHTML = disc.map(d => {
     const limite = faltaLimite(d.sigla, d.ch);
     const temCustom = STATE.faltasLimites && STATE.faltasLimites[d.sigla] != null;
@@ -6323,6 +6666,10 @@ function renderFaltas(){
           <b${restam === 1 && pct < 100 ? ' style="color:var(--red)"' : ''}>${titulo}</b>
           <span class="fc-sub">${sub}</span>
           ${presencaPct !== null ? `<span class="fc-pres">${presencaPct}% de presença</span>` : ''}
+          ${(() => { const ra = restantes[d.sigla]; if(!ra || !ra.aulas) return '';
+            // em quantas das aulas que restam ainda dá para faltar (cada aula vale ra.ha / ra.aulas faltas)
+            const pode = pct >= 100 ? 0 : Math.min(ra.aulas, Math.floor(restam / (ra.ha / ra.aulas)));
+            return `<span class="fc-pres">Ainda há ${ra.aulas} ${ra.aulas === 1 ? 'aula' : 'aulas'}${porHoraAula ? ` (${ra.ha} h-aula)` : ''} até ${fmtCurta(fimAulas)}${pct < 100 ? `; dá para faltar em ${pode === ra.aulas ? 'todas' : 'até ' + pode}` : ''}.</span>`; })()}
         </div>
       </div>
       <div class="fc-actions">
@@ -8680,9 +9027,12 @@ function renderCalendarGrid(){
     const exams = examsByDay[c.iso] || [];
     const isToday = c.iso === todayIso;
     let inner = `<div class="num">${c.day}</div>`;
+    const feriado = calSemAula(c.iso), evDia = calEventosDoDia(c.iso);
+    if(feriado) inner += `<div class="cal-tag is-feriado" title="${esc(feriado)}">${esc(feriado)}</div>`;
+    else if(evDia.length) inner += `<div class="cal-tag is-ev" title="${esc(evDia.map(e => e.nome).join(', '))}">${esc(evDia[0].nome)}</div>`;
     exams.slice(0,2).forEach(p => { inner += `<div class="exam-dot" title="${esc(p.disciplina)} ${esc(p.tipo)}"><span class="ed-full">${esc(examLabel(p))}</span><span class="ed-short">${esc(provaSigla(p) || p.tipo)}</span></div>`; });
     if(exams.length > 2) inner += `<div class="exam-more">+${exams.length-2}</div>`;
-    return `<div class="navday${isToday?' today':''}" data-cal-dia="${c.iso}" role="button" tabindex="0" aria-label="${c.day} de ${MESES[m]}${exams.length ? ', ' + exams.length + (exams.length === 1 ? ' prova' : ' provas') : ''}. Marcar prova neste dia">${inner}</div>`;
+    return `<div class="navday${isToday?' today':''}${feriado ? ' is-feriado' : ''}" data-cal-dia="${c.iso}" role="button" tabindex="0" aria-label="${c.day} de ${MESES[m]}${feriado ? ', sem aula: ' + esc(feriado) : ''}${evDia.length ? ', ' + esc(evDia.map(e => e.nome).join(', ')) : ''}${exams.length ? ', ' + exams.length + (exams.length === 1 ? ' prova' : ' provas') : ''}. Marcar prova neste dia">${inner}</div>`;
   }).join('');
 
   grid.innerHTML = html;
@@ -8883,6 +9233,8 @@ document.getElementById('btnExport').addEventListener('click', async () => {
     grade_oferta: STATE.gradeOferta,
     grade_plano: STATE.gradePlano,
     grade_amigos: STATE.gradeAmigos,
+    calendario: STATE.calendario,
+    conquistas: STATE.conquistas,
     labs: STATE.labs,
     base_data: currentBaseData(),
   };
@@ -8937,13 +9289,13 @@ document.getElementById('fileImport').addEventListener('change', (e) => {
       const BACKUP_KEYS = ['config','historico_overrides','historico_custom','historico_removidos','tarefas',
         'lab_concluido','provas','faltas','faltas_limites','faltas_registro','relatorios_ocultos','relatorios_overrides','horas_comp',
         'horas_global','aulas_custom','turmas_custom','notas_parciais','metas_notas','tema','lembretes',
-        'pom_sessions','disc_notes','estudos_materiais','semestres','grade_oferta','grade_plano','grade_amigos','labs'];
+        'pom_sessions','disc_notes','estudos_materiais','semestres','grade_oferta','grade_plano','grade_amigos','calendario','conquistas','labs'];
       // o tipo de cada parte: lista, objeto, texto, ou "?" quando também pode ser vazio (null)
       const TIPO = {config:'obj', historico_overrides:'obj', historico_custom:'arr', historico_removidos:'arr', tarefas:'arr',
         lab_concluido:'obj', provas:'arr', faltas:'obj', faltas_limites:'obj', faltas_registro:'arr', relatorios_ocultos:'arr',
         relatorios_overrides:'obj', horas_comp:'arr', horas_global:'obj', aulas_custom:'arr?', turmas_custom:'obj?', notas_parciais:'obj',
         metas_notas:'obj', tema:'str', lembretes:'arr', pom_sessions:'arr', disc_notes:'obj', estudos_materiais:'arr', semestres:'arr',
-        grade_oferta:'obj?', grade_plano:'obj?', grade_amigos:'arr', labs:'obj'};
+        grade_oferta:'obj?', grade_plano:'obj?', grade_amigos:'arr', calendario:'obj?', conquistas:'obj?', labs:'obj'};
       const tipoOk = (v, t) => (t.endsWith('?') && v === null) || (t.startsWith('arr') ? Array.isArray(v)
         : t.startsWith('obj') ? (v !== null && typeof v === 'object' && !Array.isArray(v)) : typeof v === 'string');
       const ignoradas = BACKUP_KEYS.filter(k => k in backup && !tipoOk(backup[k], TIPO[k]));
@@ -9009,7 +9361,7 @@ function scheduleDeadlineNotifications(){
 // O app guarda um resumo dos prazos no Cache Storage e o service worker decide o que avisar,
 // uma vez cada: ao abrir, a cada poucos minutos com o app aberto e, no Android com o app
 // instalado, quando o celular rodar a sincronização periódica.
-const REMINDER_KEYS = ['tarefas', 'provas', 'base_data', 'lab_concluido', 'relatorios_overrides', 'relatorios_ocultos'];
+const REMINDER_KEYS = ['tarefas', 'provas', 'base_data', 'lab_concluido', 'relatorios_overrides', 'relatorios_ocultos', 'calendario', 'aulas_custom'];
 let _snapTimer = null;
 function saveReminderSnapshot(){
   clearTimeout(_snapTimer);
@@ -9020,6 +9372,7 @@ function saveReminderSnapshot(){
       provas: STATE.provas.map(p => ({tipo: p.tipo, disciplina: p.disciplina, data: p.data, hora: p.hora || null, local: p.local || null})),
       tarefas: STATE.tarefas.filter(t => t.status !== 'Concluído' && t.prazo).map(t => ({nome: t.nome, prazo: t.prazo})),
       rels,
+      eventos: calLembretes(),
     };
     try{
       const c = await caches.open('lembretes-data');
@@ -9673,6 +10026,7 @@ function renderAll(){
   renderTarefas();
   renderProvas();
   renderConfig();
+  renderCalendarioConfig();
   renderMapaSucesso();
   renderFaltas();
   renderHorasComp();
