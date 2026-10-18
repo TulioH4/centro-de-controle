@@ -103,7 +103,8 @@ function abrir(nav, url, t){
   // a página vai para um arquivo: no Windows o Edge às vezes não escreve num pipe
   const fd = fs.openSync(arq, 'w');
   return new Promise(resolve => {
-    const p = spawn(nav, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-extensions',
+    // (no GitHub Actions o Chrome roda sem a caixa de areia do Linux, que lá não tem permissão)
+    const p = spawn(nav, ['--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check', '--disable-extensions', ...(process.env.CI ? ['--no-sandbox'] : []),
       '--virtual-time-budget=30000', `--window-size=${t.largura || 1280},900`, `--user-data-dir=${perfil}`, '--dump-dom', url], {stdio: ['ignore', fd, 'ignore']});
     const limite = setTimeout(() => p.kill(), 120000);
     p.on('close', () => { clearTimeout(limite); fs.closeSync(fd); resolve(fs.readFileSync(arq, 'utf8')); });

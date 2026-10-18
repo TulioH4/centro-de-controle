@@ -27,6 +27,11 @@ jobs:
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 24
+      # os testes vêm antes: se algum falhar, nada é publicado (fuso do Brasil, como no celular)
+      - name: Testes
+        run: node tests/rodar.js
+        env:
+          TZ: America/Sao_Paulo
       - run: node scripts/build-pwa.mjs
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5

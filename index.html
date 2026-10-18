@@ -6060,8 +6060,8 @@ function calFeriadosNacionais(ano){
   [[-48, 'Carnaval'], [-47, 'Carnaval'], [-2, 'Sexta-feira Santa'], [60, 'Corpus Christi']].forEach(([n, nome]) => { f[localISO(calSoma(pascoa, n))] = nome; });
   return (_calNac[ano] = f);
 }
-// Calendário oficial da graduação do Inatel 2026 (aprovado pelo Conselho Diretor, alterado em 23/02/2026).
-// Vale sozinho nos perfis do Inatel; o que a pessoa escreve vem na frente. "semAula": os dias SEDA e SED.
+// Calendário oficial da graduação do Inatel (aprovado pelo Conselho Diretor: 2026 alterado em 23/02/2026,
+// 2027 aprovado em 24/08/2026). Vale sozinho nos perfis do Inatel; o que a pessoa escreve vem na frente. "semAula": os dias SEDA e SED.
 // Em cada semestre (o número de semNum): o período de aulas e as datas [de, até, nome, tipo, curso];
 // a semana de um curso só aparece para quem faz aquele curso.
 const CAL_INATEL = {
@@ -6070,6 +6070,12 @@ const CAL_INATEL = {
     ['04-02', 'Semana Santa'], ['04-03', 'Semana Santa'], ['04-04', 'Semana Santa'], ['04-05', 'Páscoa'], ['04-21', 'Tiradentes'],
     ['05-01', 'Dia do Trabalho'], ['05-22', 'Dia da Padroeira'], ['05-23', 'Sem expediente didático'], ['05-24', 'Feriado municipal'],
     ['06-04', 'Corpus Christi'], ['09-07', 'Independência'], ['10-12', 'Nossa Senhora Aparecida'], ['10-13', 'Dia do Professor'],
+    ['11-02', 'Finados'], ['11-15', 'Proclamação da República'], ['11-20', 'Consciência Negra'], ['12-25', 'Natal'],
+  ], 2027: [
+    ['01-01', 'Confraternização Universal'], ['02-08', 'Carnaval'], ['02-09', 'Carnaval'], ['02-10', 'Cinzas'],
+    ['03-25', 'Semana Santa'], ['03-26', 'Semana Santa'], ['03-27', 'Semana Santa'], ['04-21', 'Tiradentes'],
+    ['05-01', 'Dia do Trabalho'], ['05-22', 'Dia da Padroeira'], ['05-24', 'Feriado municipal'], ['05-27', 'Corpus Christi'],
+    ['09-07', 'Independência'], ['10-11', 'Dia do Professor'], ['10-12', 'Nossa Senhora Aparecida'],
     ['11-02', 'Finados'], ['11-15', 'Proclamação da República'], ['11-20', 'Consciência Negra'], ['12-25', 'Natal'],
   ]},
   semestres: {
@@ -6103,6 +6109,38 @@ const CAL_INATEL = {
       ['2026-12-12', '', 'Último dia para trocar de curso', 'prazo'],
       ['2026-12-16', '2026-12-17', 'Provas substitutivas', 'provas'],
       ['2026-12-18', '', 'Último dia para sair as notas', 'outro'],
+    ]},
+    4054: {aulas: ['2027-02-11', '2027-07-03'], datas: [
+      ['2027-01-28', '2027-01-30', 'Matrícula', 'matricula'],
+      ['2027-02-11', '', 'Início das aulas', 'outro'],
+      ['2027-02-19', '2027-02-20', 'Alteração de matrícula', 'matricula'],
+      ['2027-03-09', '2027-03-11', 'Semana da Automação e Elétrica', 'evento', /automa|eletric/],
+      ['2027-04-27', '2027-05-01', 'Semana das Telecomunicações', 'evento', /telecom/],
+      ['2027-05-12', '2027-05-14', 'Semana das Engenharias de Computação e Software', 'evento', /comput|software/],
+      ['2027-05-15', '', 'Fetin Day', 'evento'],
+      ['2027-05-31', '', 'Último dia para desistir ou trancar', 'prazo'],
+      ['2027-06-02', '2027-06-04', 'Incitel', 'evento'],
+      ['2027-06-07', '', 'Último dia do relatório de estágio', 'prazo'],
+      ['2027-07-03', '', 'Fim das aulas', 'outro'],
+      ['2027-07-03', '', 'Último dia para trocar de curso', 'prazo'],
+      ['2027-07-07', '2027-07-08', 'Provas substitutivas', 'provas'],
+      ['2027-07-09', '', 'Último dia para sair as notas', 'outro'],
+    ]},
+    4055: {aulas: ['2027-07-26', '2027-12-11'], datas: [
+      ['2027-07-22', '2027-07-24', 'Matrícula', 'matricula'],
+      ['2027-07-26', '', 'Início das aulas', 'outro'],
+      ['2027-07-30', '2027-07-31', 'Alteração de matrícula', 'matricula'],
+      ['2027-08-10', '2027-08-11', 'Semana da Engenharia Biomédica', 'evento', /biomed/],
+      ['2027-08-28', '', 'Fetin Day', 'evento'],
+      ['2027-09-23', '2027-09-25', 'Fetin', 'evento'],
+      ['2027-10-25', '2027-10-27', 'Semana da Produção', 'evento', /producao/],
+      ['2027-11-09', '2027-11-11', 'Semana do Empreendedor', 'evento'],
+      ['2027-11-22', '', 'Último dia para desistir ou trancar', 'prazo'],
+      ['2027-11-22', '', 'Último dia do relatório de estágio', 'prazo'],
+      ['2027-12-11', '', 'Fim das aulas', 'outro'],
+      ['2027-12-11', '', 'Último dia para trocar de curso', 'prazo'],
+      ['2027-12-15', '2027-12-16', 'Provas substitutivas', 'provas'],
+      ['2027-12-17', '', 'Último dia para sair as notas', 'outro'],
     ]},
   },
 };
