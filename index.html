@@ -8092,7 +8092,8 @@ function abrirFimSemestre(){
     // a nota que já estiver no Histórico
     const bruta = ns.final !== undefined ? ns.final : mp ? mp.media : (typeof item.nota === 'number' ? item.nota : null);
     const nota = bruta === null ? null : Math.round(bruta * 10) / 10;
-    const corte = ns.final !== undefined ? notaAprova() : (STATE.config.notaMinima || 60);
+    // nota final (pela regra ou a do Histórico) aprova com a nota final mínima; média incompleta, com o mínimo
+    const corte = ns.final !== undefined || !mp ? notaAprova() : (STATE.config.notaMinima || 60);
     finais[s] = {nota, res: ns.fase === 'np3' ? 'nao' : nota === null || nota >= corte ? 'passei' : 'nao', manual: false};
   });
   // disciplina nova criada no passo 2 vai para o semestre seguinte do curso, se ele existir

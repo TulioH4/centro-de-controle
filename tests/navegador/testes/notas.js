@@ -62,8 +62,12 @@ setTimeout(async () => {
     confere(out.sobrou.badge === 'Aprovado' && out.sobrou.texto === 'Média final: 65,0, aprovado!' && !out.sobrou.campo, 'NP3 que sobrou ainda aparece');
     // nota do semestre incompleta no encerramento: compara com 60, não com o 50 da nota final
     STATE.notasParciais.H04 = [{label: 'P1', valor: 55, peso: 1}, {label: 'P2', valor: null, peso: 1}]; await storeSet('notas_parciais', STATE.notasParciais);
+    // sem parciais, a nota do Histórico já é a final: 55 passa no Inatel (como o Histórico mostra)
+    delete STATE.notasParciais.P13; const p13 = STATE.historico.find(i => i.sigla === 'P13'), p13nota = p13.nota; p13.nota = 55;
     abrirFimSemestre(); await espera(200);
-    out.encerrar2 = {F01: SEM.finais.F01, F01sub: txt(document.querySelector('[data-sem-disc="F01"] small')), H04: SEM.finais.H04};
+    out.encerrar2 = {F01: SEM.finais.F01, F01sub: txt(document.querySelector('[data-sem-disc="F01"] small')), H04: SEM.finais.H04, P13: SEM.finais.P13};
+    p13.nota = p13nota;
+    confere(out.encerrar2.P13.nota === 55 && out.encerrar2.P13.res === 'passei', 'encerrar: nota final 55 do Histórico virou "não passei"');
     confere(out.encerrar2.F01.nota === 65 && out.encerrar2.F01.res === 'passei' && !/NP3/.test(out.encerrar2.F01sub), 'encerrar: NP3 que sobrou entrou na conta');
     confere(out.encerrar2.H04.nota === 55 && out.encerrar2.H04.res === 'nao', 'encerrar: média incompleta de 55 virou "passei"');
     fecharFimSemestre();
