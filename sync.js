@@ -450,7 +450,7 @@
   };
   async function requestPasswordReset(email){
     if (!client) throw new Error('Sem conexão com o servidor. Verifique a internet.');
-    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+    const { error } = await client.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname.replace(/index\.html$/, '') });
     if (error) throw resetFriendly(error);
   }
   // reads the address only: {email, access_token, refresh_token}, {error} or null

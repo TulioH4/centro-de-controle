@@ -55,6 +55,24 @@ setTimeout(async () => {
     out.encerrarSub = txt(linhaSem);
     confere(/com a NP3/.test(out.encerrarSub), 'encerrar não diz que a nota veio com a NP3');
     fecharFimSemestre();
+    // NP3 que sobrou (a P2 foi corrigida e a média passou de 60): não aparece no texto nem no encerramento
+    STATE.notasParciais.F01[1].valor = 80; await storeSet('notas_parciais', STATE.notasParciais);
+    renderNotasSemestre(); await espera(100);
+    out.sobrou = {badge: txt(card('F01').querySelector('.badge')), texto: txt(card('F01').querySelector('.notas-precisa')), campo: !!card('F01').querySelector('[data-nota-np3]')};
+    confere(out.sobrou.badge === 'Aprovado' && out.sobrou.texto === 'Média final: 65,0, aprovado!' && !out.sobrou.campo, 'NP3 que sobrou ainda aparece');
+    // nota do semestre incompleta no encerramento: compara com 60, não com o 50 da nota final
+    STATE.notasParciais.H04 = [{label: 'P1', valor: 55, peso: 1}, {label: 'P2', valor: null, peso: 1}]; await storeSet('notas_parciais', STATE.notasParciais);
+    abrirFimSemestre(); await espera(200);
+    out.encerrar2 = {F01: SEM.finais.F01, F01sub: txt(document.querySelector('[data-sem-disc="F01"] small')), H04: SEM.finais.H04};
+    confere(out.encerrar2.F01.nota === 65 && out.encerrar2.F01.res === 'passei' && !/NP3/.test(out.encerrar2.F01sub), 'encerrar: NP3 que sobrou entrou na conta');
+    confere(out.encerrar2.H04.nota === 55 && out.encerrar2.H04.res === 'nao', 'encerrar: média incompleta de 55 virou "passei"');
+    fecharFimSemestre();
+    // a prova "P3" cadastrada na aba Provas é a NP3: a nota dela vai para o campo da NP3, não para a média
+    STATE.notasParciais.F01[1].valor = 40; STATE.notasParciais.F01 = STATE.notasParciais.F01.filter(e => !e.np3); await storeSet('notas_parciais', STATE.notasParciais);
+    const prova = {id: 'p3teste', tipo: 'P3', disciplina: 'Física Newtoniana Clássica (F01-B)', data: '2026-10-10', hora: '19:30'};
+    await setProvaNota(prova, 70);
+    out.p3 = {lista: STATE.notasParciais.F01.map(e => (e.np3 ? 'NP3:' : e.label + ':') + e.valor), lida: provaNota(prova), fase: notaSituacao('F01').fase, final: notaSituacao('F01').final};
+    confere(out.p3.lista.join(',') === 'P1:50,P2:40,NP3:70' && out.p3.lida === 70 && out.p3.fase === 'aprovado' && out.p3.final === 57.5, 'a nota da prova P3 não foi para a NP3');
   }catch(e){ out.passo = 'ERR ' + e.message + ' ' + (e.stack || '').split('\n')[1]; }
   out.erros = __erros;
   const pre = document.createElement('pre'); pre.id = '__audit'; pre.textContent = JSON.stringify(out); document.body.appendChild(pre);

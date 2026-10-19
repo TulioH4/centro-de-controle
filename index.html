@@ -5283,7 +5283,7 @@ function renderNotasSemestre(){
         statusLabel = ok ? 'Aprovado' : ns.fase === 'np3' ? 'NP3' : 'Reprovado';
         statusCls = ok ? 'green' : ns.fase === 'np3' ? 'amber' : 'red';
         cor(statusCls);
-        precisaTxt = ns.np3 !== null && ns.final !== undefined
+        precisaTxt = ns.precisaNP3 !== undefined && ns.np3 !== null
           ? `Nota final: (${fmtNum(ns.npa)} + ${fmtNum(ns.np3)}) / 2 = <b>${fmtNum(ns.final)}</b>, ${ok ? 'aprovado!' : `abaixo de ${NP3_FINAL}`}`
           : ns.fase === 'np3' ? `Média ${fmtNum(ns.npa)}: vai para a NP3. Precisa de <b>${fmtNum(ns.precisaNP3)}</b> nela.`
           : ok ? `Média final: ${fmtNum(ns.npa)}, aprovado!`
@@ -8092,7 +8092,8 @@ function abrirFimSemestre(){
     // a nota que já estiver no Histórico
     const bruta = ns.final !== undefined ? ns.final : mp ? mp.media : (typeof item.nota === 'number' ? item.nota : null);
     const nota = bruta === null ? null : Math.round(bruta * 10) / 10;
-    finais[s] = {nota, res: ns.fase === 'np3' ? 'nao' : nota === null || nota >= notaAprova() ? 'passei' : 'nao', manual: false};
+    const corte = ns.final !== undefined ? notaAprova() : (STATE.config.notaMinima || 60);
+    finais[s] = {nota, res: ns.fase === 'np3' ? 'nao' : nota === null || nota >= corte ? 'passei' : 'nao', manual: false};
   });
   // disciplina nova criada no passo 2 vai para o semestre seguinte do curso, se ele existir
   const prox = histSemestreAtual() + 1;
@@ -8123,7 +8124,7 @@ function renderFimSemestre(){
       ${atuais.length ? atuais.map(s => {
         const f = SEM.finais[s], mp = mediaParcial(s), faltas = (STATE.faltas[s] || {}).faltas || 0;
         const ns = notaSituacao(s);
-        const sub = [ns.fase === 'np3' ? 'falta lançar a NP3' : ns.np3 !== null && ns.final !== undefined ? 'com a NP3' : mp ? `média de ${mp.lancadas} de ${mp.total} ${mp.total === 1 ? 'nota' : 'notas'}` : 'sem notas parciais', `${faltas} ${faltas === 1 ? 'falta' : 'faltas'}`].join(', ');
+        const sub = [ns.fase === 'np3' ? 'falta lançar a NP3' : ns.precisaNP3 !== undefined && ns.np3 !== null ? 'com a NP3' : mp ? `média de ${mp.lancadas} de ${mp.total} ${mp.total === 1 ? 'nota' : 'notas'}` : 'sem notas parciais', `${faltas} ${faltas === 1 ? 'falta' : 'faltas'}`].join(', ');
         return `<div class="sem-row" data-sem-disc="${esc(s)}">
           <div><b>${esc(nomeDaDisciplina(s))}</b><small>${sub}</small></div>
           <input inputmode="decimal" maxlength="5" autocomplete="off" placeholder="Nota" value="${f.nota === null ? '' : fmtNum(f.nota)}" aria-label="Nota final de ${esc(nomeDaDisciplina(s))}">
@@ -9171,11 +9172,14 @@ function provaDiscAtual(p){
   return (STATE.config.disciplinasAtuais || []).find(s => provaDaDisciplina(p, s, (STATE.historico.find(i => i.sigla === s) || {}).disciplina)) || null;
 }
 const rotuloIgual = (a, b) => normalizeStr(a).trim() === normalizeStr(b).trim();
-// nota da prova: a da aba Notas com o mesmo rótulo (P1, P2...) ou a guardada na própria prova
+// a prova "P3" (ou "NP3") é a NP3 quando a regra do Inatel vale
+const provaEhNP3 = p => regraNP3() && /^n?p\s*3$/i.test(String(p.tipo || '').trim());
+// nota da prova: a da aba Notas com o mesmo rótulo (P1, P2...), a NP3, ou a guardada na própria prova
 function provaNota(p){
   const s = provaDiscAtual(p);
   if(s){
-    const e = (STATE.notasParciais[s] || []).find(x => rotuloIgual(x.label, p.tipo));
+    const lista = STATE.notasParciais[s] || [];
+    const e = (provaEhNP3(p) && lista.find(x => x.np3)) || lista.find(x => !x.np3 && rotuloIgual(x.label, p.tipo));
     if(e) return notaOk(e) ? Number(e.valor) : null;
   }
   return notaOk({valor: p.nota}) ? Number(p.nota) : null;
@@ -9184,11 +9188,11 @@ async function setProvaNota(p, valor){
   const s = provaDiscAtual(p);
   if(s){
     if(!STATE.notasParciais[s]) STATE.notasParciais[s] = [{label:'P1',valor:null,peso:1},{label:'P2',valor:null,peso:1}];
-    const lista = STATE.notasParciais[s];
-    let e = lista.find(x => rotuloIgual(x.label, p.tipo));
+    const lista = STATE.notasParciais[s], np3 = provaEhNP3(p);
+    let e = np3 ? lista.find(x => x.np3) : lista.find(x => !x.np3 && rotuloIgual(x.label, p.tipo));
     if(!e){
       if(valor === null) return;
-      e = {label: p.tipo, valor: null, peso: 1};
+      e = np3 ? {label: 'NP3', valor: null, peso: 1, np3: true} : {label: p.tipo, valor: null, peso: 1};
       lista.push(e);
     }
     e.valor = valor;
