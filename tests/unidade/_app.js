@@ -22,6 +22,9 @@ function funcao(nome){
 const REQUISITOS = [
   trecho('const CURRICULOS = [', 'const WIZ_STATUS'),
   funcao('situacao'),
+  funcao('regraNP3'),
+  funcao('notaAprova'),
+  trecho('const NP3_PISO', 'function regraNP3'),
   trecho('function proximoRotulo', '// parece que o semestre'),
   funcao('wizNorm'),
   trecho('// ---------------- Requisitos, créditos', 'function renderFormatura'),
@@ -29,6 +32,16 @@ const REQUISITOS = [
 const SAIDA_REQ = 'CURRICULOS, curriculoDoPerfil, reqBase, reqPlano, reqCred, reqTrava, reqRotulos, reqDe, reqFaltando, reqIndice, reqPrevisao, reqPesos, semNum, reqContagem';
 function requisitos(STATE){
   return new Function('STATE', 'esc', 'storeSet', 'renderMapaSucesso', REQUISITOS + ';return {' + SAIDA_REQ + '};')(STATE, x => String(x), () => {}, () => {});
+}
+
+// regra de aprovação (média do semestre, NP3) e situação no histórico
+const NOTAS = [
+  src.slice(src.indexOf('const notaOk'), src.indexOf('\n', src.indexOf('const notaOk'))),
+  trecho('// ---------------- Regra de aprovação', '// ---------------- Disciplinas em Risco'),
+  funcao('situacao'),
+].join('\n');
+function notas(STATE){
+  return new Function('STATE', NOTAS + ';return {regraNP3, notaAprova, notaSituacao, notaPerdida, situacao, NP3_PISO, NP3_FINAL};')(STATE);
 }
 
 // calendário acadêmico
@@ -60,4 +73,4 @@ function verificador(nome){
   };
 }
 
-module.exports = {RAIZ, src, trecho, funcao, requisitos, calendario, verificador};
+module.exports = {RAIZ, src, trecho, funcao, requisitos, notas, calendario, verificador};

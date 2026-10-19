@@ -305,6 +305,9 @@
   .notas-card-nome{font-size:12.5px; font-weight:500; flex:1; line-height:1.35;}
   .notas-entries{display:flex; flex-direction:column; gap:5px;}
   .nota-row{display:flex; align-items:center; gap:6px;}
+  .nota-row--np3{margin-top:4px; padding-top:8px; border-top:1px dashed var(--line);}
+  .nota-np3-label{flex:0 0 auto; font-family:var(--mono); font-size:11px; font-weight:700; color:var(--amber); padding:4px 6px;}
+  .nota-np3-dica{flex:1; min-width:0; font-size:11px; color:var(--text-faint);}
   .nota-label-input{flex:1; min-width:0; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09); border-radius:3px; padding:4px 6px; color:var(--text); font-family:var(--mono); font-size:11px;}
   .nota-valor-input{flex:0 0 72px; width:72px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.09); border-radius:3px; padding:4px 8px; color:var(--text); font-family:var(--mono); font-size:12.5px; text-align:right;}
   .nota-peso-sep{font-size:10px; color:var(--text-faint); padding:0 1px; flex-shrink:0;}
@@ -3156,6 +3159,7 @@
           <div class="field"><label>Instituição</label><input id="cInstituicao"></div>
           <div class="field"><label>Semestre atual</label><input id="cSemestre"></div>
           <div class="field"><label>Nota mínima de aprovação (0-100)</label><input id="cNotaMinima" type="number" min="0" max="100"></div>
+          <div class="field"><label for="cRegraNota">Abaixo da nota mínima</label><select id="cRegraNota"><option value="">Automático (pela faculdade)</option><option value="np3">Faz a NP3 (regra do Inatel)</option><option value="media">Reprova</option></select></div>
         </div>
         <div class="save-row">
           <button class="btn btn-primary" id="btnSaveConfig">Salvar configurações</button>
@@ -3640,6 +3644,7 @@ function sanearDados(){
   DATA.disciplinasAtuais = textos(DATA.disciplinasAtuais).filter(siglaOk);
   const c = STATE.config = obj(STATE.config);
   c.notaMinima = num(c.notaMinima, 0, 100, 60);
+  c.regraNota = ['np3', 'media'].includes(c.regraNota) ? c.regraNota : '';
   c.disciplinasAtuais = textos(c.disciplinasAtuais).filter(siglaOk);
   ['aluno', 'curso', 'instituicao', 'semestre', 'curriculo'].forEach(k => { c[k] = txt(c[k]); });
   c.creditosSemestre = Math.round(num(c.creditosSemestre, 0, 60, 0));
@@ -3659,7 +3664,7 @@ function sanearDados(){
   STATE.faltasLimites = mapa(STATE.faltasLimites, v => { const n = num(v, 1, 9999, NaN); return Number.isNaN(n) ? undefined : Math.round(n); });
   STATE.faltasRegistro = lista(STATE.faltasRegistro).filter(r => typeof r.data === 'string' && siglaOk(r.sigla)).map(r => Object.assign(r, {n: Math.round(num(r.n, 1, 99, 1)), inicio: txt(r.inicio)}));
   STATE.notasParciais = mapa(STATE.notasParciais, v => Array.isArray(v) ? lista(v).map(e => Object.assign(e, {
-    label: txt(e.label), valor: numOuNulo(e.valor, 0, 100), peso: num(e.peso, 0.01, 100, 1)})) : undefined);
+    label: txt(e.label), valor: numOuNulo(e.valor, 0, 100), peso: num(e.peso, 0.01, 100, 1), np3: e.np3 === true ? true : undefined})) : undefined);
   STATE.metasNotas = mapa(STATE.metasNotas, v => { const n = num(v, 0, 100, NaN); return Number.isNaN(n) ? undefined : n; });
 
   // listas do dia a dia
@@ -4190,7 +4195,7 @@ function situacao(item){
   if(!isNaN(n)){
     // "não passei" (no fim do semestre, ou reprovado por falta mesmo com nota boa); cursando de novo, conta como cursando
     if(item.aprovado === false) return STATE.config.disciplinasAtuais.includes(item.sigla) ? 'Cursando' : 'Reprovado';
-    if(n >= STATE.config.notaMinima) return 'Aprovado';
+    if(n >= notaAprova()) return 'Aprovado';
     // Aprovado por recuperação: nota abaixo do mínimo mas marcado manualmente ou via import
     if(item.aprovado === true && !STATE.config.disciplinasAtuais.includes(item.sigla)) return 'Aprovado';
     return 'Reprovado';
@@ -4295,6 +4300,47 @@ const fmtNum = (n, d = 1) => Number(n).toFixed(d).replace('.', ',');
 // peso de uma nota parcial: pode ser quebrado (0,5 para uma prova que vale metade da NP1)
 const fmtPeso = p => String(Number(p) || 1).replace('.', ',');
 
+// ---------------- Regra de aprovação ----------------
+// Inatel (a regra de quase todas as disciplinas): NPA = média do semestre (NP1 e NP2, com os pesos).
+// NPA ≥ mínimo: aprovado. NPA < 30: reprovado. Entre 30 e o mínimo: NP3 (prova de todo o conteúdo) e
+// nota final (NPA + NP3)/2, aprovado com 50 ou mais. Nas outras faculdades: média ≥ mínimo.
+const NP3_PISO = 30, NP3_FINAL = 50;
+function regraNP3(){
+  const c = STATE.config || {};
+  if(c.regraNota) return c.regraNota === 'np3';
+  return c.curriculo === 'inatel-producao' || /inatel|instituto nacional de telecomunicacoes/.test(String(c.instituicao || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
+}
+// a nota final mínima que aprova (no Inatel, 50: abaixo de 60 só se chega a ela passando pela NP3)
+function notaAprova(){
+  return regraNP3() ? NP3_FINAL : (STATE.config.notaMinima || 60);
+}
+// onde está a nota de uma disciplina em curso: {fase: 'sem' | 'andamento' | 'aprovado' | 'np3' | 'reprovado',
+// media (das notas já lançadas), npa (quando todas saíram), np3, final, precisa (nas que faltam, para chegar
+// ao mínimo), precisaPiso (para ter direito à NP3), maxNPA (tirando 100 em todas as que faltam), precisaNP3}
+function notaSituacao(sigla){
+  const min = STATE.config.notaMinima || 60, comNP3 = regraNP3();
+  const todas = STATE.notasParciais[sigla] || [], peso = e => Number(e.peso) || 1;
+  const entradas = todas.filter(e => !e.np3), np3e = comNP3 ? todas.find(e => e.np3 && notaOk(e)) : null;
+  const feitas = entradas.filter(notaOk), soma = feitas.reduce((a, e) => a + Number(e.valor) * peso(e), 0);
+  const pT = entradas.reduce((a, e) => a + peso(e), 0), pF = feitas.reduce((a, e) => a + peso(e), 0), pV = pT - pF;
+  const r = {comNP3, min, lancadas: feitas.length, total: entradas.length, media: pF ? soma / pF : null, np3: np3e ? Number(np3e.valor) : null};
+  if(!feitas.length){ r.fase = 'sem'; return r; }
+  if(pV <= 0){
+    r.npa = soma / pT;
+    if(r.npa >= min) Object.assign(r, {fase: 'aprovado', final: r.npa});
+    else if(!comNP3 || r.npa < NP3_PISO) Object.assign(r, {fase: 'reprovado', final: r.npa});
+    else {
+      r.precisaNP3 = 2 * NP3_FINAL - r.npa;
+      if(r.np3 === null) r.fase = 'np3';
+      else { r.final = (r.npa + r.np3) / 2; r.fase = r.final >= NP3_FINAL ? 'aprovado' : 'reprovado'; }
+    }
+    return r;
+  }
+  return Object.assign(r, {fase: 'andamento', precisa: (min * pT - soma) / pV, precisaPiso: (NP3_PISO * pT - soma) / pV, maxNPA: (soma + 100 * pV) / pT});
+}
+// sem jeito de passar só com as notas do semestre: no Inatel, nem de chegar a 30 (o direito à NP3)
+const notaPerdida = r => r.fase === 'reprovado' || (r.fase === 'andamento' && r.precisa > 100 && (!r.comNP3 || r.maxNPA < NP3_PISO));
+
 
 // ---------------- Disciplinas em Risco (painel) ----------------
 function renderDiscRisco(){
@@ -4311,22 +4357,16 @@ function renderDiscRisco(){
     const faltasCount = (STATE.faltas[sigla]||{}).faltas || 0;
     const faltasPct = faltasCount / limite;
 
-    const entradas = STATE.notasParciais[sigla] || [];
-    const preenchidas = entradas.filter(notaOk);
-    const vazias = entradas.filter(e => !notaOk(e));
-    const pesoTotal = entradas.reduce((s,e)=>s+(Number(e.peso)||1),0);
-    const somaW = preenchidas.reduce((s,e)=>s+Number(e.valor)*(Number(e.peso)||1),0);
-    const pesoVazias = vazias.reduce((s,e)=>s+(Number(e.peso)||1),0);
     // (o que falta na nota, lido depois de "Nota")
+    const ns = notaSituacao(sigla);
     let notaRisk = 0, notaLabel = '';
-    if(preenchidas.length && pesoVazias === 0){
-      const mf = pesoTotal>0 ? somaW/pesoTotal : 0;
-      if(mf < notaMin){ notaRisk = 1; notaLabel = `ficou em ${fmtNum(mf)}`; }
-    } else if(preenchidas.length && pesoVazias > 0){
-      const precisa = (notaMin*pesoTotal - somaW)/pesoVazias;
-      if(precisa > 100){ notaRisk = 1; notaLabel = 'não dá mais'; }
-      else if(precisa > 85){ notaRisk = 0.8; notaLabel = `precisa de ${precisa.toFixed(0)}`; }
-      else if(precisa > notaMin){ notaRisk = 0.5; notaLabel = `precisa de ${precisa.toFixed(0)}`; }
+    if(ns.fase === 'reprovado'){ notaRisk = 1; notaLabel = `ficou em ${fmtNum(ns.final)}`; }
+    else if(ns.fase === 'np3'){ notaRisk = 0.8; notaLabel = `NP3: precisa de ${ns.precisaNP3.toFixed(0)}`; }
+    else if(ns.fase === 'andamento'){
+      if(notaPerdida(ns)){ notaRisk = 1; notaLabel = 'não dá mais'; }
+      else if(ns.precisa > 100){ notaRisk = 0.8; notaLabel = 'vai para a NP3'; }
+      else if(ns.precisa > 85){ notaRisk = 0.8; notaLabel = `precisa de ${ns.precisa.toFixed(0)}`; }
+      else if(ns.precisa > notaMin){ notaRisk = 0.5; notaLabel = `precisa de ${ns.precisa.toFixed(0)}`; }
     }
 
     const totalRisk = Math.max(faltasPct * 0.6, notaRisk * 0.4);
@@ -4400,21 +4440,8 @@ function renderPainel(){
     <span class="meta-chip">Sincronizado às <b>${nowHM}</b></span>
     <span class="meta-chip"><b>${esc(STATE.config.aluno || 'Aluno não identificado')}</b></span>  `;
 
-  // Calcular disciplinas com nota já reprovada (sem recuperação possível)
-  const notaMin = STATE.config.notaMinima || 60;
-  const discReprovando = (STATE.config.disciplinasAtuais||[]).filter(sigla => {
-    const entradas = STATE.notasParciais ? (STATE.notasParciais[sigla]||[]) : [];
-    if(!entradas.length) return false;
-    const preenchidas = entradas.filter(notaOk);
-    const vazias = entradas.filter(e => !notaOk(e));
-    if(!preenchidas.length) return false;
-    const pesoTotal = entradas.reduce((s,e) => s+(Number(e.peso)||1), 0);
-    const somaW = preenchidas.reduce((s,e) => s+Number(e.valor)*(Number(e.peso)||1), 0);
-    const pesoVazias = vazias.reduce((s,e) => s+(Number(e.peso)||1), 0);
-    if(vazias.length===0){ const mf=somaW/pesoTotal; return mf < notaMin; }
-    const precisa = pesoVazias > 0 ? (notaMin*pesoTotal - somaW)/pesoVazias : 999;
-    return precisa > 100;
-  }).length;
+  // disciplinas sem jeito de passar só com as notas do semestre (no Inatel, nem com a NP3)
+  const discReprovando = (STATE.config.disciplinasAtuais||[]).filter(sigla => notaPerdida(notaSituacao(sigla))).length;
 
   // Próxima prova que ainda não começou (uma prova de hoje às 08:00 sai do card depois das 08:00)
   const proxProva = upcomingProvas(1)[0];
@@ -4948,7 +4975,7 @@ function renderHistorico(filter){
     const isCustom = STATE.historicoCustom.some(c => c.sigla === item.sigla);
     const isCurrently = STATE.config.disciplinasAtuais.includes(item.sigla);
     const notaN = Number(item.nota);
-    const notaBaixaHistorico = !isCurrently && !isNaN(notaN) && notaN < STATE.config.notaMinima;
+    const notaBaixaHistorico = !isCurrently && !isNaN(notaN) && notaN < notaAprova();
     const sig = esc(item.sigla);
     let situacaoBadge;
     if(notaBaixaHistorico && s === 'Reprovado'){
@@ -5094,7 +5121,7 @@ function showDiscDetail(sigla){
   const faltasPct = Math.min(100, Math.round(faltasCount / limite * 100));
   const faltasCls = faltasCount >= limite ? 'red' : (faltasCount >= limite*0.75 ? 'amber' : 'green');
 
-  const entradas = isAtual && STATE.notasParciais[sigla] ? STATE.notasParciais[sigla] : [];
+  const entradas = isAtual && STATE.notasParciais[sigla] ? STATE.notasParciais[sigla].filter(e => !e.np3) : [];
   const preenchidas = entradas.filter(notaOk);
   const pesoPreench = preenchidas.reduce((a,e) => a+(Number(e.peso)||1), 0);
   const mediaAtual = preenchidas.length && pesoPreench > 0
@@ -5207,8 +5234,8 @@ function renderCharts(){
     type:'bar',
     data:{ labels:numeric.map(i=>i.sigla),
       datasets:[{ label:'Nota', data:numeric.map(i=>i.nota),
-        backgroundColor:numeric.map(i=> i.nota>=STATE.config.notaMinima ? hexA(cGreen,.33) : hexA(cRed,.33)),
-        borderColor:numeric.map(i=> i.nota>=STATE.config.notaMinima ? cGreen : cRed),
+        backgroundColor:numeric.map(i=> situacao(i) === 'Aprovado' ? hexA(cGreen,.33) : hexA(cRed,.33)),
+        borderColor:numeric.map(i=> situacao(i) === 'Aprovado' ? cGreen : cRed),
         borderWidth:1.5, borderRadius:2 }]},
     options:{ scales:{
         y:{ beginAtZero:true, max:100, grid:{color:cLineSoft}, ticks:{color:cTextFaint, font:{size:10}} },
@@ -5239,42 +5266,40 @@ function renderNotasSemestre(){
     // Garantir campo peso em entradas existentes
     STATE.notasParciais[sigla].forEach(e => { if(e.peso == null) e.peso = 1; });
     const entradas = STATE.notasParciais[sigla];
-    const preenchidas = entradas.filter(e => e.valor !== null && e.valor !== '' && !isNaN(Number(e.valor)));
-    const vazias = entradas.filter(e => e.valor === null || e.valor === '');
-    const pesoTotal = entradas.reduce((s,e) => s + (Number(e.peso)||1), 0);
-    const pesoPreench = preenchidas.reduce((s,e) => s + (Number(e.peso)||1), 0);
-    const pesoVazias = vazias.reduce((s,e) => s + (Number(e.peso)||1), 0);
-    const somaW = preenchidas.reduce((s,e) => s + Number(e.valor) * (Number(e.peso)||1), 0);
-    const todosPesoIgual = entradas.every(e => (Number(e.peso)||1) === 1);
+    const ns = notaSituacao(sigla), vazias = entradas.filter(e => !e.np3 && !notaOk(e));
+    const todosPesoIgual = entradas.every(e => e.np3 || (Number(e.peso)||1) === 1);
+    const cor = c => { accentColor = progressColor = `var(--${c})`; };
 
     let statusLabel = 'Sem notas', statusCls = 'gray';
     let mediaVal = null, precisaTxt = '', accentColor = 'var(--line)';
     let progressPct = 0, progressColor = 'var(--text-faint)';
 
-    if(preenchidas.length > 0){
-      mediaVal = pesoPreench > 0 ? somaW / pesoPreench : 0;
+    if(ns.fase !== 'sem'){
+      mediaVal = ns.media;
       progressPct = Math.min(100, mediaVal);
 
-      if(vazias.length === 0){
-        const mediaFinal = pesoTotal > 0 ? somaW / pesoTotal : 0;
-        const ok = mediaFinal >= notaMin;
-        statusLabel = ok ? 'Aprovado' : 'Reprovado';
-        statusCls = ok ? 'green' : 'red';
-        accentColor = ok ? 'var(--green)' : 'var(--red)';
-        progressColor = accentColor;
-        precisaTxt = ok
-          ? `Média final: ${fmtNum(mediaFinal)}, aprovado!`
-          : `Média ${fmtNum(mediaFinal)}, abaixo do mínimo (${notaMin})`;
+      if(ns.fase !== 'andamento'){
+        const ok = ns.fase === 'aprovado';
+        statusLabel = ok ? 'Aprovado' : ns.fase === 'np3' ? 'NP3' : 'Reprovado';
+        statusCls = ok ? 'green' : ns.fase === 'np3' ? 'amber' : 'red';
+        cor(statusCls);
+        precisaTxt = ns.np3 !== null && ns.final !== undefined
+          ? `Nota final: (${fmtNum(ns.npa)} + ${fmtNum(ns.np3)}) / 2 = <b>${fmtNum(ns.final)}</b>, ${ok ? 'aprovado!' : `abaixo de ${NP3_FINAL}`}`
+          : ns.fase === 'np3' ? `Média ${fmtNum(ns.npa)}: vai para a NP3. Precisa de <b>${fmtNum(ns.precisaNP3)}</b> nela.`
+          : ok ? `Média final: ${fmtNum(ns.npa)}, aprovado!`
+          : ns.comNP3 ? `Média ${fmtNum(ns.npa)}, abaixo de ${NP3_PISO}: sem direito à NP3`
+          : `Média ${fmtNum(ns.npa)}, abaixo do mínimo (${notaMin})`;
       } else {
-        const precisa = pesoVazias > 0 ? (notaMin * pesoTotal - somaW) / pesoVazias : null;
-        if(precisa === null || precisa <= 0){
-          statusLabel = 'Já aprovado'; statusCls = 'green';
-          accentColor = 'var(--green)'; progressColor = 'var(--green)';
+        const precisa = ns.precisa;
+        if(precisa <= 0){
+          statusLabel = 'Já aprovado'; statusCls = 'green'; cor('green');
           precisaTxt = 'Aprovado mesmo que zere as próximas!';
+        } else if(notaPerdida(ns)){
+          statusLabel = 'Reprovado'; statusCls = 'red'; cor('red');
+          precisaTxt = ns.comNP3 ? `Não dá mais para chegar a ${NP3_PISO}, o mínimo para fazer a NP3.` : 'Não é mais possível atingir a média mínima.';
         } else if(precisa > 100){
-          statusLabel = 'Reprovado'; statusCls = 'red';
-          accentColor = 'var(--red)'; progressColor = 'var(--red)';
-          precisaTxt = 'Não é mais possível atingir a média mínima.';
+          statusLabel = 'NP3'; statusCls = 'amber'; cor('amber');
+          precisaTxt = ns.precisaPiso > 0 ? `Mesmo com 100, vai para a NP3. Para ter direito a ela: <b>${fmtNum(ns.precisaPiso)}</b>.` : 'Mesmo com 100, vai para a NP3.';
         } else {
           const provasStr = vazias.length === 1 ? 'na próxima avaliação' : `de média nas próximas ${vazias.length} avaliações`;
           if(precisa > notaMin * 1.15){
@@ -5287,7 +5312,7 @@ function renderNotasSemestre(){
             statusLabel = 'Em dia'; statusCls = 'green';
             accentColor = 'var(--green)'; progressColor = 'var(--green)';
           }
-          precisaTxt = `Precisa de <b>${fmtNum(precisa)}</b> ${provasStr} para passar`;
+          precisaTxt = `Precisa de <b>${fmtNum(precisa)}</b> ${provasStr} para passar${ns.comNP3 ? ' sem NP3' : ''}`;
         }
       }
     }
@@ -5309,7 +5334,7 @@ function renderNotasSemestre(){
         <span class="badge badge-${statusCls}">${statusLabel}</span>
       </div>
       <div class="notas-entries">
-        ${entradas.map((e,i) => `
+        ${entradas.map((e,i) => e.np3 ? '' : `
           <div class="nota-row">
             <input class="nota-label-input" type="text" value="${esc(e.label||'')}" placeholder="P1"
               data-nota-label data-sigla="${esc(sigla)}" data-idx="${i}">
@@ -5322,6 +5347,12 @@ function renderNotasSemestre(){
               aria-label="Peso de ${esc(e.label || 'nota')}" data-nota-peso data-sigla="${esc(sigla)}" data-idx="${i}">
             <button class="nota-del" data-nota-del data-sigla="${esc(sigla)}" data-idx="${i}" title="Remover linha">×</button>
           </div>`).join('')}
+        ${ns.precisaNP3 !== undefined ? `<div class="nota-row nota-row--np3">
+            <span class="nota-np3-label">NP3</span>
+            <input class="nota-valor-input" type="number" min="0" max="100" step="0.1" value="${ns.np3 !== null ? ns.np3 : ''}" placeholder="—"
+              aria-label="NP3 de ${esc(nome)}" data-nota-np3 data-sigla="${esc(sigla)}">
+            <span class="nota-np3-dica">vale metade da nota final</span>
+          </div>` : ''}
         <div class="nota-foot">
           <button class="nota-add-btn" data-nota-add data-sigla="${esc(sigla)}">+ Adicionar nota</button>
           <label class="nota-meta">Meta
@@ -5332,7 +5363,7 @@ function renderNotasSemestre(){
           </label>
         </div>
       </div>
-      ${preenchidas.length > 0 ? `
+      ${ns.fase !== 'sem' ? `
       <div class="notas-summary">
         <div class="notas-progress">
           <div class="notas-progress-fill" style="width:${progressPct}%;background:${progressColor};"></div>
@@ -5368,6 +5399,20 @@ function renderNotasSemestre(){
   container.querySelectorAll('[data-nota-meta]').forEach(inp => {
     inp.addEventListener('change', () => updateNotaMeta(inp.dataset.sigla, inp.value));
   });
+  container.querySelectorAll('[data-nota-np3]').forEach(inp => {
+    inp.addEventListener('change', () => updateNotaNP3(inp.dataset.sigla, inp.value));
+  });
+}
+// a NP3 fica na lista da disciplina, marcada (não entra na média do semestre); vazia, sai
+async function updateNotaNP3(sigla, val){
+  const lista = STATE.notasParciais[sigla];
+  if(!lista) return;
+  const n = parseFloat(String(val).replace(',', '.')), i = lista.findIndex(e => e.np3);
+  if(val === '' || isNaN(n)){ if(i >= 0) lista.splice(i, 1); }
+  else if(i >= 0) lista[i].valor = Math.min(100, Math.max(0, n));
+  else lista.push({label: 'NP3', valor: Math.min(100, Math.max(0, n)), peso: 1, np3: true});
+  await storeSet('notas_parciais', STATE.notasParciais);
+  renderNotasSemestre();
 }
 
 async function updateNotaLabel(sigla, idx, val){
@@ -5384,7 +5429,7 @@ async function updateNotaValor(sigla, idx, val){
 }
 async function addNotaRow(sigla){
   if(!STATE.notasParciais[sigla]) STATE.notasParciais[sigla] = [];
-  const len = STATE.notasParciais[sigla].length;
+  const len = STATE.notasParciais[sigla].filter(e => !e.np3).length;
   STATE.notasParciais[sigla].push({label:'P'+(len+1), valor:null, peso:1});
   await storeSet('notas_parciais', STATE.notasParciais);
   renderNotasSemestre();
@@ -5406,7 +5451,7 @@ async function updateNotaMeta(sigla, val){
   renderNotasSemestre();
 }
 async function removeNotaRow(sigla, idx){
-  if(!STATE.notasParciais[sigla] || STATE.notasParciais[sigla].length <= 1) return;
+  if(!STATE.notasParciais[sigla] || STATE.notasParciais[sigla].filter(e => !e.np3).length <= 1) return;
   STATE.notasParciais[sigla].splice(idx, 1);
   await storeSet('notas_parciais', STATE.notasParciais);
   renderNotasSemestre();
@@ -5433,7 +5478,7 @@ function renderSimuladorIRA(){
     const item = STATE.historico.find(i => i.sigla === sigla);
     const nome = item ? item.disciplina : sigla;
     const ch = item && typeof item.ch === 'number' && item.ch > 0 ? item.ch : null;
-    const entradas = STATE.notasParciais[sigla] || [];
+    const entradas = (STATE.notasParciais[sigla] || []).filter(e => !e.np3);
     const preenchidas = entradas.filter(notaOk);
     const pesoPreench = preenchidas.reduce((a,e) => a+(Number(e.peso)||1), 0);
     const mediaAtual = preenchidas.length && pesoPreench > 0
@@ -5652,7 +5697,7 @@ const reqDe = (cur, sg) => reqIndice(cur).r[sg] || [];
 const reqEhGeral = (cur, sg) => /\*/.test(cur.requisitos[sg] || '');
 const REQ_TIPO = {I: 'aprovada antes', II: 'cursada antes', Co: 'aprovada antes ou junto'};
 // "não passei" com nota de aprovação: reprovou por falta (não vale nem para o pré-requisito II)
-const reprovouPorFalta = i => i.aprovado === false && Number(String(i.nota ?? '').replace(',', '.')) >= (STATE.config.notaMinima || 60);
+const reprovouPorFalta = i => i.aprovado === false && Number(String(i.nota ?? '').replace(',', '.')) >= notaAprova();
 // O que já conta para os requisitos. aprov: aprovadas (com contarCursando, também as que está
 // cursando, contando que passe); freq: cursadas com frequência (II); cursando: as deste semestre.
 function reqBase(contarCursando){
@@ -7071,7 +7116,7 @@ function renderPlanoEstudos(){
     const faltas = (STATE.faltas[sigla]||{}).faltas || 0;
     const faltaPct = faltas / limite;
     const notaMin = STATE.config.notaMinima || 60;
-    const entradas = STATE.notasParciais[sigla] || [];
+    const entradas = (STATE.notasParciais[sigla] || []).filter(e => !e.np3);
     const preench = entradas.filter(notaOk);
     const pesoP = preench.reduce((a,e) => a+(Number(e.peso)||1), 0);
     const media = preench.length && pesoP > 0 ? preench.reduce((a,e) => a+Number(e.valor)*(Number(e.peso)||1),0)/pesoP : null;
@@ -7118,32 +7163,29 @@ function renderCalculadoraFinal(){
   const rows = atuais.map(sigla => {
     const item = STATE.historico.find(i => i.sigla === sigla);
     const nome = item ? item.disciplina : sigla;
-    const entradas = STATE.notasParciais[sigla] || [];
-    const preench = entradas.filter(notaOk);
-    const vazias = entradas.filter(e => !notaOk(e));
-    const pesoPreench = preench.reduce((a,e) => a+(Number(e.peso)||1), 0);
-    const pesoTotal = entradas.reduce((a,e) => a+(Number(e.peso)||1), 0);
-    const pesoVazias = vazias.reduce((a,e) => a+(Number(e.peso)||1), 0);
-    const somaW = preench.reduce((a,e) => a+Number(e.valor)*(Number(e.peso)||1), 0);
+    const ns = notaSituacao(sigla);
     let needed = null, verdict = '', cls = 'gray';
-    if(entradas.length === 0){
+    if(!ns.total){
       verdict = 'Sem avaliações'; cls = 'gray';
-    } else if(pesoVazias === 0){
-      const media = pesoTotal > 0 ? somaW/pesoTotal : 0;
-      needed = null;
-      verdict = media >= notaMin ? '✓ Aprovado' : '✗ Reprovado'; cls = media >= notaMin ? 'green' : 'red';
+    } else if(ns.fase === 'sem'){
+      needed = notaMin; verdict = 'Possível'; cls = 'blue';
+    } else if(ns.fase === 'np3'){
+      needed = ns.precisaNP3; verdict = 'Na NP3'; cls = 'amber';
+    } else if(ns.fase !== 'andamento'){
+      verdict = ns.fase === 'aprovado' ? '✓ Aprovado' : '✗ Reprovado'; cls = ns.fase === 'aprovado' ? 'green' : 'red';
     } else {
-      needed = pesoVazias > 0 ? (notaMin*pesoTotal - somaW)/pesoVazias : 999;
-      if(needed > 100){ verdict = '✗ Impossível'; cls = 'red'; }
+      needed = ns.precisa;
+      if(notaPerdida(ns)){ verdict = '✗ Impossível'; cls = 'red'; }
+      else if(needed > 100){ needed = null; verdict = 'Vai para a NP3'; cls = 'amber'; }
       else if(needed <= 0){ verdict = '✓ Já aprovado'; cls = 'green'; }
       else if(needed >= 80){ verdict = 'Difícil'; cls = 'amber'; }
       else { verdict = 'Possível'; cls = 'blue'; }
     }
-    return {sigla, nome, needed, verdict, cls, pesoVazias, pesoTotal};
+    return {sigla, nome, needed, verdict, cls};
   });
   panel.innerHTML = `
     <div style="font-size:12px;color:var(--text-faint);margin-bottom:12px;">
-      Nota necessária nas avaliações restantes para atingir ${notaMin} pontos (nota mínima de aprovação).
+      ${regraNP3() ? `Nota necessária nas avaliações restantes para chegar a ${notaMin} sem NP3 (na NP3, a necessária nela).` : `Nota necessária nas avaliações restantes para atingir ${notaMin} pontos (nota mínima de aprovação).`}
     </div>
     ${rows.map(r => `<div class="calc-row">
       <span class="calc-sigla">${esc(r.sigla)}</span>
@@ -7954,6 +7996,7 @@ function renderConfig(){
   document.getElementById('cInstituicao').value = STATE.config.instituicao || '';
   document.getElementById('cSemestre').value = STATE.config.semestre || '';
   document.getElementById('cNotaMinima').value = STATE.config.notaMinima;
+  document.getElementById('cRegraNota').value = STATE.config.regraNota || '';
   renderAtuaisConfig();
   renderSemPanel();
   renderMetaNotas();
@@ -8013,7 +8056,7 @@ let SEM = null;
 const nomeDaDisciplina = s => (STATE.historico.find(i => i.sigla === s) || {}).disciplina || s;
 // média ponderada das notas parciais já lançadas (null sem nenhuma)
 function mediaParcial(sigla){
-  const entradas = STATE.notasParciais[sigla] || [];
+  const entradas = (STATE.notasParciais[sigla] || []).filter(e => !e.np3);
   const feitas = entradas.filter(notaOk);
   if(!feitas.length) return null;
   const peso = e => Number(e.peso) || 1;
@@ -8041,14 +8084,15 @@ function semestreParaEncerrar(){
 }
 function abrirFimSemestre(){
   const atuais = STATE.config.disciplinasAtuais || [];
-  const min = STATE.config.notaMinima || 60;
   const finais = {};
   atuais.forEach(s => {
-    const mp = mediaParcial(s);
+    const mp = mediaParcial(s), ns = notaSituacao(s);
     const item = STATE.historico.find(i => i.sigla === s) || {};
-    // a média das parciais; sem parciais, a nota que já estiver no Histórico
-    const nota = mp ? Math.round(mp.media * 10) / 10 : (typeof item.nota === 'number' ? item.nota : null);
-    finais[s] = {nota, res: nota === null || nota >= min ? 'passei' : 'nao', manual: false};
+    // a nota final pela regra (no Inatel, com a NP3); faltando a NP3, a média do semestre; sem parciais,
+    // a nota que já estiver no Histórico
+    const bruta = ns.final !== undefined ? ns.final : mp ? mp.media : (typeof item.nota === 'number' ? item.nota : null);
+    const nota = bruta === null ? null : Math.round(bruta * 10) / 10;
+    finais[s] = {nota, res: ns.fase === 'np3' ? 'nao' : nota === null || nota >= notaAprova() ? 'passei' : 'nao', manual: false};
   });
   // disciplina nova criada no passo 2 vai para o semestre seguinte do curso, se ele existir
   const prox = histSemestreAtual() + 1;
@@ -8069,7 +8113,6 @@ function renderFimSemestre(){
   const voltar = document.getElementById('semVoltar'), avancar = document.getElementById('semAvancar');
   const passos = n => `<div class="sem-passos" aria-hidden="true">${[1, 2, 3].map(i => `<span class="${i <= n ? 'on' : ''}"></span>`).join('')}</div>`;
   const atuais = STATE.config.disciplinasAtuais || [];
-  const min = STATE.config.notaMinima || 60;
   voltar.style.visibility = SEM.passo > 1 && SEM.passo < 4 ? 'visible' : 'hidden';
   avancar.textContent = SEM.passo === 3 ? 'Encerrar semestre' : SEM.passo === 4 ? 'Concluir' : 'Próximo';
   document.getElementById('semTitulo').textContent = SEM.passo === 4 ? 'Semestre encerrado' : `Encerrar semestre (${SEM.passo} de 3)`;
@@ -8079,7 +8122,8 @@ function renderFimSemestre(){
       <p class="help-text" style="margin:0 0 4px;">A nota já vem da média das suas notas parciais: confira e corrija se precisar. Ela vai para o Histórico.</p>
       ${atuais.length ? atuais.map(s => {
         const f = SEM.finais[s], mp = mediaParcial(s), faltas = (STATE.faltas[s] || {}).faltas || 0;
-        const sub = [mp ? `média de ${mp.lancadas} de ${mp.total} ${mp.total === 1 ? 'nota' : 'notas'}` : 'sem notas parciais', `${faltas} ${faltas === 1 ? 'falta' : 'faltas'}`].join(', ');
+        const ns = notaSituacao(s);
+        const sub = [ns.fase === 'np3' ? 'falta lançar a NP3' : ns.np3 !== null && ns.final !== undefined ? 'com a NP3' : mp ? `média de ${mp.lancadas} de ${mp.total} ${mp.total === 1 ? 'nota' : 'notas'}` : 'sem notas parciais', `${faltas} ${faltas === 1 ? 'falta' : 'faltas'}`].join(', ');
         return `<div class="sem-row" data-sem-disc="${esc(s)}">
           <div><b>${esc(nomeDaDisciplina(s))}</b><small>${sub}</small></div>
           <input inputmode="decimal" maxlength="5" autocomplete="off" placeholder="Nota" value="${f.nota === null ? '' : fmtNum(f.nota)}" aria-label="Nota final de ${esc(nomeDaDisciplina(s))}">
@@ -8097,7 +8141,7 @@ function renderFimSemestre(){
         const n = Number(t);
         f.nota = t === '' || isNaN(n) ? null : Math.min(100, Math.max(0, n));
         // enquanto a pessoa não escolheu à mão, o resultado segue a nota
-        if(!f.manual && f.nota !== null) marcar(f.nota >= min ? 'passei' : 'nao');
+        if(!f.manual && f.nota !== null) marcar(f.nota >= notaAprova() ? 'passei' : 'nao');
       });
       row.querySelectorAll('[data-res]').forEach(b => b.addEventListener('click', () => { f.manual = true; marcar(b.dataset.res); }));
     });
@@ -8920,6 +8964,7 @@ document.getElementById('btnSaveConfig').addEventListener('click', async () => {
     instituicao: document.getElementById('cInstituicao').value.trim(),
     semestre: document.getElementById('cSemestre').value.trim(),
     notaMinima: Number(document.getElementById('cNotaMinima').value) || 60,
+    regraNota: (v => ['np3', 'media'].includes(v) ? v : '')(document.getElementById('cRegraNota').value),
   };
   await storeSet('config', STATE.config);
   document.getElementById('brandCurso').textContent = STATE.config.curso;
