@@ -12345,7 +12345,7 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
     if(_swReloading) return;
     const a = document.activeElement;
     const busy = (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) || document.querySelector('.modal-overlay.open')
-      || (document.getElementById('quickAddOverlay') || {}).style?.display === 'flex';
+      || ['quickAddOverlay', 'discDetailOverlay', 'wizardOverlay'].some(id => ((document.getElementById(id) || {}).style || {}).display === 'flex');
     if(busy){ document.addEventListener('visibilitychange', reloadForUpdate, {once:true}); return; }
     _swReloading = true;
     location.reload();

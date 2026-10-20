@@ -16,6 +16,7 @@ function aparelho({local = {}, meta = {}, dono = null, sessao = null, sairFalha 
     key(i){ return [...this.m.keys()][i] ?? null; } get length(){ return this.m.size; } }
   const ls = new FakeStorage();
   Object.entries(local).forEach(([k, val]) => ls.m.set(P + k, JSON.stringify(val)));
+  if(sessao) ls.m.set('cc-auth', JSON.stringify({user: sessao}));
   ls.m.set(P + '__sync_meta', JSON.stringify(meta));
   if(dono) ls.m.set(P + '__sync_owner', JSON.stringify(dono));
   const chamadas = [], eventos = [];
@@ -27,10 +28,11 @@ function aparelho({local = {}, meta = {}, dono = null, sessao = null, sairFalha 
     onAuthStateChange(fn){ ouvinte = fn; },
     signInWithPassword: async ({email}) => { chamadas.push('entrar ' + email); atual = usuario(email); avisa('SIGNED_IN', {user: atual}); return {data: {user: atual, session: {}}, error: null}; },
     signUp: async ({email}) => { chamadas.push('criar ' + email); atual = usuario(email); avisa('SIGNED_IN', {user: atual}); return {data: {user: atual, session: {}}, error: null}; },
+    // como a biblioteca: sem conexão, devolve o erro e deixa a sessão guardada
     signOut: async ({scope} = {}) => {
       chamadas.push('sair ' + (scope || 'global'));
-      if(sairFalha && scope !== 'local') return {error: {message: 'Failed to fetch'}};
-      atual = null; avisa('SIGNED_OUT', null); return {error: null};
+      if(sairFalha) return {error: {message: 'Failed to fetch'}};
+      atual = null; ls.removeItem('cc-auth'); avisa('SIGNED_OUT', null); return {error: null};
     },
   };
   const tabela = () => { const q = {select(){ return q; }, in(){ return Promise.resolve({error: null, data: []}); }, range(){ return Promise.resolve({error: null, data: []}); },
@@ -115,11 +117,16 @@ const erro = async fn => { try{ await fn(); return null; }catch(e){ return e.mes
   await a.Sync.signOut();
   v.igual([a.loc.recargas, a.valor('gteste_config'), a.dono()], [0, null, null], 'sair por esta aba limpa o aparelho sem recarregar sozinho');
 
-  // 10) sem internet para avisar o servidor: a sessão sai assim mesmo deste aparelho
+  // 10) sair é só deste aparelho (o celular continua entrado)...
+  a = aparelho({local: dadosA, meta: sincronizado, sessao: {id: 'id-a@x.com', email: 'a@x.com'}});
+  await a.Sync.restoreSession();
+  await a.Sync.signOut();
+  v.igual(a.chamadas, ['sair local'], 'sair não derruba a conta nos outros aparelhos');
+  // ...e sem internet a sessão sai assim mesmo (senão a próxima abertura entraria de novo)
   a = aparelho({local: dadosA, meta: sincronizado, sessao: {id: 'id-a@x.com', email: 'a@x.com'}, sairFalha: true});
   await a.Sync.restoreSession();
   await a.Sync.signOut();
-  v.igual(a.chamadas, ['sair global', 'sair local'], 'sem resposta do servidor, a sessão sai só daqui');
+  v.igual([a.chamadas, a.ls.getItem('cc-auth'), a.valor('gteste_config')], [['sair local'], null, null], 'sem resposta do servidor, a sessão e os dados saem deste aparelho');
 
   v.fim();
 })().catch(e => { console.log('✕ ' + e.stack); process.exitCode = 1; });

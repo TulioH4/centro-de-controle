@@ -43,6 +43,8 @@ Um teste reprova se acontecer um destes:
 - botão ou campo sem nome para leitor de tela;
 - uma conferência que o próprio teste anotou em `falhas`.
 
+A **varredura** (no computador, no celular e no tema claro) entra em cada aba e em cada janela e clica em tudo o que não apaga, não sai da conta e não baixa nada (mais de 500 cliques por rodada); qualquer erro reprova.
+
 O **aluno-outro-curso** passa pelo assistente escolhendo Engenharia de Telecomunicações e confere o histórico, o nome do curso e a regra do Inatel no perfil criado.
 
 O **ajustes** (no computador e, como `ajustes-celular`, com 390 px) confere os avisos do próprio app no lugar das caixas do navegador, o "Novo item" cabendo na tela, a tarefa nova aparecendo no quadro, as listas de disciplina e de semestre, Configurações no pé da barra, as tarefas no Painel, o calendário de provas no celular, as ligações do Mapa sem passar por cima das disciplinas e o horário montado no passo 2 do "Encerrar semestre".

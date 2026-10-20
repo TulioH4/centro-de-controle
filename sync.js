@@ -433,9 +433,15 @@
     await push();
     if (hasDirty()) throw new Error('Ainda há alterações que não foram enviadas. Conecte-se à internet e tente de novo.');
     if (channel) { client.removeChannel(channel); channel = null; }
-    const { error } = await busy(() => client.auth.signOut());
-    // offline, the session would stay here and the next opening would enter the account again
-    if (error && !/session.*(missing|not found)|not.*logged in/i.test(error.message || '')) await busy(() => client.auth.signOut({ scope: 'local' }));
+    // only this device leaves the account (the default, "global", would sign out the phone too)
+    const { error } = await busy(() => client.auth.signOut({ scope: 'local' }));
+    // without a connection the library keeps the session stored, and the next opening would enter the
+    // account again: it goes from here anyway
+    if (error) {
+      const auth = [];
+      for (let i = 0; i < ls.length; i++) { const k = ls.key(i); if (k && k.startsWith('cc-auth')) auth.push(k); }
+      auth.forEach(k => rawRemove.call(ls, k));
+    }
     state.user = null;
     // the data lives in the account; leave nothing behind on this device
     clearLocalData();
