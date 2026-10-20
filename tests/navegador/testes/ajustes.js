@@ -78,6 +78,12 @@ setTimeout(async () => {
     const r = {titulo, tarefa: linhas.some(l => /Lista do laboratório/.test(l) && /Tarefa, faltam 2 dias/.test(l)), plano: !!document.getElementById('planoEstudosPanel')};
     confere(r.titulo === 'Relatórios e tarefas' && r.tarefa, 'o Painel não mostra as tarefas junto dos relatórios');
     confere(!r.plano && !/próximos 7 dias/.test(document.getElementById('tab-painel').textContent), 'o plano de estudos de 7 dias ainda aparece');
+    // resumo do dia: sem a sequência de estudos, e todo valor no mesmo tamanho (número junto da palavra)
+    STATE.pomSessions = [{ts: new Date().toISOString(), sigla: 'F01', min: 25}]; renderPainel();
+    const cards = [...document.querySelectorAll('#resumoStats .stat')];
+    r.resumo = cards.map(txt);
+    confere(!r.resumo.some(t => /Sequência/.test(t)), 'o card da sequência de estudos ainda aparece');
+    confere(cards.every(c => c.querySelector('.stat__value.small')) && /^Aulas hoje (\d+ aulas?|Nenhuma)$/.test(r.resumo[0]), 'os números do resumo não estão no mesmo tamanho dos outros valores');
     return r;
   });
 

@@ -4466,21 +4466,6 @@ function renderDiscRisco(){
   }).join('');
 }
 
-// ---------------- Streak de Estudo ----------------
-function calcStudyStreak(){
-  if(!STATE.pomSessions || !STATE.pomSessions.length) return 0;
-  const sessSet = new Set(STATE.pomSessions.map(s => new Date(s.ts).toDateString()));
-  const d = new Date(); d.setHours(0,0,0,0);
-  // sem sessão hoje ainda, a sequência conta até ontem: não some de manhã antes de a pessoa estudar
-  if(!sessSet.has(d.toDateString())) d.setDate(d.getDate()-1);
-  let streak = 0;
-  while(sessSet.has(d.toDateString())){
-    streak++;
-    d.setDate(d.getDate()-1);
-  }
-  return streak;
-}
-
 // ---------------- render: Painel ----------------
 function renderPainel(){
   const stats = cursoStatsCompute();
@@ -4525,16 +4510,16 @@ function renderPainel(){
   })() : 'Nenhuma marcada';
 
   renderDayOverview();
-  const streak = calcStudyStreak();
+  // todos os valores no mesmo tamanho dos de texto ("Às 19:30: P14"): o número vai junto da palavra
+  const qtd = (n, um, varios) => n ? `${n} ${n === 1 ? um : varios}` : 'Nenhuma';
   document.getElementById('resumoStats').innerHTML = `
-    ${statCard('Aulas hoje', aulasHoje.length, 'blue')}
+    ${statCard('Aulas hoje', qtd(aulasHoje.length, 'aula', 'aulas'), 'blue', true)}
     ${statCard('Próxima aula', proxAula, 'gray', true)}
     ${statCard('Próxima prova', provaCard, proxProvaHoje?'red':'blue', true)}
-    ${statCard('Pendentes em 7 dias', tarefas7d, tarefas7d>0?'amber':'green')}
-    ${tarefasAtrasadas > 0 ? statCard('Tarefas atrasadas', tarefasAtrasadas, 'red') : ''}
+    ${statCard('Pendentes em 7 dias', qtd(tarefas7d, 'tarefa', 'tarefas'), tarefas7d>0?'amber':'green', true)}
+    ${tarefasAtrasadas > 0 ? statCard('Tarefas atrasadas', qtd(tarefasAtrasadas, 'tarefa', 'tarefas'), 'red', true) : ''}
     ${disciplinasRisco > 0 ? statCard('Risco de falta', disciplinasRisco+' disc.', 'red', true) : ''}
     ${discReprovando > 0 ? statCard('Reprovando em notas', discReprovando+' disc.', 'red', true) : ''}
-    ${streak > 0 ? statCard('Sequência de estudos', streak+'d', 'amber', true) : ''}
     ${statCard(calPeriodo().estimado ? 'Semestre (estimado)' : 'Semestre', esc(calProgresso().txt), 'purple', true)}
   `;
   document.querySelectorAll('#resumoStats [data-count]').forEach(el => animateCount(el, Number(el.dataset.count)));
