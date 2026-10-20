@@ -17,6 +17,7 @@ const DIST = path.join(RAIZ, 'dist'), JUNTOS = 3;
 const REQ = ['grade.js', 'requisitos.tail.js'];
 const TESTES = [
   {nome: 'aluno-novo', perfil: ['novo.js']},
+  {nome: 'aluno-outro-curso', perfil: ['novo.js']},
   ...['telas', 'telas-detalhes', 'calendario', 'calendario-bordas', 'colega', 'plano', 'arvore', 'fim-de-curso', 'requisitos', 'requisitos-bordas', 'notas']
     .map(nome => ({nome, perfil: REQ})),
   {nome: 'fluxos', perfil: ['grade.js'], extra: 'oferta.js'},

@@ -70,7 +70,7 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 - Atalhos no ícone (clique direito no Windows, toque longo no Android): nova tarefa, provas, tarefas
 - Notificações de provas e prazos do dia e do dia seguinte e, no domingo à noite, o resumo da semana
 - Tema claro e escuro, no estilo *Liquid Glass*
-- Assistente de configuração para novos usuários: a grade de Engenharia de Produção do INATEL é montada com toques (escolha o semestre e ajuste as disciplinas); nos outros cursos a pessoa escreve o nome das disciplinas de cada semestre (o código é criado sozinho), ou importa uma planilha do Excel
+- Assistente de configuração para novos usuários: nas engenharias do INATEL (Produção, Biomédica, Computação, Controle e Automação, Elétrica, Software e Telecomunicações, pelas grades curriculares oficiais) a grade é montada com toques: escolha o curso e o semestre e ajuste as disciplinas. Nos outros cursos a pessoa escreve o nome das disciplinas de cada semestre (o código é criado sozinho), ou importa uma planilha do Excel
 - Criar conta já entra direto, sem e-mail de confirmação
 - Backup em arquivo e, sem conta, vários perfis no mesmo aparelho
 

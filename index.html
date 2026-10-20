@@ -4380,7 +4380,7 @@ const NP3_PISO = 30, NP3_FINAL = 50;
 function regraNP3(){
   const c = STATE.config || {};
   if(c.regraNota) return c.regraNota === 'np3';
-  return c.curriculo === 'inatel-producao' || /inatel|instituto nacional de telecomunicacoes/.test(String(c.instituicao || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
+  return /^inatel-/.test(c.curriculo || '') || /inatel|instituto nacional de telecomunicacoes/.test(String(c.instituicao || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase());
 }
 // a nota final mínima que aprova (no Inatel, 50: abaixo de 60 só se chega a ela passando pela NP3)
 function notaAprova(){
@@ -6279,7 +6279,7 @@ const calSemAcento = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '
 // o calendário oficial deste perfil (só o do Inatel, por enquanto), ou null
 function calOficial(){
   const c = STATE.config || {};
-  return c.curriculo === 'inatel-producao' || /inatel|instituto nacional de telecomunicacoes/.test(calSemAcento(c.instituicao)) ? CAL_INATEL : null;
+  return /^inatel-/.test(c.curriculo || '') || /inatel|instituto nacional de telecomunicacoes/.test(calSemAcento(c.instituicao)) ? CAL_INATEL : null;
 }
 // dias sem aula do ano: os do calendário oficial, ou os feriados nacionais quando ele não tem aquele ano
 const _calOf = {};
@@ -10670,12 +10670,13 @@ async function selectProfile(profileId){
 // ============================================================
 
 // Matrizes curriculares públicas (só sigla e nome, sem notas). Com elas o
-// assistente monta a grade com toques, sem planilha nem copiar e colar.
+// assistente monta a grade com toques, sem planilha nem copiar e colar. A pessoa escolhe o curso
+// no passo 2; só a de Produção tem também o quadro de pré-requisitos (previsão de formatura, cadeados).
 const CURRICULOS = [
   {id:'inatel-producao', curso:'Engenharia de Produção', instituicao:'INATEL', semestres:[
     [["AT01","Atividade Complementar I"],["C02","Algoritmos e Estrutura de Dados I"],["E01","Circuitos Elétricos em Corrente Contínua"],["H01","Administração"],["M01","Matemática Aplicada à Engenharia"],["M02","Álgebra e Geometria Analítica"],["P01","Introdução à Engenharia"],["Q01","Química e Ciências dos Materiais"]],
     [["AT02","Atividade Complementar II"],["C03","Algoritmos e Estrutura de Dados II"],["E10","Desenho"],["F01","Física Newtoniana Clássica"],["G04","Fundamentos de Gestão de Projetos"],["H02","Economia"],["M03","Cálculo Aplicado à Engenharia I"],["P02","Empreendedorismo e Inovação"]],
-    [["AT03","Atividade Complementar III"],["E04","Eletrônica Analógica para Projetos de Fontes de Alimentação"],["F02","Física Ondulatória, Óptica e Termodinâmica"],["F05","Mecânica dos Sólidos e Resistências dos Materiais"],["M04","Cálculo Aplicado à Engenharia II"],["P03","Engenharia Econômica"],["P04","Gestão da Segurança da Informação"],["P05","Comunicação Empresarial"]],
+    [["AT03","Atividade Complementar III"],["E04","Eletrônica Analógica para Projetos de Fontes de Alimentação"],["F02","Física Ondulatória, Óptica e Termodinâmica"],["F05","Mecânica dos Sólidos e Resistência dos Materiais"],["M04","Cálculo Aplicado à Engenharia II"],["P03","Engenharia Econômica"],["P04","Gestão da Segurança da Informação"],["P05","Comunicação Empresarial"]],
     [["AT04","Atividade Complementar IV"],["E07","Eletrônica Digital Básica"],["F03","Física Aplicada na Eletricidade e Eletromagnetismo"],["M05","Cálculo Aplicado à Séries e Equações Diferenciais"],["P06","Engenharia da Qualidade"],["P07","Métodos de Gestão de Projetos"],["P08","Engenharia de Processos"]],
     [["AT05","Atividade Complementar V"],["C06","Programação Orientada a Objetos com Java"],["M11","Probabilidade e Processos Estocásticos"],["P09","Sistemas de Produção"],["P10","Administração Financeira"],["P11","Desenvolvimento Organizacional"],["P12","Mercado Financeiro e de Capitais"],["P13","Contabilidade de Custos Empresariais"]],
     [["AT06","Atividade Complementar VI"],["CP01","Comportamento Profissional I"],["C11","Ciência de Dados com Python"],["FT01","Feira Tecnológica do Inatel I"],["H03","Humanidades, Ciências Sociais e Cidadania"],["M06","Cálculo Numérico e Estatística"],["P30","Disciplina Eletiva I"],["TR01","Trilha I"],["T02","Redes de Dados I"]],
@@ -10712,6 +10713,86 @@ const CURRICULOS = [
     P22:'P02 I, P07 I', AT09:'AT07 I, AT08 Co', P21:'P15 I',
     P23:'P02 I', TCC:'* Co', A18:'M06 II', AT10:'AT08 Co, AT09 Co',
   }},
+  // Os outros cursos de engenharia do Inatel: só a grade (sigla e nome por período), sem o quadro de
+  // requisitos; conferidas com os PDFs de horário do 2º semestre de 2026 ("currículo a partir de 2023")
+  // Engenharia Biomédica: grade curricular oficial, currículo 8 (inatel.br → Estudante → Documentos dos cursos)
+  {id:'inatel-biomedica', curso:'Engenharia Biomédica', instituicao:'INATEL', semestres:[
+    [["AT01","Atividade Complementar I"],["B01","Introdução à Engenharia"],["C02","Algoritmos e Estrutura de Dados I"],["E01","Circuitos Elétricos em Corrente Contínua"],["H01","Administração"],["M01","Matemática Aplicada à Engenharia"],["M02","Álgebra e Geometria Analítica"],["Q01","Química e Ciências dos Materiais"]],
+    [["AT02","Atividade Complementar II"],["B02","Bioquímica"],["C03","Algoritmos e Estrutura de Dados II"],["E02","Circuitos Elétricos em Corrente Alternada"],["E04","Eletrônica Analógica para Projetos de Fontes de Alimentação"],["F01","Física Newtoniana Clássica"],["M03","Cálculo Aplicado à Engenharia I"]],
+    [["AT03","Atividade Complementar III"],["B03","Anatomia Humana"],["E05","Eletrônica Analógica Transistorizada"],["E07","Eletrônica Digital Básica"],["F02","Física Ondulatória, Óptica e Termodinâmica"],["H03","Humanidades, Ciências Sociais e Cidadania"],["M04","Cálculo Aplicado à Engenharia II"]],
+    [["AT04","Atividade Complementar IV"],["B04","Fisiologia Humana"],["E06","Eletrônica Analógica com Aplicações em Amplificador Operacional"],["E08","Eletrônica Digital Aplicada a Contadores e Sequenciadores"],["F03","Física Aplicada na Eletricidade e Eletromagnetismo"],["M05","Cálculo Aplicado à Séries e Equações Diferenciais"],["M07","Sinais e Sistemas"]],
+    [["AT05","Atividade Complementar V"],["B05","Biofísica"],["B06","Transdução de Sinais Biomédicos"],["B07","Práticas em Engenharia Clínica"],["B22","Biomecânica"],["C06","Programação Orientada a Objetos com Java"],["E03","Circuitos Elétricos com Aplicação em Filtros"],["F06","Eletromagnetismo"],["G04","Fundamentos de Gestão de Projetos"]],
+    [["AT06","Atividade Complementar VI"],["B25","Projeto Integrado de Tecnologias Médicas"],["B29","Tecnologias em Equipamentos Médicos"],["C11","Ciência de Dados com Python"],["CP02","Comportamento Profissional II"],["E09","Sistemas Microcontrolados e Microprocessados"],["F04","Física Moderna e Quântica"],["FT01","Feira Tecnológica do Inatel I"],["T02","Redes de Dados I"],["TR02","Trilha II"]],
+    [["A02","Controle de Sistemas Dinâmicos"],["AT07","Atividade Complementar VII"],["B26","Tecnologias Emergentes Aplicadas à Saúde"],["B28","Segurança Biológica"],["B30","Disciplina Eletiva I"],["B32","Tecnologias em Equipamentos Médicos II"],["C23","Inteligência Artificial"],["M08","Probabilidade e Processos Estocásticos"]],
+    [["AT08","Atividade Complementar VIII"],["B11","Engenharia Clínica"],["B13","Instalações e Máquinas Elétricas no Ambiente Hospitalar"],["B14","Processamento de Imagens Médicas"],["B27","Biomateriais, Nanomateriais e Princípio de Engenharia Genética"],["B31","Disciplina Eletiva II"],["E11","Processamento Digital de Sinais"],["H02","Economia"],["M06","Cálculo Numérico e Estatística"]],
+    [["AT09","Atividade Complementar IX"],["B15","Radiações, Física Médica e Medicina Nuclear"],["B16","Informática Médica"],["B18","Sistemas de Telemedicina"],["EST1","Estágio Supervisionado"],["H04","Ciências do Ambiente"]],
+    [["AT10","Atividade Complementar X"],["B19","Engenharia de Reabilitação"],["B23","Regulação Sanitária e Atos Normativos da Anvisa"],["B24","Metrologia"],["TCC","Trabalho de Conclusão de Curso I"]]
+  ]},
+  // Engenharia de Computação: grade curricular oficial, currículo 9 (inatel.br → Estudante → Documentos dos cursos)
+  {id:'inatel-computacao', curso:'Engenharia de Computação', instituicao:'INATEL', semestres:[
+    [["AT01","Atividade Complementar I"],["C01","Introdução à Engenharia"],["C02","Algoritmos e Estrutura de Dados I"],["E01","Circuitos Elétricos em Corrente Contínua"],["M01","Matemática Aplicada à Engenharia"],["M02","Álgebra e Geometria Analítica"],["Q01","Química e Ciências dos Materiais"]],
+    [["AT02","Atividade Complementar II"],["C03","Algoritmos e Estrutura de Dados II"],["E02","Circuitos Elétricos em Corrente Alternada"],["E04","Eletrônica Analógica para Projetos de Fontes de Alimentação"],["F01","Física Newtoniana Clássica"],["H03","Humanidades, Ciências Sociais e Cidadania"],["M03","Cálculo Aplicado à Engenharia I"]],
+    [["AT03","Atividade Complementar III"],["C04","Algoritmos e Estrutura de Dados III"],["E05","Eletrônica Analógica Transistorizada"],["E07","Eletrônica Digital Básica"],["F02","Física Ondulatória, Óptica e Termodinâmica"],["M04","Cálculo Aplicado à Engenharia II"]],
+    [["AT04","Atividade Complementar IV"],["E06","Eletrônica Analógica com Aplicações em Amplificador Operacional"],["E08","Eletrônica Digital Aplicada a Contadores e Sequenciadores"],["F03","Física Aplicada na Eletricidade e Eletromagnetismo"],["G04","Fundamentos de Gestão de Projetos"],["M05","Cálculo Aplicado à Séries e Equações Diferenciais"],["M07","Sinais e Sistemas"]],
+    [["AT05","Atividade Complementar V"],["C06","Programação Orientada a Objetos com Java"],["C07","Bancos de Dados"],["E09","Sistemas Microcontrolados e Microprocessados"],["F04","Física Moderna e Quântica"],["M08","Probabilidade e Processos Estocásticos"]],
+    [["AT06","Atividade Complementar VI"],["C05","Linguagens de Programação e Compiladores"],["C11","Ciência de Dados com Python"],["C14","Engenharia de Software"],["CP01","Comportamento Profissional I"],["FT01","Feira Tecnológica do Inatel I"],["M06","Cálculo Numérico e Estatística"],["T02","Redes de Dados I"],["TR01","Trilha I"]],
+    [["AT07","Atividade Complementar VII"],["C08","Arquiteturas de Computadores"],["C09","Computação Gráfica e Multimídia"],["C19","Disciplina Eletiva I"],["C24","Inteligência Artificial"],["H01","Administração"]],
+    [["AT08","Atividade Complementar VIII"],["C12","Sistemas Operacionais"],["C13","Sistemas Embarcados"],["C20","Disciplina Eletiva II"],["H02","Economia"],["M09","Otimização"],["T03","Redes de Dados II"]],
+    [["AT09","Atividade Complementar IX"],["C16","Tópicos Especiais I"],["EST1","Estágio Supervisionado"],["H04","Ciências do Ambiente"]],
+    [["AT10","Atividade Complementar X"],["C15","Sistemas Distribuídos"],["C17","Tópicos Especiais II"],["C18","Tópicos Especiais III"],["TCC","Trabalho de Conclusão de Curso I"]]
+  ]},
+  // Engenharia de Controle e Automação: grade curricular oficial, currículo 5 (inatel.br → Estudante → Documentos dos cursos)
+  {id:'inatel-automacao', curso:'Engenharia de Controle e Automação', instituicao:'INATEL', semestres:[
+    [["A01","Introdução à Engenharia"],["AT01","Atividade Complementar I"],["C02","Algoritmos e Estrutura de Dados I"],["E01","Circuitos Elétricos em Corrente Contínua"],["M01","Matemática Aplicada à Engenharia"],["M02","Álgebra e Geometria Analítica"],["Q01","Química e Ciências dos Materiais"]],
+    [["A03","Sistemas Hidro-Pneumáticos"],["AT02","Atividade Complementar II"],["C03","Algoritmos e Estrutura de Dados II"],["E02","Circuitos Elétricos em Corrente Alternada"],["E04","Eletrônica Analógica para Projetos de Fontes de Alimentação"],["F01","Física Newtoniana Clássica"],["H01","Administração"],["M03","Cálculo Aplicado à Engenharia I"]],
+    [["AT03","Atividade Complementar III"],["E05","Eletrônica Analógica Transistorizada"],["E07","Eletrônica Digital Básica"],["F02","Física Ondulatória, Óptica e Termodinâmica"],["F05","Mecânica dos Sólidos e Resistência dos Materiais"],["H03","Humanidades, Ciências Sociais e Cidadania"],["M04","Cálculo Aplicado à Engenharia II"]],
+    [["AT04","Atividade Complementar IV"],["E06","Eletrônica Analógica com Aplicações em Amplificador Operacional"],["E08","Eletrônica Digital Aplicada a Contadores e Sequenciadores"],["F03","Física Aplicada na Eletricidade e Eletromagnetismo"],["G04","Fundamentos de Gestão de Projetos"],["M05","Cálculo Aplicado à Séries e Equações Diferenciais"],["M07","Sinais e Sistemas"]],
+    [["A04","Circuitos Trifásicos e Magnéticos"],["AT05","Atividade Complementar V"],["E03","Circuitos Elétricos com Aplicação em Filtros"],["E09","Sistemas Microcontrolados e Microprocessados"],["F04","Física Moderna e Quântica"],["F06","Eletromagnetismo"],["M08","Probabilidade e Processos Estocásticos"]],
+    [["A02","Controle de Sistemas Dinâmicos"],["A05","Instrumentação Industrial"],["A06","Máquinas e Comandos Elétricos"],["AT06","Atividade Complementar VI"],["CP02","Comportamento Profissional II"],["FT01","Feira Tecnológica do Inatel I"],["M06","Cálculo Numérico e Estatística"],["T02","Redes de Dados I"],["TR02","Trilha II"]],
+    [["A07","Controladores Lógicos Programáveis"],["A08","Sistemas de Controle Digital"],["A09","Identificação de Sistemas Dinâmicos"],["A10","Eletrônica de Potência"],["A11","Sistemas Supervisórios para Automação e Elétrica"],["AT07","Atividade Complementar VII"],["C22","Inteligência Artificial"]],
+    [["A12","Controle e Sistemas Inteligentes Aplicados aos Conceitos da Indústria 4.0"],["A13","Fundamentos de Robótica Industrial Aplicado aos Conceitos da Indústria 4.0"],["A14","Sistemas de Controle Moderno e Avançado Aplicado aos Conceitos da Indústria 4.0"],["A15","Padrões de Comunicação Aplicados a Indústria 4.0"],["A16","Instalações Elétricas"],["A19","Disciplina Eletiva I"],["AT08","Atividade Complementar VIII"],["H02","Economia"]],
+    [["A17","Tópicos Especiais"],["A20","Disciplina Eletiva II"],["AT09","Atividade Complementar IX"],["EST1","Estágio Supervisionado"],["H04","Ciências do Ambiente"]],
+    [["A18","Manutenção Industrial, Normalização e Certificações"],["AT10","Atividade Complementar X"],["TCC","Trabalho de Conclusão de Curso"]]
+  ]},
+  // Engenharia Elétrica: grade curricular oficial, currículo 2 (inatel.br → Estudante → Documentos dos cursos)
+  {id:'inatel-eletrica', curso:'Engenharia Elétrica', instituicao:'INATEL', semestres:[
+    [["A01","Introdução à Engenharia"],["AT01","Atividade Complementar I"],["C02","Algoritmos e Estrutura de Dados I"],["E01","Circuitos Elétricos em Corrente Contínua"],["M01","Matemática Aplicada à Engenharia"],["M02","Álgebra e Geometria Analítica"],["Q01","Química e Ciências dos Materiais"]],
+    [["A03","Sistemas Hidro-Pneumáticos"],["AT02","Atividade Complementar II"],["C03","Algoritmos e Estrutura de Dados II"],["E02","Circuitos Elétricos em Corrente Alternada"],["E04","Eletrônica Analógica para Projetos de Fontes de Alimentação"],["F01","Física Newtoniana Clássica"],["H01","Administração"],["M03","Cálculo Aplicado à Engenharia I"]],
+    [["AT03","Atividade Complementar III"],["E05","Eletrônica Analógica Transistorizada"],["E07","Eletrônica Digital Básica"],["F02","Física Ondulatória, Óptica e Termodinâmica"],["F05","Mecânica dos Sólidos e Resistência dos Materiais"],["H03","Humanidades, Ciências Sociais e Cidadania"],["M04","Cálculo Aplicado à Engenharia II"]],
+    [["AT04","Atividade Complementar IV"],["E06","Eletrônica Analógica com Aplicações em Amplificador Operacional"],["E08","Eletrônica Digital Aplicada a Contadores e Sequenciadores"],["F03","Física Aplicada na Eletricidade e Eletromagnetismo"],["G04","Fundamentos de Gestão de Projetos"],["M05","Cálculo Aplicado à Séries e Equações Diferenciais"],["M07","Sinais e Sistemas"]],
+    [["A04","Circuitos Trifásicos e Magnéticos"],["AT05","Atividade Complementar V"],["E03","Circuitos Elétricos com Aplicação em Filtros"],["E09","Sistemas Microcontrolados e Microprocessados"],["F04","Física Moderna e Quântica"],["F06","Eletromagnetismo"],["M08","Probabilidade e Processos Estocásticos"]],
+    [["A02","Controle de Sistemas Dinâmicos"],["A05","Instrumentação Industrial"],["A06","Máquinas e Comandos Elétricos"],["AT06","Atividade Complementar VI"],["CP02","Comportamento Profissional II"],["FT01","Feira Tecnológica do Inatel I"],["M06","Cálculo Numérico e Estatística"],["T02","Redes de Dados I"],["TR02","Trilha II"]],
+    [["A07","Controladores Lógicos Programáveis"],["A08","Sistemas de Controle Digital"],["A10","Eletrônica de Potência"],["A11","Sistemas Supervisórios para Automação e Elétrica"],["AT07","Atividade Complementar VII"],["C22","Inteligência Artificial"],["L01","Análise de Sistemas Elétricos"]],
+    [["A16","Instalações Elétricas"],["AT08","Atividade Complementar VIII"],["H02","Economia"],["L02","Transmissão e Distribuição de Energia Elétrica"],["L03","Geração de Energia Elétrica"],["L04","Proteção de Sistemas Elétricos"],["L05","Qualidade de Energia Elétrica"],["L06","Subestações Elétricas"],["L08","Disciplina Eletiva I"]],
+    [["A17","Tópicos Especiais"],["AT09","Atividade Complementar IX"],["EST1","Estágio Supervisionado"],["H04","Ciências do Ambiente"],["L07","Condicionamento de Energia Elétrica"],["L09","Disciplina Eletiva II"]],
+    [["A18","Manutenção Industrial, Normalização e Certificações"],["AT10","Atividade Complementar X"],["TCC","Trabalho de Conclusão de Curso"]]
+  ]},
+  // Engenharia de Software: grade curricular oficial, currículo 3 (inatel.br → Estudante → Documentos dos cursos)
+  {id:'inatel-software', curso:'Engenharia de Software', instituicao:'INATEL', semestres:[
+    [["AT01","Atividade Complementar I"],["C01","Introdução à Engenharia"],["C02","Algoritmos e Estrutura de Dados I"],["E01","Circuitos Elétricos em Corrente Contínua"],["M01","Matemática Aplicada à Engenharia"],["M02","Álgebra e Geometria Analítica"],["Q01","Química e Ciências dos Materiais"]],
+    [["AT02","Atividade Complementar II"],["C03","Algoritmos e Estrutura de Dados II"],["E10","Desenho"],["F01","Física Newtoniana Clássica"],["H03","Humanidades, Ciências Sociais e Cidadania"],["M03","Cálculo Aplicado à Engenharia I"],["M10","Matemática Discreta"]],
+    [["AT03","Atividade Complementar III"],["C04","Algoritmos e Estrutura de Dados III"],["C05","Linguagens de Programação e Compiladores"],["E07","Eletrônica Digital Básica"],["F02","Física Ondulatória, Óptica e Termodinâmica"],["M04","Cálculo Aplicado à Engenharia II"]],
+    [["AT04","Atividade Complementar IV"],["E08","Eletrônica Digital Aplicada a Contadores e Sequenciadores"],["F03","Física Aplicada na Eletricidade e Eletromagnetismo"],["G04","Fundamentos de Gestão de Projetos"],["M05","Cálculo Aplicado à Séries e Equações Diferenciais"],["S01","Paradigmas de Programação"],["S05","Interação Homem Máquina"]],
+    [["AT05","Atividade Complementar V"],["C06","Programação Orientada a Objetos com Java"],["C07","Bancos de Dados"],["E09","Sistemas Microcontrolados e Microprocessados"],["F04","Física Moderna e Quântica"],["M11","Probabilidade e Processos Estocásticos"]],
+    [["AT06","Atividade Complementar VI"],["C11","Ciência de Dados com Python"],["C14","Engenharia de Software"],["CP01","Comportamento Profissional I"],["FT01","Feira Tecnológica do Inatel I"],["M06","Cálculo Numérico e Estatística"],["S03","Arquiteturas de Software"],["T02","Redes de Dados I"],["TR01","Trilha I"]],
+    [["AT07","Atividade Complementar VII"],["C09","Computação Gráfica e Multimídia"],["C24","Inteligência Artificial"],["H01","Administração"],["S02","Bancos de Dados II"],["S07","Qualidade, Gerência de Config e Evolução de Software"],["S08","Disciplina Eletiva I"]],
+    [["AT08","Atividade Complementar VIII"],["C12","Sistemas Operacionais"],["H02","Economia"],["M09","Otimização"],["S06","Engenharia de Produto de Software"],["S09","Disciplina Eletiva II"],["T03","Redes de Dados II"]],
+    [["AT09","Atividade Complementar IX"],["C16","Tópicos Especiais I"],["EST1","Estágio Supervisionado"],["H04","Ciências do Ambiente"]],
+    [["AT10","Atividade Complementar X"],["C15","Sistemas Distribuídos"],["C17","Tópicos Especiais II"],["C18","Tópicos Especiais III"],["TCC","Trabalho de Conclusão de Curso I"]]
+  ]},
+  // Engenharia de Telecomunicações: grade curricular oficial, currículo 12 (inatel.br → Estudante → Documentos dos cursos)
+  {id:'inatel-telecom', curso:'Engenharia de Telecomunicações', instituicao:'INATEL', semestres:[
+    [["AT01","Atividade Complementar I"],["C02","Algoritmos e Estrutura de Dados I"],["E01","Circuitos Elétricos em Corrente Contínua"],["M01","Matemática Aplicada à Engenharia"],["M02","Álgebra e Geometria Analítica"],["Q01","Química e Ciências dos Materiais"],["T01","Introdução à Engenharia"]],
+    [["AT02","Atividade Complementar II"],["C03","Algoritmos e Estrutura de Dados II"],["E02","Circuitos Elétricos em Corrente Alternada"],["E04","Eletrônica Analógica para Projetos de Fontes de Alimentação"],["F01","Física Newtoniana Clássica"],["H03","Humanidades, Ciências Sociais e Cidadania"],["M03","Cálculo Aplicado à Engenharia I"]],
+    [["AT03","Atividade Complementar III"],["C06","Programação Orientada a Objetos com Java"],["E05","Eletrônica Analógica Transistorizada"],["E07","Eletrônica Digital Básica"],["F02","Física Ondulatória, Óptica e Termodinâmica"],["M04","Cálculo Aplicado à Engenharia II"]],
+    [["AT04","Atividade Complementar IV"],["E06","Eletrônica Analógica com Aplicações em Amplificador Operacional"],["E08","Eletrônica Digital Aplicada a Contadores e Sequenciadores"],["F03","Física Aplicada na Eletricidade e Eletromagnetismo"],["G04","Fundamentos de Gestão de Projetos"],["M05","Cálculo Aplicado à Séries e Equações Diferenciais"],["M07","Sinais e Sistemas"]],
+    [["AT05","Atividade Complementar V"],["C11","Ciência de Dados com Python"],["E03","Circuitos Elétricos com Aplicação em Filtros"],["E09","Sistemas Microcontrolados e Microprocessados"],["F06","Eletromagnetismo"],["M08","Probabilidade e Processos Estocásticos"],["T27","Princípios de Comunicações Analógicas e Digitais"]],
+    [["AT06","Atividade Complementar VI"],["CP02","Comportamento Profissional II"],["F04","Física Moderna e Quântica"],["FT01","Feira Tecnológica do Inatel I"],["M06","Cálculo Numérico e Estatística"],["T02","Redes de Dados I"],["T06","Fundamentos de Redes de Telecomunicações"],["T09","Teoria da Informação e Codificação"],["T12","Linhas de Transmissão e Microondas"],["T21","Disciplina Eletiva I"],["T24","Projeto Integrador de Redes e Sistemas de Telecomunicações I"],["T28","Comunicações Digitais I"],["TR02","Trilha II"]],
+    [["AT07","Atividade Complementar VII"],["C24","Inteligência Artificial"],["E11","Processamento Digital de Sinais"],["T03","Redes de Dados II"],["T13","Eletrônica de Rádio Frequência"],["T14","Antenas"],["T25","Projeto Integrador de Redes e Sistemas de Telecomunicações II"],["T29","Comunicações Digitais II"]],
+    [["A02","Controle de Sistemas Dinâmicos"],["AT08","Atividade Complementar VIII"],["T17","Sistemas de Comunicações Móveis"],["T22","Disciplina Eletiva II"],["T32","Projeto Integrador de Redes e Sistemas de Telecomunicações III"],["T34","Redes de Telecomunicações"],["T35","Sistemas de Radioenlaces Digitais"],["T36","Sistemas de Comunicações Ópticas"]],
+    [["AT09","Atividade Complementar IX"],["EST1","Estágio Supervisionado"],["H01","Administração"],["H04","Ciências do Ambiente"],["T33","Projeto Integrador de Redes e Sistemas de Telecomunicações IV"]],
+    [["AT10","Atividade Complementar X"],["H02","Economia"],["T37","Segurança em Redes e Sistemas de Telecomunicações"],["TCC","Trabalho de Conclusão de Curso"]]
+  ]},
 ];
 // tabelas sem protótipo: um código como "toString" vindo dos dados não acha nada nelas
 CURRICULOS.forEach(c => ['creditos', 'requisitos'].forEach(k => { if(c[k]) c[k] = Object.assign(Object.create(null), c[k]); }));
@@ -10958,7 +11039,8 @@ function wizardStep2(body){
   wizTitulo();
   // Pré-seleciona a grade quando o curso digitado no passo 1 bate com um catálogo
   if(WIZARD_DATA.catalogo === null){
-    const match = CURRICULOS.find(c => wizNorm(WIZARD_DATA.curso) && wizNorm(c.curso).includes(wizNorm(WIZARD_DATA.curso)));
+    const t = wizNorm(WIZARD_DATA.curso), parecidas = t ? CURRICULOS.filter(c => wizNorm(c.curso).includes(t)) : [];
+    const match = CURRICULOS.find(c => t && wizNorm(c.curso) === t) || (parecidas.length === 1 ? parecidas[0] : null);
     if(match) WIZARD_DATA.catalogo = match.id;
   }
   body.innerHTML = `
@@ -10972,6 +11054,9 @@ function wizardStep2(body){
   body.querySelectorAll('[data-cat]').forEach(btn => btn.addEventListener('click', () => {
     if(WIZARD_DATA.catalogo === btn.dataset.cat) return;
     WIZARD_DATA.catalogo = btn.dataset.cat;
+    const escolhida = CURRICULOS.find(c => c.id === btn.dataset.cat);
+    if(escolhida && (!WIZARD_DATA.curso || CURRICULOS.some(c => c.curso === WIZARD_DATA.curso))) WIZARD_DATA.curso = escolhida.curso;
+    if(escolhida && !WIZARD_DATA.instituicao) WIZARD_DATA.instituicao = escolhida.instituicao;
     // as disciplinas já escritas em "Outro curso" ficam guardadas se a pessoa trocar de opção e voltar
     WIZARD_DATA.grade = []; WIZARD_DATA.disciplinasAtuais = [];
     WIZARD_DATA.status = {}; WIZARD_DATA.notas = {}; WIZARD_DATA.semAtual = null;
