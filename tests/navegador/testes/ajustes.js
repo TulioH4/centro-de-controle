@@ -133,7 +133,7 @@ setTimeout(async () => {
   await passo('arvore', async () => {
     lsSet('mapa_vista', 'arvore'); switchTab('mapa'); renderMapaSucesso(); await espera(200);
     const r = {};
-    for(const sg of ['C02', 'P10', 'M05']){
+    for(const sg of ['C02', 'P10', 'M05', 'P17']){
       if(!document.querySelector(`[data-arv="${sg}"]`)) continue;
       ARV_SEL = null; document.querySelector(`[data-arv="${sg}"]`).click(); await espera(100);
       const palco = document.getElementById('arvPalco'), pr = palco.getBoundingClientRect();
@@ -147,8 +147,11 @@ setTimeout(async () => {
           if(c && c.sg !== a.de && c.sg !== a.para){ cruzou.push(`${a.de}→${a.para} sobre ${c.sg}`); break; }
         }
       });
-      r[sg] = {ligacoes: ARV_ARESTAS.length, cruzou};
+      // descida reta: no máximo 4 curvas (desce, vai ao vão, desce, vai à disciplina, desce), sem degraus
+      const curvas = Math.max(0, ...[...document.querySelectorAll('#arvSvg path.arv-l')].map(p => (p.getAttribute('d').match(/Q/g) || []).length));
+      r[sg] = {ligacoes: ARV_ARESTAS.length, cruzou, curvas};
       confere(!cruzou.length, `ligações de ${sg} passam por cima de disciplinas: ${cruzou.slice(0, 3).join('; ')}`);
+      confere(curvas <= 4, `ligações de ${sg} fazem degraus (${curvas} curvas)`);
     }
     ARV_SEL = null; lsSet('mapa_vista', 'semestres');
     return r;

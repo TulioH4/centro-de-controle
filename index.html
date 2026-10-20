@@ -6817,10 +6817,11 @@ function arvSelecionar(cur){
   const ver = info.querySelector('[data-arv-ver]');
   if(ver) ver.addEventListener('click', () => showDiscDetail(ver.dataset.arvVer));
 }
-// As ligações andam pelos vãos, nunca por baixo de uma disciplina: saem da exigida para o corredor entre
-// as linhas (embaixo dela; em cima, se a que exige está na mesma linha ou acima), atravessam cada linha do
-// meio pelo vão livre mais perto, e entram por cima na que exige. Ligações no mesmo corredor ou vão ficam
-// um pouco afastadas umas das outras.
+// As ligações andam pelos vãos, nunca por baixo de uma disciplina, como linhas de metrô: saem do meio
+// da exigida para o corredor entre as linhas (embaixo dela; em cima, se a que exige está na mesma linha ou
+// acima), descem por um vão só, sempre pelo meio dele, e entram pelo meio de cima da que exige. Como os
+// trechos ficam sempre no meio do corredor e do vão, ligações que seguem o mesmo caminho viram uma linha só
+// e se separam onde cada uma vai para o seu lado (e o que chega numa disciplina chega numa seta só).
 function arvDesenhar(){
   const palco = document.getElementById('arvPalco'), svg = document.getElementById('arvSvg');
   if(!palco || !svg || !palco.offsetParent) return;
@@ -6839,7 +6840,6 @@ function arvDesenhar(){
   // corredor k: o vão acima da linha k (o último fica embaixo da última linha)
   const N = linhas.length;
   const corredor = k => k <= 0 ? linhas[0].t - 5 : k >= N ? linhas[N - 1].b + 5 : (linhas[k - 1].b + linhas[k].t) / 2;
-  const folgaC = k => k <= 0 || k >= N ? 2 : Math.max(0, (linhas[k].t - linhas[k - 1].b) / 2 - 2);
   // vãos livres de uma linha, em x: depois do número do período, entre as caixas e depois da última
   const ESQ = 26;
   const vaos = l => {
@@ -6848,8 +6848,20 @@ function arvDesenhar(){
     if(W - x >= 6) out.push([x + 2, W - 2]);
     return out;
   };
-  const uso = {};
-  const afasta = (chave, folga) => { const i = uso[chave] = (uso[chave] || 0) + 1, d = [0, 3, -3, 6, -6, 9, -9][(i - 1) % 7]; return Math.max(-folga, Math.min(folga, d)); };
+  // vãos livres em todas as linhas de de até ate (o que sobra da interseção)
+  const cruza = (A, B) => A.flatMap(([a0, a1]) => B.map(([b0, b1]) => [Math.max(a0, b0), Math.min(a1, b1)])).filter(([x0, x1]) => x1 - x0 >= 4);
+  const livres = (de, ate) => { let iv = [[ESQ, W]]; for(let L = de; L <= ate && iv.length; L++) iv = cruza(iv, vaos(linhas[L])); return iv; };
+  // onde passar num conjunto de vãos: no meio do vão entre duas caixas; num espaço largo (o fim das
+  // linhas), o mais perto das duas pontas, longe das caixas. Vence o que deixa o caminho mais curto.
+  const raia = (iv, px, qx) => {
+    let melhor = null, custo = Infinity;
+    iv.forEach(([a0, a1]) => {
+      const x = a1 - a0 < 44 ? (a0 + a1) / 2 : Math.max(a0 + 10, Math.min(a1 - 10, (px + qx) / 2));
+      const c = Math.abs(x - px) + Math.abs(x - qx);
+      if(c < custo - .5){ custo = c; melhor = Math.round(x); }
+    });
+    return melhor;
+  };
   const n = v => Math.round(v * 10) / 10;
   // cantos arredondados
   const caminho = pts => {
@@ -6857,7 +6869,7 @@ function arvDesenhar(){
     let d = `M${n(P[0][0])},${n(P[0][1])}`;
     for(let i = 1; i < P.length - 1; i++){
       const [x0, y0] = P[i - 1], [x1, y1] = P[i], [x2, y2] = P[i + 1];
-      const l1 = Math.hypot(x1 - x0, y1 - y0), l2 = Math.hypot(x2 - x1, y2 - y1), r = Math.min(7, l1 / 2, l2 / 2);
+      const l1 = Math.hypot(x1 - x0, y1 - y0), l2 = Math.hypot(x2 - x1, y2 - y1), r = Math.min(6, l1 / 2, l2 / 2);
       d += ` L${n(x1 - (x1 - x0) / l1 * r)},${n(y1 - (y1 - y0) / l1 * r)} Q${n(x1)},${n(y1)} ${n(x1 + (x2 - x1) / l2 * r)},${n(y1 + (y2 - y1) / l2 * r)}`;
     }
     const f = P[P.length - 1];
@@ -6866,29 +6878,25 @@ function arvDesenhar(){
   const linhasSvg = ARV_ARESTAS.map(a => {
     const p = cx[a.de], q = cx[a.para];
     if(!p || !q) return '';
-    const px = (p.l + p.r) / 2, qx = (q.l + q.r) / 2, desce = p.linha < q.linha;
-    let k = desce ? p.linha + 1 : p.linha, x = px, y = corredor(k) + afasta('c' + k, folgaC(k));
-    const pts = [[px, desce ? p.b : p.t], [x, y]];
-    // atravessa as linhas do meio, uma de cada vez, pelo vão mais perto (puxando para o lado da que exige)
-    for(let volta = 0; k !== q.linha && volta < 60; volta++){
-      const L = desce ? k : k - 1;
-      let melhor = null, dist = Infinity;
-      vaos(linhas[L]).forEach(([a0, a1]) => {
-        const xx = Math.max(a0, Math.min(a1, x)), d = Math.abs(xx - x) + Math.abs(xx - qx) * 0.3;
-        if(d < dist){ dist = d; melhor = [a0, a1, xx]; }
-      });
-      if(melhor){
-        const [a0, a1] = melhor, meio = (a0 + a1) / 2;
-        // vão entre duas caixas: pelo meio dele; espaço largo (o fim da linha): perto de onde a ligação já está
-        let nx = (a1 - a0 < 44 ? meio : melhor[2]) + afasta('v' + L + ':' + Math.round(a0), Math.max(0, (a1 - a0) / 2 - 3));
-        nx = Math.max(a0, Math.min(a1, nx));
-        if(Math.abs(nx - x) > .5){ pts.push([nx, y]); x = nx; }
+    const px = Math.round((p.l + p.r) / 2), qx = Math.round((q.l + q.r) / 2), desce = p.linha < q.linha;
+    const k0 = desce ? p.linha + 1 : p.linha, k1 = q.linha; // corredor de saída e o de chegada (acima da que exige)
+    const pts = [[px, desce ? p.b : p.t], [px, corredor(k0)]];
+    if(k0 !== k1){
+      // as linhas do meio: de preferência todas pelo mesmo vão (uma descida reta)
+      const de = Math.min(k0, k1), ate = Math.max(k0, k1) - 1, x = raia(livres(de, ate), px, qx);
+      if(x !== null) pts.push([x, corredor(k0)], [x, corredor(k1)]);
+      else {
+        // sem um vão comum: linha a linha, pelo vão mais perto de onde a ligação está
+        let k = k0, cx0 = px;
+        while(k !== k1){
+          const L = k0 < k1 ? k : k - 1, nx = raia(vaos(linhas[L]), cx0, cx0);
+          if(nx !== null && nx !== cx0){ pts.push([nx, corredor(k)]); cx0 = nx; }
+          k += k0 < k1 ? 1 : -1;
+          pts.push([cx0, corredor(k)]);
+        }
       }
-      k += desce ? 1 : -1;
-      y = corredor(k) + afasta('c' + k, folgaC(k));
-      pts.push([x, y]);
     }
-    pts.push([qx, y], [qx, q.t - 2]);
+    pts.push([qx, corredor(k1)], [qx, q.t - 2]);
     return `<path d="${caminho(pts)}" class="arv-l t-${a.tipo} is-${a.lado}" marker-end="url(#arvSeta-${a.lado})"/>`;
   }).join('');
   svg.innerHTML = `<defs>${['cima', 'baixo'].map(l => `<marker id="arvSeta-${l}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="arv-seta is-${l}"/></marker>`).join('')}</defs>${linhasSvg}`;
