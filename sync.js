@@ -15,13 +15,15 @@
   const META_KEY = PREFIX + '__sync_meta';
   const BASE_SUFFIX = '__sync_base';
   // device-specific keys that must never travel between devices
-  const LOCAL_ONLY = [/^active_profile$/, /^notif_last_/, /^__sync_meta$/, /__probe__$/, /^cloud_skip$/, /__sync_base$/];
+  const LOCAL_ONLY = [/^active_profile$/, /^notif_last_/, /^__sync_meta$/, /^__sync_owner$/, /__probe__$/, /^cloud_skip$/, /__sync_base$/];
   const isSynced = fullKey => fullKey.startsWith(PREFIX) && !LOCAL_ONLY.some(re => re.test(fullKey.slice(PREFIX.length)));
 
   const ls = window.localStorage;
   const rawSet = Storage.prototype.setItem;
   const rawRemove = Storage.prototype.removeItem;
   let applying = false;
+  // another tab left the account: this page must not write that account's data back before it reloads
+  let detached = false;
 
   let meta = {};
   try { meta = JSON.parse(ls.getItem(META_KEY) || '{}') || {}; } catch(e){ meta = {}; }
@@ -157,11 +159,13 @@
     schedulePush();
   }
   Storage.prototype.setItem = function(k, v){
+    if (detached && this === ls && String(k).startsWith(PREFIX)) return;
     try { rawSet.call(this, k, v); }
     catch(e) { if (this !== ls || !dropBases()) throw e; rawSet.call(this, k, v); } // out of room: the bases go first
     if (this === ls && !applying && isSynced(k)) touch(k);
   };
   Storage.prototype.removeItem = function(k){
+    if (detached && this === ls && String(k).startsWith(PREFIX)) return;
     rawRemove.call(this, k);
     if (this === ls && !applying && isSynced(k)) touch(k);
   };
@@ -346,36 +350,19 @@
     return hit ? hit[1] : 'Não foi possível concluir: ' + msg;
   };
 
-  async function restoreSession(){
-    if (!client) return null;
-    const { data } = await client.auth.getSession();
-    state.user = data && data.session ? data.session.user : null;
-    if (state.user) setStatus(navigator.onLine ? 'synced' : 'offline');
-    return state.user;
-  }
-  async function signIn(email, password){
-    const { data, error } = await client.auth.signInWithPassword({ email, password });
-    if (error) throw new Error(friendly(error));
-    state.user = data.user;
-    return data.user;
-  }
-  // No e-mail confirmation: the account is ready to use as soon as it is created.
-  // (Supabase → Authentication → Email → "Confirm email" must be off; with it on, the
-  // sign-in below fails and the person sees why instead of waiting for an e-mail.)
-  async function signUp(email, password){
-    const { data, error } = await client.auth.signUp({ email, password });
-    if (error) throw new Error(friendly(error));
-    if (data.session) { state.user = data.user; return data.user; }
-    return signIn(email, password);
-  }
-  async function signOut(){
-    if (hasDirty()) await pull(); // merges what another device changed in the same lists, so the push below sends it
-    await push();
-    if (hasDirty()) throw new Error('Ainda há alterações que não foram enviadas. Conecte-se à internet e tente de novo.');
-    if (channel) { client.removeChannel(channel); channel = null; }
-    await client.auth.signOut();
-    state.user = null;
-    // the data lives in the account; leave nothing behind on this device
+  // ---- whose data is on this device -----------------------------------------------
+  // The data stored here belongs to one account, or to none (used without an account). Entering a
+  // different account must neither show nor upload the previous one's data, so it is cleared first:
+  // it is safe in its own account. Data typed without an account goes into the account (that is how
+  // someone who started without one keeps it). Changes of another account that were not sent yet
+  // block the switch instead of being lost.
+  const OWNER_KEY = PREFIX + '__sync_owner';
+  const readOwner = () => { try { return JSON.parse(ls.getItem(OWNER_KEY) || 'null'); } catch(e){ return null; } };
+  const saveOwner = u => { try { rawSet.call(ls, OWNER_KEY, JSON.stringify({ id: u.id, email: u.email || '' })); } catch(e){} };
+  // something here was synced with an account (only a push or pull leaves a key clean)
+  const fromAnAccount = () => !!readOwner() || Object.keys(meta).some(k => !meta[k].dirty);
+  let cleared = false;
+  function clearLocalData(){
     applying = true;
     try {
       const keys = [];
@@ -383,6 +370,75 @@
       keys.forEach(k => ls.removeItem(k));
     } finally { applying = false; }
     meta = {};
+    cleared = true;
+  }
+  // before entering an account: are there unsent changes of another one here?
+  function checkSwitch(email, creating){
+    if (!hasDirty()) return;
+    const owner = readOwner();
+    if (owner && owner.email && owner.email.toLowerCase() !== String(email || '').trim().toLowerCase())
+      throw new Error(`Este aparelho tem alterações da conta ${owner.email} que ainda não foram para a nuvem. Entre nela primeiro para enviá-las.`);
+    if (!owner && creating && fromAnAccount())
+      throw new Error('Este aparelho tem alterações de outra conta que ainda não foram para a nuvem. Entre nela primeiro para enviá-las.');
+  }
+  // after entering: the data here is this account's from now on. resumed = the session was already
+  // here (app opening), so what is stored was being synced with it.
+  function claimDevice(user, resumed){
+    const owner = readOwner();
+    if (owner && owner.id === user.id) return;
+    // (a device from before this check, with unsent changes: most likely the same account, they stay)
+    if (owner || (!resumed && fromAnAccount() && !hasDirty())) clearLocalData();
+    saveOwner(user);
+  }
+  // this tab signing in or out itself (the events below are about other tabs)
+  let authBusy = false;
+  async function busy(fn){ authBusy = true; try { return await fn(); } finally { authBusy = false; } }
+  if (client) client.auth.onAuthStateChange((event, session) => {
+    if (authBusy || !state.user || !/^SIGNED_(IN|OUT)$/.test(event)) return;
+    if (session && session.user && session.user.id === state.user.id) return;
+    // another tab left this account (or entered another): start over with what is stored now
+    detached = true;
+    location.reload();
+  });
+
+  async function restoreSession(){
+    if (!client) return null;
+    const { data } = await client.auth.getSession();
+    state.user = data && data.session ? data.session.user : null;
+    if (state.user) { claimDevice(state.user, true); setStatus(navigator.onLine ? 'synced' : 'offline'); }
+    return state.user;
+  }
+  async function signIn(email, password){
+    checkSwitch(email, false);
+    const { data, error } = await busy(() => client.auth.signInWithPassword({ email, password }));
+    if (error) throw new Error(friendly(error));
+    claimDevice(data.user, false);
+    state.user = data.user;
+    return data.user;
+  }
+  // No e-mail confirmation: the account is ready to use as soon as it is created.
+  // (Supabase → Authentication → Email → "Confirm email" must be off; with it on, the
+  // sign-in below fails and the person sees why instead of waiting for an e-mail.)
+  async function signUp(email, password){
+    checkSwitch(email, true);
+    const { data, error } = await busy(() => client.auth.signUp({ email, password }));
+    if (error) throw new Error(friendly(error));
+    if (!data.session) return signIn(email, password);
+    claimDevice(data.user, false);
+    state.user = data.user;
+    return data.user;
+  }
+  async function signOut(){
+    if (hasDirty()) await pull(); // merges what another device changed in the same lists, so the push below sends it
+    await push();
+    if (hasDirty()) throw new Error('Ainda há alterações que não foram enviadas. Conecte-se à internet e tente de novo.');
+    if (channel) { client.removeChannel(channel); channel = null; }
+    const { error } = await busy(() => client.auth.signOut());
+    // offline, the session would stay here and the next opening would enter the account again
+    if (error && !/session.*(missing|not found)|not.*logged in/i.test(error.message || '')) await busy(() => client.auth.signOut({ scope: 'local' }));
+    state.user = null;
+    // the data lives in the account; leave nothing behind on this device
+    clearLocalData();
     setStatus('local', { lastSync: null, error: null });
   }
 
@@ -467,12 +523,13 @@
     // a device signed in to another account keeps it: its data must not move to this one
     if (state.user && state.user.email && state.user.email.toLowerCase() !== link.email.toLowerCase())
       throw new Error(`Este aparelho está na conta ${state.user.email}. Saia dela antes de trocar a senha de outra.`);
-    const s = await client.auth.setSession({ access_token: link.access_token, refresh_token: link.refresh_token });
+    checkSwitch(link.email, false);
+    const s = await busy(() => client.auth.setSession({ access_token: link.access_token, refresh_token: link.refresh_token }));
     if (s.error) throw resetFriendly(s.error);
-    const u = await client.auth.updateUser({ password });
+    const u = await busy(() => client.auth.updateUser({ password }));
     if (u.error) throw resetFriendly(u.error);
     state.user = u.data.user || (s.data && s.data.user) || null;
-    if (state.user) setStatus(navigator.onLine ? 'synced' : 'offline');
+    if (state.user) { claimDevice(state.user, false); setStatus(navigator.onLine ? 'synced' : 'offline'); }
     return state.user;
   }
 
@@ -483,6 +540,8 @@
     onChange(fn){ listeners.add(fn); fn(Object.assign({}, state)); return () => listeners.delete(fn); },
     hasSyncedBefore: () => Object.keys(meta).length > 0,
     hasPending: hasDirty,
+    // entering the account cleared another account's data from this device (the page should start over)
+    get cleared(){ return cleared; },
     restoreSession, signIn, signUp, signOut: signOutAndUnsubscribe, pull, push, startBackground,
     currentPushSub, savePush, deletePush, testPush,
     requestPasswordReset, readRecoveryLink, finishPasswordReset,

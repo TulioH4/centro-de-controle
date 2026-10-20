@@ -2,8 +2,9 @@ setTimeout(async () => {
   const out = {passos: []};
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const txt = el => el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
-  window.alert = m => out.passos.push('ALERTA: ' + m);
-  window.confirm = () => true;
+  // os avisos e confirmações do app (não os do navegador): o aviso vira um passo; confirmar diz sim
+  window.avisar = async m => { out.passos.push('ALERTA: ' + m); };
+  window.confirmar = async () => true;
   try{
     const ov = document.getElementById('wizardOverlay');
     out.assistente = !!ov && ov.style.display !== 'none';

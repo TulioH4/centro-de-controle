@@ -38,4 +38,13 @@ const g = requisitos({historico: [], config: {}});
 v.igual([g.semNum('2º semestre de 2026'), g.semNum('1º Semestre de 2027'), g.semNum('2026/2'), g.semNum('2026.1'), g.semNum('4º período')], [4053, 4054, 4053, 4052, null], 'semNum');
 v.ok(/^daqui a cerca de|no fim deste semestre/.test(g.reqContagem(4060)), 'contagem até a formatura');
 
+// "Encerrar semestre", passo 2 (planejando o próximo): das cursando, só as em que passou contam como aprovadas;
+// a que não passou conta como cursada. Fora do encerramento, todas as cursando contam (como antes).
+const cfg = {historico: [{sigla: 'M01', disciplina: 'Cálculo I', nota: null}, {sigla: 'F01', disciplina: 'Física I', nota: null}], config: {disciplinasAtuais: ['M01', 'F01']}};
+const enc = requisitos(cfg, {planejando: true, finais: {M01: {res: 'passei'}, F01: {res: 'nao'}}}).reqBase(true);
+v.igual([enc.aprov.has('M01'), enc.aprov.has('F01'), enc.freq.has('F01')], [true, false, true], 'encerrando: só a que passou conta como aprovada');
+const fora = requisitos(cfg).reqBase(true);
+v.igual([fora.aprov.has('M01'), fora.aprov.has('F01')], [true, true], 'fora do encerramento: as cursando contam como aprovadas');
+v.igual([g.semNum(g.semRotulo(4053)), g.semRotulo(4054)], [4053, '1º semestre de 2027'], 'rótulo do semestre da lista');
+
 v.fim();

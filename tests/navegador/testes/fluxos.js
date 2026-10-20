@@ -2,7 +2,7 @@ setTimeout(async () => {
   const out = {};
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const ls = k => JSON.parse(localStorage.getItem('centro_controle_' + ACTIVE_PROFILE_ID + '_' + k));
-  window.confirm = () => true;
+  window.confirmar = async () => true;
   const passo = async (nome, fn) => { try{ out[nome] = await fn(); }catch(e){ out[nome] = 'ERR ' + e.message + ' ' + (e.stack || '').split('\n')[1]; } };
 
   // 1. encerrar o semestre e desfazer

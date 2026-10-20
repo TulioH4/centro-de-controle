@@ -87,6 +87,12 @@
   .rail__brand p{margin:0; font-size:11px; color:var(--text-faint); font-family:var(--mono);}
 
   .rail__nav{flex:1; padding:14px 10px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--line) var(--bg-alt);}
+  /* Configurações fica no pé da barra lateral, separada das abas do dia a dia */
+  @media (min-width:881px){
+    body:not(.pos-top):not(.pos-bottom) .rail__nav{display:flex; flex-direction:column;}
+    body:not(.pos-top):not(.pos-bottom) .rail__nav > .navbtn{flex-shrink:0;}
+    body:not(.pos-top):not(.pos-bottom) .rail__nav > .navbtn[data-tab="config"]{margin-top:auto;}
+  }
   .rail__nav::-webkit-scrollbar{width:5px;}
   .rail__nav::-webkit-scrollbar-track{background:var(--bg-alt);}
   .rail__nav::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px;}
@@ -228,7 +234,8 @@
   .btn-sm{padding:5px 10px; font-size:11.5px;}
   kbd.kbd{background:var(--bg-alt);border:1px solid var(--line);border-radius:3px;padding:1px 5px;font-size:11.5px;font-family:var(--mono);color:var(--text-dim);}
 
-  .field{display:flex; flex-direction:column; gap:5px;}
+  .field{display:flex; flex-direction:column; gap:5px; min-width:0;}
+  .field > input, .field > select, .field > textarea{min-width:0; max-width:100%;}
   .field label{font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-faint);}
   .field input, .field select, .field textarea{
     background:rgba(255,255,255,.06);
@@ -291,6 +298,7 @@
   /* Quick Add */
   .qa-tab-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.10);color:var(--text-dim);backdrop-filter:blur(8px);}
   .qa-tab-btn.active{background:rgba(96,165,250,.22);border-color:rgba(96,165,250,.4);color:var(--blue);box-shadow:0 0 12px -4px var(--blue);}
+  .qa-grid{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; margin-bottom:8px;}
   #quickAddPanel .field label{font-size:11px;color:var(--text-dim);font-family:var(--mono);display:block;margin-bottom:3px;}
 
   .charts-grid{display:grid; grid-template-columns:1fr 1.4fr; gap:14px;}
@@ -429,6 +437,8 @@
   .navday .exam-dot{width:100%; font-size:9.5px; font-family:var(--mono); background:var(--blue-dim); color:var(--blue);
     border-radius:2px; padding:1px 4px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; line-height:1.5;}
   .navday .exam-more{font-size:9px; color:var(--text-faint); font-family:var(--mono);}
+  .nd-marks{display:contents;}
+  .prazos-mais{margin-top:6px; font-size:12.5px;}
 
   .exam-row{display:flex; align-items:center; gap:12px; padding:11px 4px; border-bottom:1px solid var(--line-soft);}
   .exam-row:last-child{border-bottom:none;}
@@ -610,6 +620,15 @@
     transition:opacity .18s, visibility .18s;
   }
   .modal-overlay.open{visibility:visible; opacity:1; pointer-events:auto;}
+  /* avisos e confirmações do app */
+  .dlg-overlay{z-index:1300;}
+  .dlg-overlay .modal{max-width:420px;}
+  .dlg__t{margin:0 0 6px; font-size:16px; font-weight:600; color:var(--text); text-wrap:balance;}
+  .dlg__t[hidden] + .dlg__txt{color:var(--text);}
+  .dlg__txt{margin:0; font-size:14px; line-height:1.5; color:var(--text-dim); white-space:pre-line;}
+  .dlg__txt:empty{display:none;}
+  .dlg-overlay .modal-foot{border-top:none; padding-top:4px;}
+  .btn.btn-perigo{background:var(--red); border-color:var(--red); color:#fff;}
   .modal{
     background:rgba(12,14,28,.82);
     backdrop-filter:blur(32px) saturate(180%); -webkit-backdrop-filter:blur(32px) saturate(180%);
@@ -1102,11 +1121,6 @@
   .prova-tl-sub{font-size:11px;color:var(--text-faint);font-family:var(--mono);}
 
   /* ===== PLANO DE ESTUDOS ===== */
-  .plan-day{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--line-soft);align-items:flex-start;}
-  .plan-day:last-child{border-bottom:none;}
-  .plan-day-label{font-family:var(--mono);font-size:11px;width:60px;flex-shrink:0;color:var(--text-faint);padding-top:2px;}
-  .plan-subjects{display:flex;flex-wrap:wrap;gap:5px;flex:1;}
-  .plan-chip{display:inline-flex;align-items:center;gap:5px;background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:3px 9px;font-size:11px;font-family:var(--mono);}
 
   /* ===== CALCULADORA FINAL ===== */
   .calc-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line-soft);font-size:12.5px;}
@@ -1669,13 +1683,6 @@
   /* badges: optically centred text */
   .badge{display:inline-flex; align-items:center; justify-content:center; line-height:1; padding:4px 9px; vertical-align:middle;}
 
-  /* study plan */
-  .plan-day{gap:14px; padding:9px 0; align-items:center;}
-  .plan-day-label{font-family:var(--sans); font-size:12.5px; font-weight:500; width:72px; color:var(--text-dim); padding:0;}
-  .plan-day-label.is-today{color:var(--text); font-weight:600;}
-  .plan-chip{font-family:var(--sans); font-size:12.5px; border:none; border-radius:999px; padding:4px 11px;
-    background:var(--lg-fill-hover); color:var(--text-dim);}
-  .plan-chip b{color:var(--text); font-weight:600;}
   .prova-tl-day{font-family:var(--sans); font-size:12px; font-weight:600; text-transform:none; letter-spacing:0;}
   .agenda-event, .agenda-event.ev-aula, .agenda-event.ev-prova, .agenda-event.ev-tarefa{
     position:relative; display:flex; flex-direction:column; gap:1px; margin:0;
@@ -1730,6 +1737,14 @@
   .notif-agenda__txt span{font-size:12.5px; color:var(--text-dim); line-height:1.45;}
   @media (max-width:1100px){ .notif-quando{grid-template-columns:repeat(2, minmax(0,1fr));} }
   /* fim de semestre: notas finais, próximo semestre, limpeza */
+  .sem-modal{max-width:640px;}
+  .sem-modal.is-larga{max-width:1080px; max-height:92vh;}
+  #gmApp [hidden]{display:none !important;}
+  #gmApp.sem-enc .gm-resumo-sec{display:none !important;}
+  .sem-novo{display:flex; align-items:center; gap:8px 10px; flex-wrap:wrap; margin:0 0 14px; font-size:13.5px; color:var(--text-dim);}
+  .sem-novo b{font-size:15px; font-weight:600; color:var(--text);}
+  .sem-novo select{padding:7px 10px; border-radius:10px; border:1px solid var(--line); background:var(--panel-2); color:var(--text); font:inherit; font-size:13.5px;}
+  .sem-fora{margin-top:14px;}
   .sem-passos{display:flex; gap:6px; margin-bottom:16px;}
   .sem-passos span{flex:1; height:4px; border-radius:999px; background:var(--line);}
   .sem-passos span.on{background:var(--blue);}
@@ -2243,11 +2258,12 @@
   .arv-q.is-livre{border-color:var(--blue);}
   .arv-q.is-bloq{border-style:dashed; opacity:.7;}
   .arv-palco{position:relative; display:flex; flex-direction:column; gap:26px; padding:8px 0 4px;}
-  .arv-svg{position:absolute; left:0; top:0; pointer-events:none; overflow:visible; z-index:0;}
+  .arv-svg{position:absolute; left:0; top:0; pointer-events:none; overflow:visible; z-index:2;}
   .arv-per{display:flex; gap:10px; align-items:flex-start;}
   .arv-per__h{flex:0 0 24px; font-family:var(--mono); font-size:11.5px; color:var(--text-faint); padding-top:9px; text-align:right;}
-  .arv-nos{flex:1; min-width:0; display:flex; flex-wrap:wrap; gap:10px 10px;}
-  .arv-no{position:relative; z-index:1; width:122px; max-width:calc(50% - 5px); min-height:54px; display:flex; flex-direction:column; align-items:flex-start; gap:1px;
+  /* vãos largos: é por eles que as ligações passam */
+  .arv-nos{flex:1; min-width:0; display:flex; flex-wrap:wrap; gap:16px 20px;}
+  .arv-no{position:relative; z-index:1; width:122px; max-width:calc(50% - 10px); min-height:54px; display:flex; flex-direction:column; align-items:flex-start; gap:1px;
     padding:7px 9px; border-radius:12px; border:1px solid var(--line); color:var(--text); font:inherit; text-align:left; cursor:pointer;
     background:linear-gradient(var(--panel-2), var(--panel-2)), var(--bg); transition:opacity .2s, box-shadow .2s, transform .15s;}
   .arv-no:active{transform:scale(.97);}
@@ -2470,6 +2486,7 @@
     }
     .msheet__act .i{width:21px; height:21px; color:var(--text-dim);}
     .msheet__act + .msheet__act{border-top:.5px solid var(--line-soft); border-radius:0;}
+    .msheet__act.active, .msheet__act.active .i{color:var(--blue);}
 
     /* timer opens as a card above the tab bar */
     .pomodoro-widget{left:12px !important; right:12px !important; bottom:calc(88px + env(safe-area-inset-bottom)) !important; top:auto !important; width:auto !important; z-index:57;}
@@ -2495,6 +2512,29 @@
     .stat{padding:14px 15px !important;}
     .stat__value{font-size:26px;}
     .stat__value.small{font-size:16px;}
+
+    /* calendário de provas: número no meio, sem caixa; feriado, evento e prova viram pontos */
+    .cal-grid{gap:2px 0;}
+    .cal-dow{font-size:10.5px; letter-spacing:.04em; padding:0 0 6px;}
+    .cal-grid .navday{aspect-ratio:auto; height:46px; padding:3px 0 0; gap:3px; align-items:center; border:none; background:none; border-radius:12px; box-shadow:none;}
+    .cal-grid .navday .num{width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-family:var(--sans); font-size:14.5px; font-weight:500; color:var(--text); font-variant-numeric:tabular-nums;}
+    .cal-grid .navday.out{opacity:1;}
+    .cal-grid .navday.out .num{color:var(--text-faint); opacity:.5;}
+    .cal-grid .navday.is-feriado .num{color:var(--red);}
+    .cal-grid .navday.today .num{background:var(--blue); color:#fff; font-weight:600;}
+    .cal-grid .navday:not(.out):active .num{background:var(--lg-fill-active);}
+    .cal-grid .navday.today:active .num{background:var(--blue);}
+    .cal-grid .nd-marks{display:flex; justify-content:center; gap:3px; height:6px;}
+    .cal-grid .nd-marks > *{flex:0 0 6px; width:6px; height:6px; margin:0; padding:0; border-radius:50%; font-size:0; line-height:0; overflow:hidden;}
+    .cal-grid .nd-marks .exam-dot{background:var(--blue);}
+    .cal-grid .nd-marks .cal-tag.is-feriado{background:var(--red);}
+    .cal-grid .nd-marks .cal-tag.is-ev{background:var(--purple, var(--blue));}
+    .cal-grid .nd-marks .exam-more{display:none;}
+    .cal-head{margin-bottom:10px;}
+    .cal-head .month{font-family:var(--sans); font-size:17px;}
+    .cal-nav button{width:34px; height:34px; border-radius:50%;}
+    #calToday{border-radius:999px !important; padding:0 12px !important;}
 
     /* week agenda as a list */
     #agendaSemanalPanel .agenda-grid{display:none;}
@@ -2793,7 +2833,7 @@
           <div class="row-list" id="provasHomeList"></div>
         </div>
         <div class="panel panel--pad" style="--accent:var(--amber)">
-          <div class="stat__label" style="margin-bottom:8px;">Prazos de laboratório</div>
+          <div class="stat__label" style="margin-bottom:8px;">Relatórios e tarefas</div>
           <div class="row-list" id="prazosList"></div>
         </div>
       </div>
@@ -2817,9 +2857,6 @@
 
       <div class="section-label">Linha do tempo de provas</div>
       <div id="provaTimelinePanel" class="panel panel--pad" style="--accent:var(--red)"></div>
-
-      <div class="section-label">Plano de estudos para os próximos 7 dias</div>
-      <div id="planoEstudosPanel" class="panel panel--pad" style="--accent:var(--green)"></div>
 
       <div class="section-label">Progresso do curso</div>
       <div id="progressoCursoPanel" class="panel panel--pad" style="--accent:var(--green);"></div>
@@ -3022,7 +3059,7 @@
           <div class="field"><label for="hcValidadas">Já validadas</label><input id="hcValidadas" type="number" inputmode="numeric" placeholder="0" min="0"></div>
           <div class="hf-foot">
             <span class="hf-msg" id="hcMsg" role="alert"></span>
-            <button class="btn" id="hcCancel">Fechar</button>
+            <button class="btn" id="hcCancel">Cancelar</button>
             <button class="btn btn-primary" id="btnAddHora">Adicionar</button>
           </div>
         </div>
@@ -3041,7 +3078,7 @@
           <div class="field"><label>Categoria</label>
             <select id="fCategoria"><option>Trabalho</option><option>Relatório de Lab.</option><option>Projeto</option><option>Pessoal</option><option>Outro</option></select>
           </div>
-          <div class="field"><label>Disciplina</label><input id="fDisciplina" placeholder="Sigla" list="discSuggestList"></div>
+          <div class="field"><label for="fDisciplina">Disciplina</label><select id="fDisciplina"></select><input id="fDisciplinaOutra" placeholder="Nome ou código" aria-label="Outra disciplina" autocomplete="off" hidden></div>
           <div class="field"><label>Prazo</label><input id="fPrazo" type="date"></div>
           <div class="field"><label>Prioridade</label>
             <select id="fPrioridade"><option>Alta</option><option>Média</option><option selected>Baixa</option></select>
@@ -3157,7 +3194,7 @@
           <div class="field"><label>Nome do aluno</label><input id="cAluno"></div>
           <div class="field"><label>Curso</label><input id="cCurso"></div>
           <div class="field"><label>Instituição</label><input id="cInstituicao"></div>
-          <div class="field"><label>Semestre atual</label><input id="cSemestre"></div>
+          <div class="field"><label for="cSemestre">Semestre atual</label><select id="cSemestre"></select></div>
           <div class="field"><label>Nota mínima de aprovação (0-100)</label><input id="cNotaMinima" type="number" min="0" max="100"></div>
           <div class="field"><label for="cRegraNota">Abaixo da nota mínima</label><select id="cRegraNota"><option value="">Automático (pela faculdade)</option><option value="np3">Faz a NP3 (regra do Inatel)</option><option value="media">Reprova</option></select></div>
         </div>
@@ -3282,8 +3319,21 @@
 </div>
 
 <!-- MODAL: encerrar o semestre e começar o próximo -->
+<div class="modal-overlay dlg-overlay" id="dlgOverlay">
+  <div class="modal dlg" role="alertdialog" aria-modal="true" aria-labelledby="dlgTitulo" aria-describedby="dlgTexto">
+    <div class="modal-body">
+      <h3 class="dlg__t" id="dlgTitulo"></h3>
+      <p class="dlg__txt" id="dlgTexto"></p>
+    </div>
+    <div class="modal-foot">
+      <button type="button" class="btn" id="dlgCancelar">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalSemestre">
-  <div class="modal" style="max-width:640px;" role="dialog" aria-modal="true" aria-labelledby="semTitulo">
+  <div class="modal sem-modal" id="semModal" role="dialog" aria-modal="true" aria-labelledby="semTitulo">
     <div class="modal-head">
       <h3 id="semTitulo">Encerrar semestre</h3>
       <button class="btn btn-ghost" id="semFechar" style="padding:4px 8px; font-size:16px;" aria-label="Fechar">✕</button>
@@ -3317,6 +3367,7 @@
       <button class="btn btn-ghost" id="gmFechar" style="padding:4px 8px; font-size:16px;" aria-label="Fechar">✕</button>
     </div>
     <div class="modal-body" id="gmBody">
+      <div id="gmApp">
       <input type="file" id="gmPdf" accept="application/pdf,.pdf" hidden>
       <div id="gmFonte"></div>
       <div id="gmAmigos"></div>
@@ -3351,8 +3402,9 @@
           <div class="panel panel--pad gm-turmas" id="gmTurmas"></div>
           <div class="panel gm-semana" id="gmSemana" aria-label="A semana"></div>
         </div>
-        <div class="section-label gm-sec"><span>3. Resumo</span><span class="gm-sec__fim"><button type="button" class="link-btn" id="gmCopiar" hidden>Copiar</button><button type="button" class="link-btn" id="gmCompartilhar" hidden>Mandar para um colega</button></span></div>
-        <div class="panel panel--pad" id="gmResumo"></div>
+        <div class="section-label gm-sec gm-resumo-sec"><span>3. Resumo</span><span class="gm-sec__fim"><button type="button" class="link-btn" id="gmCopiar" hidden>Copiar</button><button type="button" class="link-btn" id="gmCompartilhar" hidden>Mandar para um colega</button></span></div>
+        <div class="panel panel--pad gm-resumo-sec" id="gmResumo"></div>
+      </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -3437,17 +3489,17 @@
       <button type="button" class="qa-close" id="qaClose" aria-label="Fechar">✕</button>
     </div>
     <div id="qaPainelTarefa">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div class="qa-grid">
         <div class="field" style="grid-column:1/-1;"><label>Nome da tarefa</label><input id="qaTarefaNome" class="input" placeholder="ex: Estudar para P1 de M04" autocomplete="off"></div>
         <div class="field"><label>Categoria</label><select id="qaTarefaCat"><option>Trabalho</option><option>Relatório de Lab.</option><option>Projeto</option><option>Pessoal</option><option>Outro</option></select></div>
-        <div class="field"><label>Disciplina</label><input id="qaTarefaDisc" placeholder="ex: M04" list="discSuggestList"></div>
+        <div class="field"><label for="qaTarefaDisc">Disciplina</label><select id="qaTarefaDisc"></select><input id="qaTarefaDiscOutra" placeholder="Nome ou código" aria-label="Outra disciplina" autocomplete="off" hidden></div>
         <div class="field"><label>Prazo</label><input id="qaTarefaPrazo" type="date"></div>
         <div class="field"><label>Prioridade</label><select id="qaTarefaPrio"><option>Alta</option><option selected>Média</option><option>Baixa</option></select></div>
       </div>
       <button class="btn btn-primary" id="qaBtnAddTarefa" style="width:100%;">Adicionar tarefa</button>
     </div>
     <div id="qaPainelProva" style="display:none;">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div class="qa-grid">
         <div class="field" style="grid-column:1/-1;"><label for="qaProvaDisciplina">Disciplina</label>
           <select id="qaProvaDisciplina"></select>
           <input id="qaProvaDiscCustom" placeholder="Nome da disciplina" aria-label="Nome da disciplina" style="display:none;margin-top:6px;">
@@ -4045,7 +4097,7 @@ function openMoreSheet(){
   const name = (STATE.config.aluno || '').trim() || 'Aluno';
   const initials = document.getElementById('operatorInitials').textContent;
   const sync = window.Sync && Sync.user ? (document.getElementById('syncLine').textContent || 'Sincronizado') : 'Salvo só neste aparelho';
-  const outras = TABS.filter(tabVisible).filter(t => !MOBILE_PRIMARY.includes(t.id));
+  const outras = TABS.filter(tabVisible).filter(t => !MOBILE_PRIMARY.includes(t.id) && t.id !== 'config');
   const install = document.getElementById('btnInstall');
   sheet.innerHTML = `
     <div class="msheet__grab" aria-hidden="true"></div>
@@ -4060,6 +4112,7 @@ function openMoreSheet(){
       <button type="button" class="msheet__act" data-more-act="tema">${ico(STATE.tema === 'light' ? 'moon' : 'sun')}<span>${STATE.tema === 'light' ? 'Tema escuro' : 'Tema claro'}</span></button>
       <button type="button" class="msheet__act" data-more-act="notif">${ico('bell')}<span>Notificações</span></button>
       ${install && !install.hidden ? `<button type="button" class="msheet__act" data-more-act="install">${ico('download')}<span>Instalar app</span></button>` : ''}
+      <button type="button" class="msheet__act${cur === 'config' ? ' active' : ''}" data-more-tab="config">${ico('sliders')}<span>Configurações</span></button>
     </div>`;
   sheet.querySelectorAll('[data-more-tab]').forEach(b => b.onclick = () => switchTab(b.dataset.moreTab));
   const act = {
@@ -4293,6 +4346,25 @@ function tarefaDaDisciplina(t, sigla, nome){
   if(!d || !s) return false;
   return d === s || d === normalizeStr(nome) || (d.startsWith(s) && !/[a-z0-9]/.test(d.charAt(s.length)));
 }
+// Disciplina de uma tarefa escolhida numa lista: as que a pessoa está cursando, "Nenhuma" e "Outra…"
+// (que abre um campo de texto). Um valor antigo que não está na lista continua como opção.
+function tarefaDiscOptions(valor){
+  const atuais = (STATE.config && STATE.config.disciplinasAtuais) || [], v = String(valor || '').trim();
+  const nome = s => (STATE.historico.find(i => i.sigla === s) || {}).disciplina || s;
+  return `<option value="">Nenhuma</option>`
+    + atuais.map(s => `<option value="${esc(s)}"${s === v ? ' selected' : ''}>${esc(s)} — ${esc(nome(s))}</option>`).join('')
+    + (v && !atuais.includes(v) ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '')
+    + `<option value="__outro__">Outra…</option>`;
+}
+function tarefaDiscValor(sel, outra){
+  if(!sel) return '';
+  return sel.value === '__outro__' ? String(outra && outra.value || '').trim() : sel.value;
+}
+function ligarDiscOutra(sel, outra){
+  if(!sel || !outra) return;
+  outra.hidden = sel.value !== '__outro__';
+  sel.addEventListener('change', () => { outra.hidden = sel.value !== '__outro__'; if(!outra.hidden) outra.focus(); });
+}
 // Nota parcial já lançada (vazio, null ou texto não contam)
 const notaOk = e => !!e && e.valor !== null && e.valor !== undefined && e.valor !== '' && !isNaN(Number(e.valor));
 // Números com vírgula, como se escreve em português
@@ -4484,28 +4556,26 @@ function renderPainel(){
   }).join('') : `<div class="empty">${semAulaHoje ? `Sem aula hoje: ${esc(semAulaHoje)}` : 'Nenhuma aula hoje'}</div>`;
   document.querySelectorAll('#aulasHojeList [data-faltei]').forEach(b => b.addEventListener('click', () => alternarFalta(b.dataset.faltei)));
 
-  const relOficiais = relatoriosOficiais();
-  const relTarefas = STATE.tarefas.filter(t => t.categoria==='Relatório de Lab.' && t.prazo);
-  const todosRels = [...relOficiais, ...relTarefas.map(t => ({nome:t.nome, fim:t.prazo, _tarefa:t}))];
-  todosRels.sort((a,b) => (a.fim||'').localeCompare(b.fim||''));
-  const relsAbertos = todosRels
-    .map(r => {
-      const rEfetivo = r._tarefa ? {nome: r.nome, fim: r.fim} : r;
-      const st = r._tarefa
-        ? {label: r._tarefa.status==='Concluído'?'Concluído':'Pendente', cls: r._tarefa.status==='Concluído'?'green':'gray'}
-        : relatorioStatus(rEfetivo);
-      return {rEfetivo, st};
-    })
-    .filter(x => x.st.label !== 'Concluído');
-  document.getElementById('prazosList').innerHTML = relsAbertos.length ? relsAbertos.map(({rEfetivo, st}) => {
-    const dr = daysUntil(rEfetivo.fim);
+  // relatórios do laboratório e tarefas com prazo ainda em aberto, por data
+  const prazos = [
+    ...relatoriosOficiais().map(r => ({nome: r.nome, fim: r.fim, tipo: 'Relatório', st: relatorioStatus(r)})),
+    ...STATE.tarefas.filter(t => t.prazo && t.status !== 'Concluído').map(t => ({nome: t.nome, fim: t.prazo,
+      tipo: t.categoria === 'Relatório de Lab.' ? 'Relatório' : 'Tarefa',
+      st: daysUntil(t.prazo) < 0 ? {label: 'Atrasada', cls: 'red'} : t.status === 'Em andamento' ? {label: 'Em andamento', cls: 'amber'} : {label: 'Pendente', cls: 'gray'}})),
+  ].filter(x => x.st.label !== 'Concluído').sort((a, b) => (a.fim || '').localeCompare(b.fim || ''));
+  const PRAZOS_MAX = 6, maisPrazos = prazos.length - PRAZOS_MAX;
+  document.getElementById('prazosList').innerHTML = prazos.length ? prazos.slice(0, PRAZOS_MAX).map(x => {
+    const dr = daysUntil(x.fim);
     const quando = dr < 0 ? 'prazo encerrado' : dr === 0 ? 'entrega hoje' : dr === 1 ? 'entrega amanhã' : `faltam ${dr} dias`;
     return `<div class="row-item">
-      <div class="time mono">${fmtDate(rEfetivo.fim)}</div>
-      <div class="info"><div class="t">${esc(rEfetivo.nome)}</div><div class="s">${quando}</div></div>
-      <span class="badge badge-${st.cls}">${st.label}</span>
+      <div class="time mono">${fmtDate(x.fim)}</div>
+      <div class="info"><div class="t">${esc(x.nome)}</div><div class="s">${x.tipo}, ${quando}</div></div>
+      <span class="badge badge-${x.st.cls}">${x.st.label}</span>
     </div>`;
-  }).join('') : `<div class="empty" style="font-size:12px;padding:8px 0;">Nenhum relatório em aberto</div>`;
+  }).join('') + (maisPrazos > 0 ? `<button type="button" class="link-btn prazos-mais" data-ver-tarefas>e mais ${maisPrazos}</button>` : '')
+    : `<div class="empty" style="font-size:12px;padding:8px 0;">Nenhum prazo em aberto</div>`;
+  const verTarefas = document.querySelector('#prazosList [data-ver-tarefas]');
+  if(verTarefas) verTarefas.addEventListener('click', () => switchTab('tarefas'));
 
   const provasHome = upcomingProvas(4);
   document.getElementById('provasHomeList').innerHTML = provasHome.length ? provasHome.map(p => `
@@ -4559,7 +4629,6 @@ function renderPainel(){
   renderDiscRisco();
   renderAgendaSemanal();
   renderProvaTimeline();
-  renderPlanoEstudos();
 }
 
 // ---------------- render: Progresso do Curso ----------------
@@ -5070,7 +5139,7 @@ function renderHistorico(filter){
       const sigla = btn.dataset.delDisc;
       const isCustom = STATE.historicoCustom.some(c => c.sigla === sigla);
       const nome = (STATE.historico.find(i => i.sigla === sigla) || {}).disciplina || sigla;
-      if(!confirm(`Remover "${nome}" do histórico? Esta ação não pode ser desfeita.`)) return;
+      if(!await confirmar('Esta ação não pode ser desfeita.', {titulo: `Remover "${nome}" do histórico?`, ok: 'Remover', perigo: true})) return;
       if(isCustom){
         STATE.historicoCustom = STATE.historicoCustom.filter(c => c.sigla !== sigla);
         await storeSet('historico_custom', STATE.historicoCustom);
@@ -5708,7 +5777,9 @@ function reqBase(contarCursando){
     else if(st === 'Reprovado' && !reprovouPorFalta(i)) freq.add(i.sigla);
   });
   cursando.forEach(sg => { if(aprov.has(sg)) cursando.delete(sg); });
-  if(contarCursando) cursando.forEach(sg => { aprov.add(sg); freq.add(sg); });
+  // (no "Encerrar semestre", já se sabe em quais passou: a que não passou conta só como cursada)
+  const res = contarCursando && SEM && SEM.planejando ? SEM.finais : null;
+  if(contarCursando) cursando.forEach(sg => { if(!res || !res[sg] || res[sg].res === 'passei') aprov.add(sg); freq.add(sg); });
   return {aprov, freq, cursando};
 }
 // requisitos de sg ainda não cumpridos; junto: as que vão ser cursadas no mesmo semestre (co-requisito)
@@ -5819,6 +5890,19 @@ function reqPlano(cur, limite, opts = {}){
   return {sems, sobra: resto, cadeia, minimo: faltam.length ? Math.max(...faltam.map(altura)) : 0, violacoes, pos, fixos};
 }
 // número absoluto de um semestre: "2º semestre de 2026", "2026/2" ou "2026.2" → 2026 × 2 + 1; null se não der
+// O semestre escolhido numa lista ("2º semestre de 2026"), do ano passado ao próximo. Um valor de outro
+// formato, ou fora dessa faixa, continua como opção. vazio = valor sem nada escolhido ainda
+const semRotulo = n => `${n % 2 + 1}º semestre de ${Math.floor(n / 2)}`;
+// o semestre de hoje pelo mês: o 2º começa em agosto
+const semDeHoje = () => { const d = new Date(); return d.getFullYear() * 2 + (d.getMonth() >= 7 ? 1 : 0); };
+function semestreOpcoes(valor){
+  const v = String(valor || '').trim(), n = semNum(v), hoje = semDeHoje(), nums = [];
+  for(let k = hoje - 2; k <= hoje + 2; k++) nums.push(k);
+  if(n !== null && !nums.includes(n)){ nums.push(n); nums.sort((a, b) => a - b); }
+  return `<option value=""${v ? '' : ' selected'}>—</option>`
+    + (v && n === null ? `<option value="${esc(v)}" selected>${esc(v)}</option>` : '')
+    + nums.map(k => `<option value="${semRotulo(k)}"${k === n ? ' selected' : ''}>${semRotulo(k)}</option>`).join('');
+}
 function semNum(rot){
   const t = String(rot || '').trim();
   let m = /^([12])\s*º?\s*semestre\s*(?:de\s*)?(\d{4})$/i.exec(t);
@@ -5997,7 +6081,7 @@ function renderFormatura(){
   </div>`;
   const limpar = document.getElementById('fmLimparPlano');
   if(limpar) limpar.addEventListener('click', async () => {
-    if(!confirm('Voltar o plano para o automático? Os semestres que você escolheu para cada disciplina serão esquecidos.')) return;
+    if(!await confirmar('Os semestres que você escolheu para cada disciplina serão esquecidos.', {titulo: 'Voltar o plano para o automático?', ok: 'Voltar ao automático'})) return;
     STATE.config.planoCurso = {};
     await storeSet('config', STATE.config);
     renderMapaSucesso();
@@ -6600,7 +6684,7 @@ document.getElementById('modalAmigo').addEventListener('click', e => { if(e.targ
 document.getElementById('amUsar').addEventListener('click', () => { const g = (STATE.gradeAmigos || [])[AM_IDX]; if(g) gUsarTurmasDe(g); });
 document.getElementById('amApagar').addEventListener('click', async () => {
   const g = (STATE.gradeAmigos || [])[AM_IDX];
-  if(!g || !confirm(`Apagar a grade de ${g.n} deste aparelho?`)) return;
+  if(!g || !await confirmar('', {titulo: `Apagar a grade de ${g.n} deste aparelho?`, ok: 'Apagar', perigo: true})) return;
   STATE.gradeAmigos = STATE.gradeAmigos.filter(x => x !== g);
   await storeSet('grade_amigos', STATE.gradeAmigos);
   fecharGradeAmigo();
@@ -6733,7 +6817,10 @@ function arvSelecionar(cur){
   const ver = info.querySelector('[data-arv-ver]');
   if(ver) ver.addEventListener('click', () => showDiscDetail(ver.dataset.arvVer));
 }
-// as ligações, por cima do quadro: de baixo da exigida até em cima da que exige (mesma linha: um arco)
+// As ligações andam pelos vãos, nunca por baixo de uma disciplina: saem da exigida para o corredor entre
+// as linhas (embaixo dela; em cima, se a que exige está na mesma linha ou acima), atravessam cada linha do
+// meio pelo vão livre mais perto, e entram por cima na que exige. Ligações no mesmo corredor ou vão ficam
+// um pouco afastadas umas das outras.
 function arvDesenhar(){
   const palco = document.getElementById('arvPalco'), svg = document.getElementById('arvSvg');
   if(!palco || !svg || !palco.offsetParent) return;
@@ -6741,17 +6828,70 @@ function arvDesenhar(){
   svg.setAttribute('width', W); svg.setAttribute('height', H); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
   if(!ARV_ARESTAS.length){ svg.innerHTML = ''; return; }
   palco.querySelectorAll('[data-arv]').forEach(b => { const q = b.getBoundingClientRect(); cx[b.dataset.arv] = {l: q.left - pr.left, r: q.right - pr.left, t: q.top - pr.top, b: q.bottom - pr.top}; });
+  // as linhas como aparecem na tela (um período pode quebrar em várias)
+  const linhas = [];
+  Object.keys(cx).map(sg => cx[sg]).sort((a, b) => a.t - b.t).forEach(c => {
+    const l = linhas[linhas.length - 1];
+    if(l && Math.abs(c.t - l.t) < 4){ l.nos.push(c); l.b = Math.max(l.b, c.b); }
+    else linhas.push({t: c.t, b: c.b, nos: [c]});
+  });
+  Object.keys(cx).forEach(sg => { cx[sg].linha = linhas.findIndex(l => l.nos.includes(cx[sg])); });
+  // corredor k: o vão acima da linha k (o último fica embaixo da última linha)
+  const N = linhas.length;
+  const corredor = k => k <= 0 ? linhas[0].t - 5 : k >= N ? linhas[N - 1].b + 5 : (linhas[k - 1].b + linhas[k].t) / 2;
+  const folgaC = k => k <= 0 || k >= N ? 2 : Math.max(0, (linhas[k].t - linhas[k - 1].b) / 2 - 2);
+  // vãos livres de uma linha, em x: depois do número do período, entre as caixas e depois da última
+  const ESQ = 26;
+  const vaos = l => {
+    const out = []; let x = ESQ;
+    [...l.nos].sort((a, b) => a.l - b.l).forEach(c => { if(c.l - x >= 6) out.push([x + 2, c.l - 2]); x = Math.max(x, c.r); });
+    if(W - x >= 6) out.push([x + 2, W - 2]);
+    return out;
+  };
+  const uso = {};
+  const afasta = (chave, folga) => { const i = uso[chave] = (uso[chave] || 0) + 1, d = [0, 3, -3, 6, -6, 9, -9][(i - 1) % 7]; return Math.max(-folga, Math.min(folga, d)); };
   const n = v => Math.round(v * 10) / 10;
-  const linhas = ARV_ARESTAS.map(a => {
+  // cantos arredondados
+  const caminho = pts => {
+    const P = pts.filter((pt, i) => !i || Math.abs(pt[0] - pts[i - 1][0]) > .5 || Math.abs(pt[1] - pts[i - 1][1]) > .5);
+    let d = `M${n(P[0][0])},${n(P[0][1])}`;
+    for(let i = 1; i < P.length - 1; i++){
+      const [x0, y0] = P[i - 1], [x1, y1] = P[i], [x2, y2] = P[i + 1];
+      const l1 = Math.hypot(x1 - x0, y1 - y0), l2 = Math.hypot(x2 - x1, y2 - y1), r = Math.min(7, l1 / 2, l2 / 2);
+      d += ` L${n(x1 - (x1 - x0) / l1 * r)},${n(y1 - (y1 - y0) / l1 * r)} Q${n(x1)},${n(y1)} ${n(x1 + (x2 - x1) / l2 * r)},${n(y1 + (y2 - y1) / l2 * r)}`;
+    }
+    const f = P[P.length - 1];
+    return d + ` L${n(f[0])},${n(f[1])}`;
+  };
+  const linhasSvg = ARV_ARESTAS.map(a => {
     const p = cx[a.de], q = cx[a.para];
     if(!p || !q) return '';
-    const px = (p.l + p.r) / 2, qx = (q.l + q.r) / 2;
-    let d;
-    if(q.t >= p.b - 1){ const m = (p.b + q.t) / 2; d = `M${n(px)},${n(p.b)} C${n(px)},${n(m)} ${n(qx)},${n(m)} ${n(qx)},${n(q.t - 2)}`; }
-    else { const y = Math.min(p.t, q.t) - 16; d = `M${n(px)},${n(p.t)} C${n(px)},${n(y)} ${n(qx)},${n(y)} ${n(qx)},${n(q.t - 2)}`; }
-    return `<path d="${d}" class="arv-l t-${a.tipo} is-${a.lado}" marker-end="url(#arvSeta-${a.lado})"/>`;
+    const px = (p.l + p.r) / 2, qx = (q.l + q.r) / 2, desce = p.linha < q.linha;
+    let k = desce ? p.linha + 1 : p.linha, x = px, y = corredor(k) + afasta('c' + k, folgaC(k));
+    const pts = [[px, desce ? p.b : p.t], [x, y]];
+    // atravessa as linhas do meio, uma de cada vez, pelo vão mais perto (puxando para o lado da que exige)
+    for(let volta = 0; k !== q.linha && volta < 60; volta++){
+      const L = desce ? k : k - 1;
+      let melhor = null, dist = Infinity;
+      vaos(linhas[L]).forEach(([a0, a1]) => {
+        const xx = Math.max(a0, Math.min(a1, x)), d = Math.abs(xx - x) + Math.abs(xx - qx) * 0.3;
+        if(d < dist){ dist = d; melhor = [a0, a1, xx]; }
+      });
+      if(melhor){
+        const [a0, a1] = melhor, meio = (a0 + a1) / 2;
+        // vão entre duas caixas: pelo meio dele; espaço largo (o fim da linha): perto de onde a ligação já está
+        let nx = (a1 - a0 < 44 ? meio : melhor[2]) + afasta('v' + L + ':' + Math.round(a0), Math.max(0, (a1 - a0) / 2 - 3));
+        nx = Math.max(a0, Math.min(a1, nx));
+        if(Math.abs(nx - x) > .5){ pts.push([nx, y]); x = nx; }
+      }
+      k += desce ? 1 : -1;
+      y = corredor(k) + afasta('c' + k, folgaC(k));
+      pts.push([x, y]);
+    }
+    pts.push([qx, y], [qx, q.t - 2]);
+    return `<path d="${caminho(pts)}" class="arv-l t-${a.tipo} is-${a.lado}" marker-end="url(#arvSeta-${a.lado})"/>`;
   }).join('');
-  svg.innerHTML = `<defs>${['cima', 'baixo'].map(l => `<marker id="arvSeta-${l}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="arv-seta is-${l}"/></marker>`).join('')}</defs>${linhas}`;
+  svg.innerHTML = `<defs>${['cima', 'baixo'].map(l => `<marker id="arvSeta-${l}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 z" class="arv-seta is-${l}"/></marker>`).join('')}</defs>${linhasSvg}`;
 }
 document.querySelectorAll('[data-mvista]').forEach(b => b.addEventListener('click', () => { lsSet('mapa_vista', b.dataset.mvista); renderMapaSucesso(); }));
 
@@ -7097,62 +7237,6 @@ function renderProvaTimeline(){
   }).join('') + `</div>`;
 }
 
-// ---------------- render: Plano de Estudos ----------------
-function renderPlanoEstudos(){
-  const panel = document.getElementById('planoEstudosPanel');
-  if(!panel) return;
-  const todayIso = localISO(new Date());
-  const today = new Date(); today.setHours(0,0,0,0);
-  const atuais = STATE.config.disciplinasAtuais || [];
-  if(!atuais.length){
-    panel.innerHTML = `<div class="empty">Configure as disciplinas cursando em Configurações para gerar um plano.</div>`;
-    return;
-  }
-  // Score each discipline by urgency: upcoming provas + current nota deficit + faltas risk
-  const scoreDisc = sigla => {
-    const item = STATE.historico.find(i => i.sigla === sigla);
-    const ch = item ? (item.ch||60) : 60;
-    const limite = faltaLimite(sigla, ch);
-    const faltas = (STATE.faltas[sigla]||{}).faltas || 0;
-    const faltaPct = faltas / limite;
-    const notaMin = STATE.config.notaMinima || 60;
-    const entradas = (STATE.notasParciais[sigla] || []).filter(e => !e.np3);
-    const preench = entradas.filter(notaOk);
-    const pesoP = preench.reduce((a,e) => a+(Number(e.peso)||1), 0);
-    const media = preench.length && pesoP > 0 ? preench.reduce((a,e) => a+Number(e.valor)*(Number(e.peso)||1),0)/pesoP : null;
-    const notaScore = media !== null ? Math.max(0, notaMin - media) / notaMin : 0.3;
-    // Nearest prova bonus
-    const provasDays = upcomingProvas().filter(p => provaDaDisciplina(p, sigla, item && item.disciplina))
-      .map(p => daysUntil(p.data));
-    const provaBonus = provasDays.length ? Math.max(0, 14 - Math.min(...provasDays)) / 14 : 0;
-    // Last studied
-    // ts é uma data ISO (texto): subtrair dava NaN e a ordenação saía errada
-    const lastStudy = STATE.pomSessions.filter(s => s.sigla === sigla).sort((a,b) => new Date(b.ts) - new Date(a.ts))[0];
-    const staleness = lastStudy ? Math.min(7, (Date.now() - new Date(lastStudy.ts)) / 86400000) / 7 : 1;
-    return notaScore * 0.35 + provaBonus * 0.4 + staleness * 0.15 + faltaPct * 0.1;
-  };
-  const ranked = [...atuais].sort((a,b) => scoreDisc(b) - scoreDisc(a));
-  const DAYS_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-  const plan = Array.from({length:7}, (_,i) => {
-    const d = new Date(today); d.setDate(today.getDate()+i);
-    const disc = ranked[i % ranked.length];
-    const item = STATE.historico.find(h => h.sigla === disc);
-    return {d, sigla:disc, nome: item ? item.disciplina : disc};
-  });
-  panel.innerHTML = plan.map((p, i) => {
-    const iso = localISO(p.d);
-    const hasProva = STATE.provas.some(pr => pr.data === iso && provaDaDisciplina(pr, p.sigla, p.nome));
-    const dayLabel = i === 0 ? 'Hoje' : i === 1 ? 'Amanhã' : `${DAYS_PT[p.d.getDay()]}, ${p.d.getDate()}/${p.d.getMonth()+1}`;
-    return `<div class="plan-day">
-      <div class="plan-day-label${i===0?' is-today':''}">${dayLabel}</div>
-      <div class="plan-subjects">
-        <span class="plan-chip"><b>${esc(p.sigla)}</b> ${esc(p.nome)}</span>
-        ${hasProva ? '<span class="badge badge-red">Dia de prova</span>' : ''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
 // ---------------- render: Calculadora de Prova Final ----------------
 function renderCalculadoraFinal(){
   const panel = document.getElementById('calcFinalPanel');
@@ -7436,7 +7520,8 @@ document.getElementById('btnAddHora').addEventListener('click', async () => {
   await storeSet('horas_comp', STATE.horasComp);
   ['hcSigla','hcNome','hcTotal','hcValidadas'].forEach(id => { document.getElementById(id).value = ''; });
   msg('');
-  nomeInp.focus();
+  // adicionou: o formulário fecha (o "+ Adicionar atividade" abre de novo para a próxima)
+  document.getElementById('horasAddPanel').hidden = true;
   showToast(`${nome} adicionada`, 'success');
   renderHorasComp();
 });
@@ -7754,6 +7839,9 @@ function renderTarefas(){
   const hojeBtn = document.getElementById('fHoje');
   const hojeActive = hojeBtn ? hojeBtn.dataset.active === '1' : false;
 
+  const fDisc = document.getElementById('fDisciplina');
+  if(fDisc){ const v = fDisc.value; fDisc.innerHTML = tarefaDiscOptions(v === '__outro__' ? '' : v); if(v === '__outro__') fDisc.value = v; }
+
   // Populate discipline filter select
   if(filterDiscEl){
     const discs = [...new Set(STATE.tarefas.map(t => t.disciplina).filter(Boolean))].sort();
@@ -7793,7 +7881,7 @@ function renderTarefas(){
         <div class="field" style="margin-bottom:8px;"><input id="tEditNome_${esc(t.id)}" value="${esc(t.nome)}" aria-label="Nome da tarefa" style="font-weight:600;"></div>
         <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px;">
           <div class="field"><label>Categoria</label><select id="tEditCat_${esc(t.id)}">${catOpts}</select></div>
-          <div class="field"><label>Disciplina</label><input id="tEditDisc_${esc(t.id)}" value="${esc(t.disciplina||'')}" list="discSuggestList"></div>
+          <div class="field"><label>Disciplina</label><select id="tEditDisc_${esc(t.id)}">${tarefaDiscOptions(t.disciplina)}</select><input id="tEditDiscOutra_${esc(t.id)}" placeholder="Nome ou código" aria-label="Outra disciplina" autocomplete="off" hidden></div>
           <div class="field"><label>Prazo</label><input id="tEditPrazo_${esc(t.id)}" type="date" value="${esc(t.prazo||'')}"></div>
           <div class="field"><label>Prioridade</label><select id="tEditPrio_${esc(t.id)}">${prioOpts}</select></div>
         </div>
@@ -7847,7 +7935,12 @@ function renderTarefas(){
   document.getElementById('tarefasList').innerHTML = mainArr.length
     ? mainHtml + doneSection
     : (doneSection || `<div class="empty">Nenhuma tarefa${filterStatus!=='Todas'||filterCat||filterPrio||search||filterDisc||hojeActive?' com esse filtro':' por aqui'}</div>`);
-  if(_editingTarefaId) linkFieldLabels(document.getElementById('tarefasList'));
+  if(_editingTarefaId){
+    linkFieldLabels(document.getElementById('tarefasList'));
+    ligarDiscOutra(document.getElementById('tEditDisc_' + _editingTarefaId), document.getElementById('tEditDiscOutra_' + _editingTarefaId));
+  }
+  // no modo quadro, ele é que está à vista: redesenha junto (tarefa nova, editada ou excluída)
+  if(_tarefaView === 'kanban') renderKanban();
 
   updateNavBadges();
 
@@ -7893,7 +7986,7 @@ function renderTarefas(){
       if(!t) return;
       t.nome = document.getElementById('tEditNome_'+id).value.trim() || t.nome;
       t.categoria = document.getElementById('tEditCat_'+id).value;
-      t.disciplina = document.getElementById('tEditDisc_'+id).value.trim();
+      t.disciplina = tarefaDiscValor(document.getElementById('tEditDisc_'+id), document.getElementById('tEditDiscOutra_'+id));
       t.prazo = document.getElementById('tEditPrazo_'+id).value || null;
       t.prioridade = document.getElementById('tEditPrio_'+id).value;
       await storeSet('tarefas', STATE.tarefas);
@@ -7935,6 +8028,8 @@ document.getElementById('btnViewKanban').addEventListener('click', function(){
   document.getElementById('kanbanBoard').style.display = '';
   renderKanban();
 });
+ligarDiscOutra(document.getElementById('fDisciplina'), document.getElementById('fDisciplinaOutra'));
+ligarDiscOutra(document.getElementById('qaTarefaDisc'), document.getElementById('qaTarefaDiscOutra'));
 document.getElementById('fTarefa').addEventListener('keydown', e => {
   if(e.key === 'Enter') document.getElementById('btnAddTarefa').click();
 });
@@ -7944,7 +8039,7 @@ document.getElementById('btnAddTarefa').addEventListener('click', async () => {
   const t = {
     id: 't-'+Date.now(),
     nome, categoria: document.getElementById('fCategoria').value,
-    disciplina: document.getElementById('fDisciplina').value.trim(),
+    disciplina: tarefaDiscValor(document.getElementById('fDisciplina'), document.getElementById('fDisciplinaOutra')),
     prazo: document.getElementById('fPrazo').value || null,
     prioridade: document.getElementById('fPrioridade').value,
     status: 'Pendente'
@@ -7952,6 +8047,7 @@ document.getElementById('btnAddTarefa').addEventListener('click', async () => {
   STATE.tarefas.push(t);
   await storeSet('tarefas', STATE.tarefas);
   document.getElementById('fTarefa').value=''; document.getElementById('fDisciplina').value=''; document.getElementById('fPrazo').value='';
+  document.getElementById('fDisciplinaOutra').value = ''; document.getElementById('fDisciplinaOutra').hidden = true;
   renderTarefas(); renderPainel(); renderLab();
 });
 
@@ -7994,7 +8090,7 @@ function renderConfig(){
   document.getElementById('cAluno').value = STATE.config.aluno || '';
   document.getElementById('cCurso').value = STATE.config.curso || '';
   document.getElementById('cInstituicao').value = STATE.config.instituicao || '';
-  document.getElementById('cSemestre').value = STATE.config.semestre || '';
+  document.getElementById('cSemestre').innerHTML = semestreOpcoes(STATE.config.semestre);
   document.getElementById('cNotaMinima').value = STATE.config.notaMinima;
   document.getElementById('cRegraNota').value = STATE.config.regraNota || '';
   renderAtuaisConfig();
@@ -8103,13 +8199,21 @@ function abrirFimSemestre(){
     passo: 1, finais, novas: [], periodoNovo: temProx ? prox : null,
     // nada vem marcado: quem tem a grade irregular cursa disciplinas de vários semestres, então a pessoa escolhe
     proximas: [],
-    rotulo: proximoRotulo(STATE.config.semestre),
+    // o novo semestre segue a sequência do atual; sem o atual escrito, o seguinte ao de hoje (dá para trocar)
+    rotulo: proximoRotulo(STATE.config.semestre) || semRotulo(semDeHoje() + 1),
+    rotuloFixo: !!proximoRotulo(STATE.config.semestre),
+    aulas: null, comPdf: false,
     limpar: {faltas: true, provas: true, tarefas: true, horario: true, lab: true},
   };
   renderFimSemestre();
   document.getElementById('modalSemestre').classList.add('open');
 }
-function fecharFimSemestre(){ document.getElementById('modalSemestre').classList.remove('open'); SEM = null; }
+function fecharFimSemestre(){
+  document.getElementById('modalSemestre').classList.remove('open');
+  gmDevolver();
+  if(GM && GM.enc) GM = null;
+  SEM = null;
+}
 function renderFimSemestre(){
   const body = document.getElementById('semBody');
   const voltar = document.getElementById('semVoltar'), avancar = document.getElementById('semAvancar');
@@ -8118,6 +8222,10 @@ function renderFimSemestre(){
   voltar.style.visibility = SEM.passo > 1 && SEM.passo < 4 ? 'visible' : 'hidden';
   avancar.textContent = SEM.passo === 3 ? 'Encerrar semestre' : SEM.passo === 4 ? 'Concluir' : 'Próximo';
   document.getElementById('semTitulo').textContent = SEM.passo === 4 ? 'Semestre encerrado' : `Encerrar semestre (${SEM.passo} de 3)`;
+  // o montador de grade só fica aqui no passo 2 (com o PDF): antes de redesenhar, ele volta para a janela dele
+  gmDevolver();
+  const comPdf = SEM.passo === 2 && !!(STATE.gradeOferta && (STATE.gradeOferta.registros || []).length);
+  document.getElementById('semModal').classList.toggle('is-larga', comPdf);
 
   if(SEM.passo === 1){
     body.innerHTML = passos(1) + `<p class="wizard-step-title">Como terminou cada disciplina?</p>
@@ -8151,29 +8259,45 @@ function renderFimSemestre(){
   }
 
   if(SEM.passo === 2){
+    SEM.comPdf = comPdf;
+    SEM.planejando = true;
     // o que ainda falta fazer no curso, já contando o resultado deste semestre
     const passou = s => SEM.finais[s] && SEM.finais[s].res === 'passei';
+    const noPdf = s => comPdf && GM && GM.enc && GM.disc.has(s);
+    if(comPdf && !(GM && GM.enc)) gmIniciar(true);
     const blocos = buildSemestresCurriculares()
-      .map(b => ({b, itens: b.disciplinas.filter(d => !passou(d.sigla) && (situacao(d) !== 'Aprovado' || atuais.includes(d.sigla)))}))
+      .map(b => ({b, itens: b.disciplinas.filter(d => !passou(d.sigla) && (situacao(d) !== 'Aprovado' || atuais.includes(d.sigla)) && !noPdf(d.sigla))}))
       .filter(x => x.itens.length);
     const item = (s, nome) => `<label class="wiz-check-item"><input type="checkbox" data-prox="${esc(s)}"${SEM.proximas.includes(s) ? ' checked' : ''}><span>${esc(nome)}</span></label>`;
-    // a grade montada pelo PDF (as que estão nesta lista e ainda não foram marcadas)
-    const plano = ((STATE.gradePlano || {}).escolhidas || []).filter(s => !SEM.proximas.includes(s) && blocos.some(x => x.itens.some(d => d.sigla === s)));
-    body.innerHTML = passos(2) + `<p class="wizard-step-title">E o próximo semestre?</p>
-      <div class="wiz-field"><label for="semRotulo">Nome do novo semestre</label><input id="semRotulo" value="${esc(SEM.rotulo)}" placeholder="Ex.: 1º semestre de 2027" autocomplete="off"></div>
-      <p class="help-text" style="margin:4px 0 12px;">Marque as disciplinas que você vai cursar no próximo semestre. A lista mostra só o que você ainda não fez, separado por semestre do curso.</p>
-      ${plano.length ? `<div class="notif-agenda" style="margin:0 0 14px;">
-        <span class="notif-agenda__ic">${ico('calendar')}</span>
-        <div class="notif-agenda__txt"><b>Você montou uma grade com ${plano.length} ${plano.length === 1 ? 'disciplina' : 'disciplinas'}</b><span>${esc(plano.map(nomeDaDisciplina).join(', '))}</span></div>
-        <button type="button" class="btn btn-sm" id="semUsarPlano">Marcar essas</button>
-      </div>` : ''}
-      ${blocos.map(({b, itens}) => `<div class="wiz-sem-block"><div class="wiz-sem-head"><span>${tituloSemestre(b, blocos.length === 1)}</span></div>
-        <div class="wiz-check-grid">${itens.map(d => item(d.sigla, d.disciplina)).join('')}</div></div>`).join('')}
-      ${SEM.novas.length ? `<div class="wiz-sem-block"><div class="wiz-sem-head"><span>Novas</span></div><div class="wiz-check-grid">${SEM.novas.map(n => item(n.sigla, n.disciplina)).join('')}</div></div>` : ''}
-      <form class="sem-add" id="semAddForm"><input id="semAddNome" placeholder="Outra disciplina que não está na lista" autocomplete="off" aria-label="Nome da disciplina nova"><button type="submit" class="btn btn-sm">Adicionar</button></form>`;
-    document.getElementById('semRotulo').addEventListener('input', e => { SEM.rotulo = e.target.value; });
-    const usarPlano = document.getElementById('semUsarPlano');
-    if(usarPlano) usarPlano.onclick = () => { SEM.proximas = [...new Set([...SEM.proximas, ...plano])]; renderFimSemestre(); };
+    const lista = blocos.map(({b, itens}) => `<div class="wiz-sem-block"><div class="wiz-sem-head"><span>${tituloSemestre(b, blocos.length === 1)}</span></div>
+        <div class="wiz-check-grid">${itens.map(d => item(d.sigla, d.disciplina)).join('')}</div></div>`).join('');
+    const novas = SEM.novas.length ? `<div class="wiz-sem-block"><div class="wiz-sem-head"><span>Novas${comPdf ? ' (sem horário)' : ''}</span></div><div class="wiz-check-grid">${SEM.novas.map(n => item(n.sigla, n.disciplina)).join('')}</div></div>` : '';
+    // o nome do novo semestre vem sozinho; só sem o semestre atual no perfil a pessoa confere numa lista
+    const nome = SEM.rotuloFixo ? `<p class="sem-novo">Novo semestre: <b>${esc(SEM.rotulo)}</b></p>`
+      : `<p class="sem-novo"><label for="semRotulo">Novo semestre:</label><select id="semRotulo">${semestreOpcoes(SEM.rotulo)}</select></p>`;
+    body.innerHTML = passos(2) + `<p class="wizard-step-title">E o próximo semestre?</p>${nome}`
+      + (comPdf ? `<p class="help-text" style="margin:0 0 12px;">Marque as disciplinas e escolha as turmas: o horário do próximo semestre já sai pronto, sem choque.</p>
+        <div id="semGm"></div>
+        ${blocos.length ? `<details class="gm-mais sem-fora"${blocos.some(x => x.itens.some(d => SEM.proximas.includes(d.sigla))) ? ' open' : ''}><summary>Fora deste PDF (sem horário)</summary>${lista}</details>` : ''}
+        ${novas}`
+      : `<div class="notif-agenda" style="margin:0 0 14px;">
+          <span class="notif-agenda__ic">${ico('calendar')}</span>
+          <div class="notif-agenda__txt"><b>Monte o horário junto</b><span>Com o PDF de horários do próximo semestre, você escolhe as disciplinas vendo as turmas e os choques.</span></div>
+          <button type="button" class="btn btn-sm" id="semEnviarPdf">Enviar o PDF</button>
+        </div>
+        <p class="help-text" style="margin:4px 0 12px;">Ou só marque as disciplinas que você vai cursar. A lista mostra o que você ainda não fez, separado por semestre do curso.</p>
+        ${lista}${novas}`)
+      + `<form class="sem-add" id="semAddForm"><input id="semAddNome" placeholder="Outra disciplina que não está na lista" autocomplete="off" aria-label="Nome da disciplina nova"><button type="submit" class="btn btn-sm">Adicionar</button></form>`;
+    const rot = document.getElementById('semRotulo');
+    if(rot) rot.addEventListener('change', e => { SEM.rotulo = e.target.value; });
+    if(comPdf){
+      const app = document.getElementById('gmApp');
+      app.classList.add('sem-enc');
+      document.getElementById('semGm').appendChild(app);
+      renderGradeTudo();
+    }
+    const enviar = document.getElementById('semEnviarPdf');
+    if(enviar) enviar.onclick = () => { if(!(GM && GM.enc)) gmIniciar(true); document.getElementById('gmPdf').click(); };
     body.querySelectorAll('[data-prox]').forEach(cb => cb.addEventListener('change', () => {
       SEM.proximas = SEM.proximas.filter(s => s !== cb.dataset.prox);
       if(cb.checked) SEM.proximas.push(cb.dataset.prox);
@@ -8200,8 +8324,9 @@ function renderFimSemestre(){
       ${opc('faltas', 'Zerar as faltas', 'O total de cada disciplina fica guardado no registro do semestre.')}
       ${opc('provas', 'Apagar as provas que já passaram', passadas ? `${passadas} ${passadas === 1 ? 'prova' : 'provas'}. As que ainda vão acontecer continuam.` : 'Nenhuma prova passada agora.')}
       ${opc('tarefas', 'Apagar as tarefas concluídas', feitas ? `${feitas} ${feitas === 1 ? 'tarefa' : 'tarefas'}. As pendentes continuam.` : 'Nenhuma tarefa concluída agora.')}
-      ${opc('horario', 'Limpar o horário de aulas', 'Depois você monta o novo na aba Horário.')}
+      ${SEM.aulas ? '' : opc('horario', 'Limpar o horário de aulas', 'Depois você monta o novo na aba Horário.')}
       ${opc('lab', 'Limpar o laboratório', 'As turmas e os relatórios deste semestre.')}
+      ${SEM.aulas ? `<p class="help-text" style="margin:12px 0 0;">O horário de aulas passa a ser o que você montou no passo 2.</p>` : ''}
       <div class="notif-agenda" style="margin-top:14px;">
         <span class="notif-agenda__ic">${ico('download')}</span>
         <div class="notif-agenda__txt"><b>Por garantia, baixe um backup antes</b><span>E se mudar de ideia, dá para desfazer o encerramento em Configurações.</span></div>
@@ -8214,6 +8339,13 @@ function renderFimSemestre(){
 
   // passo 4: pronto
   const n = (STATE.config.disciplinasAtuais || []).length;
+  if(SEM.aulas){
+    body.innerHTML = `<p class="wizard-step-title">Pronto, semestre encerrado!</p>
+      <p class="help-text" style="margin:0 0 14px;">As notas finais foram para o Histórico${STATE.config.semestre ? ` e o ${esc(STATE.config.semestre)} começou` : ' e o novo semestre começou'} com ${n} ${n === 1 ? 'disciplina' : 'disciplinas'}, já com o horário de aulas.</p>
+      <button type="button" class="btn btn-primary" id="semVerHorario">Ver o horário</button>`;
+    document.getElementById('semVerHorario').onclick = () => { fecharFimSemestre(); switchTab('horario'); };
+    return;
+  }
   body.innerHTML = `<p class="wizard-step-title">Pronto, semestre encerrado!</p>
     <p class="help-text" style="margin:0 0 14px;">As notas finais foram para o Histórico${STATE.config.semestre ? ` e o ${esc(STATE.config.semestre)} começou` : ' e o novo semestre começou'} com ${n} ${n === 1 ? 'disciplina' : 'disciplinas'}.
       Agora monte o horário de aulas para o Painel e o botão "Faltei" funcionarem: pelo PDF de horários da faculdade ou digitando as aulas.</p>
@@ -8253,14 +8385,15 @@ async function encerrarSemestre(){
   const ordem = STATE.historico.map(d => d.sigla);
   const pos = x => { const i = ordem.indexOf(x); return i < 0 ? Infinity : i; };
   STATE.config.disciplinasAtuais = [...new Set(SEM.proximas)].sort((a, b) => pos(a) - pos(b));
-  if(SEM.rotulo.trim()) STATE.config.semestre = SEM.rotulo.trim();
+  if(String(SEM.rotulo || '').trim()) STATE.config.semestre = String(SEM.rotulo).trim();
   // 4. limpeza
   const L = SEM.limpar;
   if(L.faltas){ STATE.faltas = {}; STATE.faltasRegistro = []; }
   Object.keys(STATE.faltasLimites || {}).forEach(s => { if(!STATE.config.disciplinasAtuais.includes(s)) delete STATE.faltasLimites[s]; });
   if(L.provas) STATE.provas = STATE.provas.filter(provaPendente);
   if(L.tarefas) STATE.tarefas = STATE.tarefas.filter(t => t.status !== 'Concluído');
-  if(L.horario) STATE.aulasCustom = [];
+  if(SEM.aulas) STATE.aulasCustom = SEM.aulas;
+  else if(L.horario) STATE.aulasCustom = [];
   if(L.lab){
     STATE.turmasCustom = {};
     STATE.relatoriosOcultos = [...new Set([...(STATE.relatoriosOcultos || []), ...(DATA.relatorios || []).map(r => r.nome)])];
@@ -8275,7 +8408,8 @@ async function encerrarSemestre(){
 async function desfazerEncerramento(id){
   const reg = (STATE.semestres || []).find(r => r.id === id);
   if(!reg || !reg.antes) return;
-  if(!confirm(`Desfazer o encerramento${reg.semestre ? ` de ${reg.semestre}` : ''}? Notas, faltas, provas, tarefas, horário e disciplinas voltam a ser como eram antes dele, e o que você mudou depois disso nessas partes se perde.`)) return;
+  if(!await confirmar('Notas, faltas, provas, tarefas, horário e disciplinas voltam a ser como eram antes dele, e o que você mudou depois disso nessas partes se perde.',
+    {titulo: `Desfazer o encerramento${reg.semestre ? ` de ${reg.semestre}` : ''}?`, ok: 'Desfazer', perigo: true})) return;
   for(const [k, campo] of Object.entries(SEM_CAMPOS)){
     if(!(k in reg.antes)) continue;
     STATE[campo] = reg.antes[k];
@@ -8310,7 +8444,34 @@ function renderSemPanel(){
 }
 document.getElementById('semFechar').addEventListener('click', fecharFimSemestre);
 document.getElementById('modalSemestre').addEventListener('click', e => { if(e.target === e.currentTarget && SEM && SEM.passo !== 3) fecharFimSemestre(); });
-document.getElementById('semVoltar').addEventListener('click', () => { if(SEM && SEM.passo > 1){ SEM.passo--; renderFimSemestre(); } });
+document.getElementById('semVoltar').addEventListener('click', () => {
+  if(!SEM || SEM.passo <= 1) return;
+  if(SEM.passo === 2 && SEM.comPdf) semLerMarcadas();
+  SEM.planejando = SEM.passo === 3;
+  SEM.passo--; renderFimSemestre();
+});
+// passo 2 com o PDF: as marcadas no montador viram as disciplinas do próximo semestre
+function semLerMarcadas(){
+  const marcadas = gPlano().escolhidas.filter(s => GM.disc.has(s));
+  SEM.proximas = [...new Set([...marcadas, ...SEM.proximas.filter(s => !GM.disc.has(s))])];
+  return marcadas;
+}
+// ...e as turmas escolhidas, o horário dele (sem choque; sem turma, a disciplina entra sem horário)
+async function semGuardarGrade(){
+  const p = gPlano(), marcadas = semLerMarcadas();
+  const lista = gEscolhidas().filter(e => marcadas.includes(e.sigla));
+  if(Object.values(gOcupado(lista)).some(es => es.length > 1)){ showToast('Ainda tem choque de horário: troque uma das turmas', 'error', 4000); return false; }
+  const semTurma = marcadas.filter(s => { const d = GM.disc.get(s), sel = p.sel[s] || {}; return (d.teoria.length && !sel.teoria) || (d.lab.length && !sel.lab); });
+  if(semTurma.length && !await confirmar('Elas entram no semestre sem horário; dá para escolher a turma depois, na aba Horário.',
+    {titulo: `Seguir sem a turma de ${semTurma.map(gNome).join(', ')}?`, ok: 'Seguir'})) return false;
+  if(!marcadas.length){ SEM.aulas = null; return true; }
+  const aulas = lista.filter(e => !semTurma.includes(e.sigla)).flatMap(e => gBlocos(e.t).map(b => ({dia: b.dia, inicio: gHM(b.ini), fim: gHM(b.fim),
+    disciplina: gCod(e.sigla, e.t), local: e.t.sala || '', tipo: e.tipo === 'lab' ? 'Laboratório' : 'Presencial'})));
+  const semFixo = marcadas.filter(s => { const d = GM.disc.get(s); return !d.teoria.length && !d.lab.length; })
+    .map(s => ({dia: '—', inicio: '—', fim: '—', disciplina: s, local: 'Sem horário fixo', tipo: 'Assíncrona'}));
+  SEM.aulas = [...aulas.sort((a, b) => WEEK_DAYS.indexOf(a.dia) - WEEK_DAYS.indexOf(b.dia) || a.inicio.localeCompare(b.inicio)), ...semFixo];
+  return true;
+}
 document.getElementById('semAvancar').addEventListener('click', async e => {
   if(!SEM) return;
   if(SEM.passo === 4){ fecharFimSemestre(); return; }
@@ -8318,6 +8479,8 @@ document.getElementById('semAvancar').addEventListener('click', async e => {
     // o que ficou escrito sem tocar em "Adicionar" também entra
     const pendente = document.getElementById('semAddNome');
     if(pendente && pendente.value.trim()){ document.getElementById('semAddForm').requestSubmit(); }
+    if(SEM.comPdf && !await semGuardarGrade()) return;
+    SEM.planejando = false;
   }
   if(SEM.passo === 3){
     const b = e.currentTarget; b.disabled = true;
@@ -8515,6 +8678,8 @@ function gRegistros(of){
 }
 // situação no histórico: feita, cursando, falta, ou fora (não está no histórico)
 function gStatus(s){
+  // encerrando o semestre, as de agora já têm resultado: passou é feita; não passou, falta de novo
+  if(SEM && SEM.planejando && SEM.finais[s]) return SEM.finais[s].res === 'passei' ? 'feita' : 'falta';
   const item = STATE.historico.find(i => i.sigla === s);
   if(!item) return (STATE.config.disciplinasAtuais || []).includes(s) ? 'cursando' : 'fora';
   const st = situacao(item);
@@ -8526,20 +8691,36 @@ const gCor = s => `var(--gc${(gPlano().escolhidas.indexOf(s) % 10) + 1})`;
 const gRotTurma = t => t.id === 'única' ? 'Turma única' : t.id;
 const gCod = (s, t) => t.id === 'única' ? s : `${s}-${t.id}`;
 
-function abrirGrade(){
-  GM = {disc: gModelo(gRegistros(STATE.gradeOferta)), opcoes: [], opIdx: 0, modo: null, msg: '', erro: false};
+// enc: dentro do "Encerrar semestre" (passo 2), planejando o semestre seguinte com o resultado deste
+function gmIniciar(enc){
+  GM = {disc: gModelo(gRegistros(STATE.gradeOferta)), opcoes: [], opIdx: 0, modo: null, msg: '', erro: false, enc: !!enc};
   if(!STATE.gradePlano) STATE.gradePlano = gPlanoNovo();
   gPreMarcar();
   document.querySelectorAll('[data-gturno]').forEach(b => b.setAttribute('aria-pressed', String(!!gPlano().turno[b.dataset.gturno])));
   document.getElementById('gmLimite').value = String(gPlano().limite || 0);
   renderGradeTudo();
+}
+// o montador volta para a janela dele
+function gmDevolver(){
+  const app = document.getElementById('gmApp'), casa = document.getElementById('gmBody');
+  app.classList.remove('sem-enc');
+  if(app.parentElement !== casa) casa.appendChild(app);
+}
+function abrirGrade(){
+  gmDevolver();
+  gmIniciar(false);
   document.getElementById('modalGrade').classList.add('open');
   document.getElementById('gmBody').scrollTop = 0;
 }
 function fecharGrade(){ document.getElementById('modalGrade').classList.remove('open'); GM = null; }
-// começo de semestre, ainda sem horário: já vêm marcadas as disciplinas cursando que estão no PDF
+// começo de semestre, ainda sem horário: já vêm marcadas as disciplinas cursando que estão no PDF.
+// Encerrando o semestre: as já marcadas para o próximo, ou o que estava no plano tirando as que acabou de passar
 function gPreMarcar(){
   const p = gPlano();
+  if(GM.enc){
+    p.escolhidas = SEM && SEM.proximas.length ? SEM.proximas.filter(s => GM.disc.has(s)) : p.escolhidas.filter(s => GM.disc.has(s) && gStatus(s) !== 'feita');
+    return;
+  }
   if(p.escolhidas.length || getAulas().some(a => a.inicio && a.inicio !== '—')) return;
   p.escolhidas = (STATE.config.disciplinasAtuais || []).filter(s => GM.disc.has(s));
 }
@@ -8569,7 +8750,7 @@ function gChoca(s, tipo, t){
 function gMelhorGrade(){
   const p = gPlano();
   // as cursando entram só no começo do semestre, ainda sem horário (são as que a pessoa vai fazer agora)
-  const semHorario = !getAulas().some(a => a.inicio && a.inicio !== '—');
+  const semHorario = !gContaCursando();
   const todas = [...GM.disc.values()].filter(d => d.teoria.length || d.lab.length);
   let cands = todas.filter(d => gStatus(d.sigla) === 'falta' || (semHorario && gStatus(d.sigla) === 'cursando'));
   GM.modo = 'auto';
@@ -8590,7 +8771,7 @@ function gMelhorGrade(){
     travadas = antes - cands.length;
     valida = escolha => { const juntas = new Set(escolha.map(x => x.s)); return escolha.every(x => livre(x.s) || reqFaltando(cur, x.s, base, base.cursando).every(r => juntas.has(r.s))); };
   }
-  GM.req = cur ? {contouCursando: !semHorario && (STATE.config.disciplinasAtuais || []).length > 0, comPlano: cands.some(d => planejada(d.sigla))} : null;
+  GM.req = cur ? {contouCursando: !semHorario && !GM.enc && (STATE.config.disciplinasAtuais || []).length > 0, comPlano: cands.some(d => planejada(d.sigla))} : null;
   // por que nada foi escolhido: nenhuma no histórico, todas feitas, pré-requisitos, ou nenhuma nos horários marcados
   GM.motivo = !todas.some(d => gStatus(d.sigla) !== 'fora') ? 'desconhecidas' : !cands.length ? (travadas ? 'requisitos' : 'feitas') : 'horarios';
   // valor: cada disciplina vale ~100000 (mais disciplinas sempre vence); a altura (quantos semestres a
@@ -8695,7 +8876,7 @@ function gContagem(){
   document.getElementById('gmConta').textContent = n ? `${n} ${n === 1 ? 'marcada' : 'marcadas'}${cr ? ` · ${cr} ${cr === 1 ? 'crédito' : 'créditos'}` : ''}` : '';
 }
 // já tem horário: o montador está planejando o próximo semestre (conta que a pessoa passe nas de agora)
-const gContaCursando = () => getAulas().some(a => a.inicio && a.inicio !== '—');
+const gContaCursando = () => !!(GM && GM.enc) || getAulas().some(a => a.inicio && a.inicio !== '—');
 // marcadas que a matrícula recusaria pelos pré-requisitos: ["Nome (precisa de ...)"]
 function gTravas(marcadas){
   const cur = curriculoDoPerfil();
@@ -8856,6 +9037,7 @@ function carregarPdfjs(){
 async function lerPdfDeGrade(arquivo){
   if(arquivo.size > 15 * 1048576){ GM.msg = 'Esse PDF passa de 15 MB. O de horários costuma ter menos de 1 MB: confira se é o arquivo certo.'; GM.erro = true; renderGradeFonte(); return; }
   GM.msg = `Lendo ${arquivo.name}…`; GM.erro = false; renderGradeFonte();
+  if(GM.enc && SEM && !SEM.comPdf) showToast('Lendo o PDF…', 'info', 2500);
   try{
     const lib = await carregarPdfjs();
     const doc = await lib.getDocument({data: new Uint8Array(await arquivo.arrayBuffer()), isEvalSupported: false}).promise;
@@ -8886,6 +9068,11 @@ async function lerPdfDeGrade(arquivo){
       : 'Não deu para ler esse PDF. Confira se é o arquivo certo.';
   }
   if(GM) renderGradeTudo();
+  // pelo convite do passo 2 do encerramento: o passo passa a ser o montador (ou avisa o erro, que ficaria escondido)
+  if(GM && GM.enc && SEM && SEM.passo === 2){
+    if(GM.erro && !SEM.comPdf) showToast(GM.msg, 'error', 6000);
+    renderFimSemestre();
+  }
 }
 // passa o horário montado para a aba Horário e as disciplinas para "cursando"
 async function usarGradeMontada(){
@@ -8897,7 +9084,7 @@ async function usarGradeMontada(){
   if(faltam.length){
     // a que ficou de fora no "Montar sozinho" (ou sem turma escolhida) pode ficar fora do horário
     if(faltam.length === marcadas.length){ showToast(`Escolha a turma de ${faltam.map(gNome).join(', ')}`, 'info', 4000); return; }
-    if(!confirm(`Sem turma escolhida: ${faltam.map(gNome).join(', ')}.\n\nUsar o horário só com as outras ${marcadas.length - faltam.length}?`)) return;
+    if(!await confirmar(`Sem turma escolhida: ${faltam.map(gNome).join(', ')}.`, {titulo: `Usar o horário só com as outras ${marcadas.length - faltam.length}?`, ok: 'Usar'})) return;
   }
   const usadas = marcadas.filter(s => !faltam.includes(s));
   lista = lista.filter(e => usadas.includes(e.sigla));
@@ -8908,7 +9095,7 @@ async function usarGradeMontada(){
   if(temHorario || saem.length){
     const partes = [temHorario ? 'O horário de aulas de agora será trocado por este.' : '',
       saem.length ? `As disciplinas cursando passam a ser estas ${marcadas.length}; saem ${saem.map(nomeDaDisciplina).join(', ')}. Se o semestre de agora ainda não acabou, encerre-o antes em Configurações, para as notas irem para o Histórico.` : ''];
-    if(!confirm(partes.filter(Boolean).join('\n\n') + '\n\nUsar este horário?')) return;
+    if(!await confirmar(partes.filter(Boolean).join('\n\n'), {titulo: 'Usar este horário?', ok: 'Usar este horário'})) return;
   }
   const aulas = lista.flatMap(e => gBlocos(e.t).map(b => ({dia: b.dia, inicio: gHM(b.ini), fim: gHM(b.fim), disciplina: gCod(e.sigla, e.t),
     local: e.t.sala || '', tipo: e.tipo === 'lab' ? 'Laboratório' : 'Presencial'})));
@@ -9247,12 +9434,14 @@ function renderCalendarGrid(){
     if(c.out) return `<div class="navday out"><div class="num">${c.day}</div></div>`;
     const exams = examsByDay[c.iso] || [];
     const isToday = c.iso === todayIso;
-    let inner = `<div class="num">${c.day}</div>`;
+    let inner = `<div class="num">${c.day}</div>`, marcas = '';
     const feriado = calSemAula(c.iso), evDia = calEventosDoDia(c.iso);
-    if(feriado) inner += `<div class="cal-tag is-feriado" title="${esc(feriado)}">${esc(feriado)}</div>`;
-    else if(evDia.length) inner += `<div class="cal-tag is-ev" title="${esc(evDia.map(e => e.nome).join(', '))}">${esc(evDia[0].nome)}</div>`;
-    exams.slice(0,2).forEach(p => { inner += `<div class="exam-dot" title="${esc(p.disciplina)} ${esc(p.tipo)}"><span class="ed-full">${esc(examLabel(p))}</span><span class="ed-short">${esc(provaSigla(p) || p.tipo)}</span></div>`; });
-    if(exams.length > 2) inner += `<div class="exam-more">+${exams.length-2}</div>`;
+    if(feriado) marcas += `<div class="cal-tag is-feriado" title="${esc(feriado)}">${esc(feriado)}</div>`;
+    else if(evDia.length) marcas += `<div class="cal-tag is-ev" title="${esc(evDia.map(e => e.nome).join(', '))}">${esc(evDia[0].nome)}</div>`;
+    exams.slice(0,2).forEach(p => { marcas += `<div class="exam-dot" title="${esc(p.disciplina)} ${esc(p.tipo)}"><span class="ed-full">${esc(examLabel(p))}</span><span class="ed-short">${esc(provaSigla(p) || p.tipo)}</span></div>`; });
+    if(exams.length > 2) marcas += `<div class="exam-more">+${exams.length-2}</div>`;
+    // no computador as marcas são etiquetas com o nome; no celular, pontos embaixo do número
+    if(marcas) inner += `<div class="nd-marks">${marcas}</div>`;
     return `<div class="navday${isToday?' today':''}${feriado ? ' is-feriado' : ''}" data-cal-dia="${c.iso}" role="button" tabindex="0" aria-label="${c.day} de ${MESES[m]}${feriado ? ', sem aula: ' + esc(feriado) : ''}${evDia.length ? ', ' + esc(evDia.map(e => e.nome).join(', ')) : ''}${exams.length ? ', ' + exams.length + (exams.length === 1 ? ' prova' : ' provas') : ''}. Marcar prova neste dia">${inner}</div>`;
   }).join('');
 
@@ -9492,7 +9681,7 @@ document.getElementById('fileImport').addEventListener('change', (e) => {
         return;
       }
       const quando = backup.exportedAt ? ` de ${new Date(backup.exportedAt).toLocaleDateString('pt-BR')}` : '';
-      if(!confirm(`Restaurar o backup${quando}? Os dados atuais deste perfil serão substituídos.`)) return;
+      if(!await confirmar('Os dados atuais deste perfil serão substituídos.', {titulo: `Restaurar o backup${quando}?`, ok: 'Restaurar', perigo: true})) return;
       if(!ACTIVE_PROFILE_ID || intoNewProfile){
         // fresh device, or restoring from the setup wizard: create the profile the backup belongs to
         const name = (backup.config.aluno || '').trim() || 'Meu perfil';
@@ -10090,7 +10279,7 @@ function estRenderDetail(body, m){
   </div>`;
   document.getElementById('estBack').onclick = () => { estReset('list'); renderEstudos(); };
   document.getElementById('estDel').onclick = async () => {
-    if(!confirm(`Excluir "${m.titulo}"? O resumo, os cartões e as questões serão apagados.`)) return;
+    if(!await confirmar('O resumo, os cartões e as questões serão apagados.', {titulo: `Excluir "${m.titulo}"?`, ok: 'Excluir', perigo: true})) return;
     STATE.estudos = STATE.estudos.filter(x => x.id !== m.id);
     await estSave();
     estReset('list'); renderEstudos();
@@ -10247,7 +10436,7 @@ function renderLabsConfig(){
   };
   const rm = document.getElementById('geminiRemove');
   if(rm) rm.onclick = async () => {
-    if(!confirm('Remover a chave do Gemini da sua conta? Os materiais já gerados continuam salvos.')) return;
+    if(!await confirmar('Os materiais já gerados continuam salvos.', {titulo: 'Remover a chave do Gemini da sua conta?', ok: 'Remover', perigo: true})) return;
     STATE.geminiKey = ''; STATE.geminiModel = '';
     await storeSet('gemini_key', '');
     await storeSet('gemini_model', '');
@@ -10300,7 +10489,7 @@ function updateProfileControls(){
   show('profilesSection', !user || many);
 }
 async function switchAccount(){
-  if(!confirm('Para outra pessoa usar o app, saia desta conta e entre (ou crie) a conta dela. Seus dados continuam salvos na nuvem. Sair agora?')) return;
+  if(!await confirmar('Para outra pessoa usar o app, saia desta conta e entre (ou crie) a conta dela. Seus dados continuam salvos na nuvem.', {titulo: 'Sair desta conta?', ok: 'Sair'})) return;
   try{ await Sync.signOut(); location.reload(); }
   catch(err){ showToast(err.message, 'error', 5000); }
 }
@@ -10531,7 +10720,7 @@ function showWizard(profileId){
   WIZARD_PROFILE_ID = profileId;
   WIZARD_STEP = 1;
   WIZARD_DATA = {
-    nome:'', curso:'', instituicao:'INATEL', semestre:'', notaMinima:60,
+    nome:'', curso:'', instituicao:'INATEL', semestre:undefined, notaMinima:60, // semestre: o de hoje até a pessoa escolher
     grade:[], disciplinasAtuais:[], aulas:[], importMode:'file',
     importHeaders:[], importRows:[], importMapping:{},
     catalogo:null, status:{}, notas:{}, semAtual:null,
@@ -10564,7 +10753,12 @@ function closeWizard(){
 ['railQuickAdd', 'mobileFab'].forEach(id => document.getElementById(id).addEventListener('click', () => openQuickAdd()));
 function openQuickAdd(tab, data){
   const overlay = document.getElementById('quickAddOverlay');
-  if(STATE.config) fillProvaDiscSelect(document.getElementById('qaProvaDisciplina'), document.getElementById('qaProvaDiscCustom'));
+  if(STATE.config){
+    fillProvaDiscSelect(document.getElementById('qaProvaDisciplina'), document.getElementById('qaProvaDiscCustom'));
+    const sel = document.getElementById('qaTarefaDisc'), v = sel.value;
+    sel.innerHTML = tarefaDiscOptions(v === '__outro__' ? '' : v);
+    if(v === '__outro__') sel.value = v;
+  }
   if(data) document.getElementById('qaProvaData').value = data;
   overlay.style.display = 'flex';
   switchQATab(tab || 'tarefa');
@@ -10641,7 +10835,7 @@ function switchQATab(tab){
     const t = {
       id: 't-'+Date.now(), nome,
       categoria: document.getElementById('qaTarefaCat').value,
-      disciplina: document.getElementById('qaTarefaDisc').value.trim(),
+      disciplina: tarefaDiscValor(document.getElementById('qaTarefaDisc'), document.getElementById('qaTarefaDiscOutra')),
       prazo: document.getElementById('qaTarefaPrazo').value || null,
       prioridade: document.getElementById('qaTarefaPrio').value,
       status: 'Pendente'
@@ -10650,6 +10844,7 @@ function switchQATab(tab){
     await storeSet('tarefas', STATE.tarefas);
     document.getElementById('qaTarefaNome').value = '';
     document.getElementById('qaTarefaDisc').value = '';
+    document.getElementById('qaTarefaDiscOutra').value = ''; document.getElementById('qaTarefaDiscOutra').hidden = true;
     document.getElementById('qaTarefaPrazo').value = '';
     closeQuickAdd();
     showToast('Tarefa adicionada!', 'success');
@@ -10741,7 +10936,7 @@ function wizardStep1(body){
       <div class="wiz-field"><label>Curso</label><input id="wCurso" value="${esc(WIZARD_DATA.curso)}" placeholder="Ex.: Engenharia de Produção"></div>
       <div class="wiz-field"><label>Faculdade</label><input id="wInst" value="${esc(WIZARD_DATA.instituicao)}" placeholder="Ex.: INATEL"></div>
     </div>
-    <div class="wiz-field"><label>Semestre atual (opcional)</label><input id="wSem" value="${esc(WIZARD_DATA.semestre)}" placeholder="Ex.: 2º semestre de 2026"></div>`;
+    <div class="wiz-field"><label for="wSem">Semestre atual</label><select id="wSem">${semestreOpcoes(WIZARD_DATA.semestre === undefined ? semRotulo(semDeHoje()) : WIZARD_DATA.semestre)}</select></div>`;
 }
 
 function wizNorm(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim(); }
@@ -10972,7 +11167,7 @@ function renderImportArea(area, mode){
       <div id="wizPreviewWrap"></div>`;
     document.getElementById('wizParsePaste').addEventListener('click', () => {
       const txt = document.getElementById('wizPasteArea').value.trim();
-      if(!txt){ alert('Cole o conteúdo copiado do Excel primeiro.'); return; }
+      if(!txt){ avisar('Cole o conteúdo copiado do Excel primeiro.'); return; }
       parseTSV(txt);
     });
     if(WIZARD_DATA.importHeaders.length) renderColMap(document.getElementById('wizColMap'));
@@ -11024,7 +11219,7 @@ function handleWizFile(file){
 
 function parseTSV(txt){
   const lines = txt.split(/\r?\n/).filter(l => l.trim());
-  if(lines.length < 2){ alert('O texto precisa ter pelo menos um cabeçalho e uma linha de dados.'); return; }
+  if(lines.length < 2){ avisar('O texto precisa ter pelo menos um cabeçalho e uma linha de dados.'); return; }
   // Auto-detecta separador: tab (Excel copiar/colar), ponto-e-vírgula (CSV brasileiro) ou vírgula
   const sep = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
   // Parser RFC 4180: respeita campos entre aspas com vírgulas e aspas escapadas ""
@@ -11241,22 +11436,22 @@ function wizardStep5(body){
     </div>`;
 }
 
-function wizardCollectStep(){
+async function wizardCollectStep(){
   if(WIZARD_STEP === 1){
     WIZARD_DATA.nome = (document.getElementById('wNome')?.value||'').trim();
     WIZARD_DATA.curso = (document.getElementById('wCurso')?.value||'').trim();
     WIZARD_DATA.instituicao = (document.getElementById('wInst')?.value||'INATEL').trim();
     WIZARD_DATA.semestre = (document.getElementById('wSem')?.value||'').trim();
     WIZARD_DATA.notaMinima = Number(document.getElementById('wNotaMin')?.value||60);
-    if(!WIZARD_DATA.nome){ alert('Por favor, insira seu nome.'); return false; }
+    if(!WIZARD_DATA.nome){ avisar('Escreva seu nome para continuar.'); return false; }
   }
-  if(WIZARD_STEP === 2 && !WIZARD_DATA.catalogo){ alert('Escolha o seu curso, ou "Outro curso".'); return false; }
+  if(WIZARD_STEP === 2 && !WIZARD_DATA.catalogo){ avisar('Escolha o seu curso, ou "Outro curso".'); return false; }
   if(WIZARD_STEP === 2 && wizCatalogo()){
-    if(!WIZARD_DATA.semAtual){ alert('Escolha em que semestre você está.'); return false; }
+    if(!WIZARD_DATA.semAtual){ avisar('Escolha em que semestre você está.'); return false; }
     if(WIZARD_DATA.catalogo === 'outro'){
       // o que ficou escrito sem tocar em "Adicionar" também entra
       document.querySelectorAll('#wizardBody [data-add-sem]').forEach(f => wizAddDisciplina(Number(f.dataset.addSem), f.querySelector('input').value));
-      if(!WIZARD_DATA.custom.flat().length && !confirm('Você ainda não escreveu nenhuma disciplina. Dá para adicionar depois, na aba Histórico. Continuar assim mesmo?')){
+      if(!WIZARD_DATA.custom.flat().length && !await confirmar('Dá para adicionar depois, na aba Histórico.', {titulo: 'Continuar sem nenhuma disciplina?', ok: 'Continuar'})){
         renderGradeArea(); return false;
       }
     }
@@ -11327,8 +11522,8 @@ async function wizardFinish(){
 }
 
 // Eventos dos botões do wizard
-document.getElementById('wizardNext').addEventListener('click', () => {
-  if(!wizardCollectStep()) return;
+document.getElementById('wizardNext').addEventListener('click', async () => {
+  if(!await wizardCollectStep()) return;
   if(WIZARD_STEP === WIZARD_TOTAL){ wizardFinish(); return; }
   WIZARD_STEP++;
   wizardRender();
@@ -11366,6 +11561,47 @@ function linkFieldLabels(root){
     if(ctl && ctl.id) label.htmlFor = ctl.id;
   });
 }
+
+// ============================================================
+// AVISOS E CONFIRMAÇÕES
+// ============================================================
+// No lugar do alert/confirm do navegador, que mostram o endereço do site no título.
+// confirmar(texto, {titulo, ok, cancelar, perigo}) → Promise<boolean>; avisar(texto, titulo) → Promise
+let _dlgFim = null;
+function dialogo({titulo = '', texto = '', ok = 'OK', cancelar = 'Cancelar', perigo = false, soAviso = false}){
+  if(_dlgFim) _dlgFim(false);
+  const ov = document.getElementById('dlgOverlay'), t = document.getElementById('dlgTitulo');
+  const bOk = document.getElementById('dlgOk'), bNao = document.getElementById('dlgCancelar');
+  t.textContent = titulo; t.hidden = !titulo;
+  document.getElementById('dlgTexto').textContent = texto;
+  bOk.textContent = ok; bOk.className = 'btn ' + (perigo ? 'btn-perigo' : 'btn-primary');
+  bNao.textContent = cancelar; bNao.hidden = soAviso;
+  const antes = document.activeElement;
+  ov.classList.add('open');
+  // no que apaga, o foco fica no "Cancelar": um Enter sem querer não apaga nada (de novo depois da
+  // animação de abrir, que pode ter impedido o primeiro)
+  const alvo = perigo && !soAviso ? bNao : bOk, focar = () => { if(ov.classList.contains('open') && document.activeElement !== alvo) alvo.focus(); };
+  setTimeout(focar, 30); setTimeout(focar, 250);
+  return new Promise(res => {
+    _dlgFim = v => {
+      _dlgFim = null;
+      ov.classList.remove('open');
+      if(antes && antes.focus && document.contains(antes)) antes.focus({preventScroll: true});
+      res(v);
+    };
+  });
+}
+function confirmar(texto, opcoes){ return dialogo(Object.assign({texto}, opcoes)); }
+function avisar(texto, titulo){ return dialogo({texto, titulo, soAviso: true}).then(() => undefined); }
+document.getElementById('dlgOk').addEventListener('click', () => { if(_dlgFim) _dlgFim(true); });
+document.getElementById('dlgCancelar').addEventListener('click', () => { if(_dlgFim) _dlgFim(false); });
+document.getElementById('dlgOverlay').addEventListener('click', e => { if(e.target === e.currentTarget && _dlgFim) _dlgFim(false); });
+// Esc fecha só o aviso (não a janela que está embaixo dele)
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape' || !_dlgFim) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  _dlgFim(false);
+}, true);
 
 // ============================================================
 // TOAST
@@ -11929,6 +12165,9 @@ document.getElementById('authForm').addEventListener('submit', async e => {
     else if(_authMode === 'signup') await Sync.signUp(email, pass);
     else await Sync.signIn(email, pass);
     try{ localStorage.removeItem(LS_PREFIX + 'cloud_skip'); }catch(err){}
+    // o app já estava aberto nesta página (entrou pelas Configurações) ou os dados de outra conta saíram
+    // do aparelho: começa do zero, para nada da memória da página ir para esta conta
+    if(Sync.cleared || ACTIVE_PROFILE_ID){ location.reload(); return; }
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('loading').style.display = 'flex';
     document.getElementById('loading').style.opacity = '1';
@@ -12003,7 +12242,7 @@ function renderSyncUI(s){
   // primeiro baixa o que outros aparelhos mandaram, depois envia o daqui
   document.getElementById('btnSyncNow').onclick = async () => { const mudou = await Sync.pull(); await Sync.push(); if(mudou) refreshFromSync(); };
   document.getElementById('btnSyncLogout').onclick = async () => {
-    if(!confirm('Sair da conta? Os dados ficam salvos na nuvem e serão removidos deste aparelho.')) return;
+    if(!await confirmar('Os dados ficam salvos na nuvem e serão removidos deste aparelho.', {titulo: 'Sair da conta?', ok: 'Sair'})) return;
     try{ await Sync.signOut(); location.reload(); }
     catch(err){ showToast(err.message, 'error', 5000); }
   };

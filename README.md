@@ -10,7 +10,7 @@ Funciona no computador e no celular, offline, com os mesmos dados nos dois.
 
 <br>
 
-<img src="docs/painel.png" width="900" alt="Painel no tema claro: recado do dia, resumo com aulas, próxima aula, próxima prova e prazos, próximas provas, prazos de laboratório e agenda da semana">
+<img src="docs/painel.png" width="900" alt="Painel no tema claro: recado do dia, resumo com aulas, próxima aula, próxima prova e prazos, próximas provas, relatórios e tarefas com prazo e agenda da semana">
 
 <sub>Captura com um perfil fictício.</sub>
 
@@ -36,10 +36,10 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 **Painel**
 - Um recado curto do dia: provas de hoje e amanhã, tarefas atrasadas ou vencendo, relatórios perto do prazo e a nota de prova que já deve ter saído
 - Resumo do dia: aulas, próxima aula, próxima prova e prazos da semana
-- Próximas provas com data, horário e sala; prazos de laboratório em aberto
+- Próximas provas com data, horário e sala; relatórios do laboratório e tarefas com prazo em aberto, por data
 - Agenda da semana em grade, juntando aulas, provas, entregas e tarefas (no dia de uma prova, a aula da disciplina dá lugar a ela)
 - Post-its de lembrete fixados no topo
-- Linha do tempo de provas e plano de estudos sugerido para os próximos 7 dias
+- Linha do tempo de provas
 
 **Acompanhamento acadêmico**
 - **Notas:** notas parciais com peso, a regra do Inatel (média abaixo de 60 e a partir de 30 vai para a NP3; a nota final é a média das duas, e passa com 50), meta por disciplina, calculadora de quanto falta na prova final, simulador de IRA e gráficos de desempenho; a nota de uma prova realizada pode ser lançada direto nela, e vai para a aba Notas
@@ -50,12 +50,12 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 - **Conquistas** (no Mapa de Sucesso): 21 marcos do curso, das notas, do estudo e da organização, com a barra do quanto falta para cada um e um aviso quando você conquista um novo
 - **Mapa de Sucesso:** o currículo organizado semestre a semestre. Em Engenharia de Produção do INATEL (currículo 3.2), com o quadro de pré e co-requisitos e os créditos: previsão de formatura (o que cabe em cada semestre, com o limite de créditos que você escolher), cadeado nas disciplinas que ainda dependem de outras e, no detalhe de cada uma, o que ela exige e o que ela libera. Mostra também o que está em jogo no semestre: em quais disciplinas uma reprovação adia a formatura (aviso que aparece também no card de risco do Painel)
 - **Meu plano:** no detalhe de cada disciplina que falta, você escolhe em que semestre fazê-la; a previsão respeita as escolhas, organiza o resto em volta (adiantando o que elas exigem), avisa quando uma escolha quebra um pré-requisito ou passa do limite de créditos, e o montador de grade prioriza o que foi fixado para o próximo semestre. A previsão mostra também quanto falta ("daqui a cerca de 2 anos e 2 meses")
-- **Árvore do curso:** o quadro de pré-requisitos desenhado, um período por linha; tocar numa disciplina acende tudo o que ela exige e tudo o que ela libera, com as ligações (aprovada antes, cursada antes, antes ou junto)
+- **Árvore do curso:** o quadro de pré-requisitos desenhado, um período por linha; tocar numa disciplina acende tudo o que ela exige e tudo o que ela libera, com as ligações (aprovada antes, cursada antes, antes ou junto), que passam pelos vãos entre as disciplinas, nunca por baixo delas
 - **Horas complementares** e **Laboratório** (turmas e entrega de relatórios)
 
 **Organização**
 - Tarefas em lista ou em quadro kanban, com prioridade, categoria, filtros e conclusão com um toque
-- Calendário de provas: tocar num dia já abre o formulário com a data
+- Calendário de provas: tocar num dia já abre o formulário com a data (no celular, as provas e os feriados viram pontos embaixo do dia)
 - Provas, tarefas e entregas exportadas para a agenda do celular (arquivo .ics, com aviso na véspera), ou uma prova por vez no Google Agenda
 - Grade de horário semanal (no celular, um dia por vez, começando por hoje)
 - **Montar a grade do semestre** pelo PDF de horários da faculdade (no formato do Inatel), lido no próprio aparelho: o app mostra as turmas de cada disciplina, avisa dos choques e monta as combinações sem choque, da que usa menos dias no campus para a que usa mais. Ou monta a melhor grade sozinho: o máximo de disciplinas que faltam nos horários em que você pode ter aula, começando pelas dos primeiros períodos. No curso com quadro de requisitos, só entram as disciplinas que os pré-requisitos liberam, primeiro as que seguram a formatura; marcar uma bloqueada avisa que a matrícula recusa, e cada grade mostra em que semestre você se forma com ela
@@ -64,7 +64,7 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 
 **Do jeito de um app**
 - Funciona offline e sincroniza quando a internet volta
-- **Fim de semestre** em 3 passos: a nota final de cada disciplina (já calculada das parciais) vai para o Histórico, você escolhe as disciplinas do próximo semestre e o que zerar (faltas, provas passadas, tarefas concluídas, horário, laboratório). Cada semestre encerrado fica registrado, e o último encerramento pode ser desfeito
+- **Fim de semestre** em 3 passos: a nota final de cada disciplina (já calculada das parciais) vai para o Histórico; você escolhe as disciplinas do próximo semestre (com o PDF de horários, já escolhendo as turmas e vendo os choques, e o horário novo sai pronto); e o que zerar (faltas, provas passadas, tarefas concluídas, horário, laboratório). O nome do novo semestre segue a sequência sozinho. Cada semestre encerrado fica registrado, e o último encerramento pode ser desfeito
 - Excluiu sem querer? O aviso traz **Desfazer** por alguns segundos (tarefas, provas, lembretes, relatórios e horas)
 - `Ctrl K` adiciona tarefa ou prova de qualquer tela; teclas `1` a `9` trocam de aba; `?` mostra os atalhos
 - Atalhos no ícone (clique direito no Windows, toque longo no Android): nova tarefa, provas, tarefas
@@ -78,7 +78,7 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 
 - **Com conta:** os dados ficam na sua conta (Supabase), protegidos por regras que só permitem a cada usuário ler e gravar os próprios registros. O app trabalha sempre com uma cópia local, então abre na hora e funciona sem internet; as alterações sobem em segundo plano e aparecem nos outros aparelhos em poucos segundos.
 - **Esqueceu a senha:** na tela de entrar, escreva o e-mail e toque em *Esqueci a senha*. O link que chega abre o app já na tela da nova senha, mostrando de qual conta ela é.
-- **Cada pessoa, sua conta:** para outra pessoa usar o app no mesmo aparelho, basta sair e entrar com a conta dela.
+- **Cada pessoa, sua conta:** para outra pessoa usar o app no mesmo aparelho, basta sair e entrar com a conta dela. Os dados guardados no aparelho são sempre da conta que está entrada: entrar (ou criar) outra conta tira do aparelho os da anterior, que continuam na conta dela, e uma aba que ficou aberta com a conta anterior recarrega sem gravar nada.
 - **Sem conta:** tudo fica só no navegador daquele aparelho.
 - **Backup:** em *Configurações → Backup dos dados*, exporte ou importe um arquivo `.json` com tudo do perfil.
 - **Proteção do app:** a versão publicada só executa scripts do próprio app e das bibliotecas que ele usa, cada uma conferida pela impressão digital do arquivo (Content Security Policy e SRI). Um trecho de HTML que chegue por um backup importado ou por um campo sincronizado não consegue rodar código, e uma biblioteca alterada no CDN não é aceita.

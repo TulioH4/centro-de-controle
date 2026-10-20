@@ -29,9 +29,10 @@ const REQUISITOS = [
   funcao('wizNorm'),
   trecho('// ---------------- Requisitos, créditos', 'function renderFormatura'),
 ].join('\n');
-const SAIDA_REQ = 'CURRICULOS, curriculoDoPerfil, reqBase, reqPlano, reqCred, reqTrava, reqRotulos, reqDe, reqFaltando, reqIndice, reqPrevisao, reqPesos, semNum, reqContagem';
-function requisitos(STATE){
-  return new Function('STATE', 'esc', 'storeSet', 'renderMapaSucesso', REQUISITOS + ';return {' + SAIDA_REQ + '};')(STATE, x => String(x), () => {}, () => {});
+const SAIDA_REQ = 'CURRICULOS, curriculoDoPerfil, reqBase, reqPlano, reqCred, reqTrava, reqRotulos, reqDe, reqFaltando, reqIndice, reqPrevisao, reqPesos, semNum, semRotulo, semestreOpcoes, reqContagem';
+// SEM: o "Encerrar semestre" aberto (null: fechado; o passo 2 dele muda o que conta como aprovada)
+function requisitos(STATE, SEM){
+  return new Function('STATE', 'esc', 'storeSet', 'renderMapaSucesso', 'SEM', REQUISITOS + ';return {' + SAIDA_REQ + '};')(STATE, x => String(x), () => {}, () => {}, SEM || null);
 }
 
 // regra de aprovação (média do semestre, NP3) e situação no histórico

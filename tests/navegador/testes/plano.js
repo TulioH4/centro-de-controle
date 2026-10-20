@@ -3,7 +3,7 @@ setTimeout(async () => {
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const txt = el => el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
   const ls = k => JSON.parse(localStorage.getItem('centro_controle_' + ACTIVE_PROFILE_ID + '_' + k));
-  window.confirm = () => true;
+  window.confirmar = async () => true;
   const passo = async (nome, fn) => { try{ out[nome] = await fn(); }catch(e){ out[nome] = 'ERR ' + e.message + ' ' + (e.stack || '').split('\n')[1]; } };
   const semDe = sg => { const c = document.querySelector(`#formaturaPanel [data-disc-chip="${sg}"]`); return c ? txt(c.closest('.fm-sem').querySelector('.fm-sem__h')) : null; };
   const escolhe = async (sg, idx) => { showDiscDetail(sg); const sel = document.getElementById('ddPlano'); const r = {opcoes: sel ? sel.options.length : 0, auto: sel ? sel.options[0].text : null};

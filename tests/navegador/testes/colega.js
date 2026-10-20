@@ -3,7 +3,7 @@ setTimeout(async () => {
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const txt = el => el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
   const ls = k => JSON.parse(localStorage.getItem('centro_controle_' + ACTIVE_PROFILE_ID + '_' + k));
-  window.confirm = () => true;
+  window.confirmar = async () => true;
   const passo = async (nome, fn) => { try{ out[nome] = await fn(); }catch(e){ out[nome] = 'ERR ' + e.message + ' ' + (e.stack || '').split('\n')[1]; } };
   const b64 = obj => { let bin = ''; new TextEncoder().encode(JSON.stringify(obj)).forEach(b => { bin += String.fromCharCode(b); }); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
   const abreLink = async frag => { history.replaceState(null, '', location.pathname + '#grade=' + frag); applyLaunchParams(); await espera(300); };

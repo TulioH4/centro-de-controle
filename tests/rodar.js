@@ -20,6 +20,8 @@ const TESTES = [
   ...['telas', 'telas-detalhes', 'calendario', 'calendario-bordas', 'colega', 'plano', 'arvore', 'fim-de-curso', 'requisitos', 'requisitos-bordas', 'notas']
     .map(nome => ({nome, perfil: REQ})),
   {nome: 'fluxos', perfil: ['grade.js'], extra: 'oferta.js'},
+  {nome: 'ajustes', perfil: REQ, extra: 'oferta.js'},
+  {nome: 'ajustes-celular', teste: 'ajustes', perfil: REQ, extra: 'oferta.js', largura: 390},
   {nome: 'layout', perfil: ['demo.js']},
   {nome: 'layout-celular', teste: 'layout', perfil: REQ, extra: 'vista-arvore.js', largura: 390},
   {nome: 'layout-claro', teste: 'layout', perfil: REQ, tema: 'light'},

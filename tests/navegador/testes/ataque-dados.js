@@ -1,7 +1,7 @@
 setTimeout(async () => {
   const out = {injetado: {}, erros: [], estados: 0};
   const espera = ms => new Promise(r => setTimeout(r, ms));
-  window.confirm = () => false; window.alert = () => {};
+  window.confirmar = async () => false; window.avisar = async () => {};
   const caminho = el => { const p = []; for(let e = el; e && e !== document.body && p.length < 4; e = e.parentElement) p.unshift(e.id ? '#' + e.id : e.tagName.toLowerCase() + (e.classList[0] ? '.' + e.classList[0] : '')); return p.join('>'); };
   const olha = nome => {
     out.estados++;

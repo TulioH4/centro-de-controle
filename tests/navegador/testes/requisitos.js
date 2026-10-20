@@ -3,7 +3,7 @@ setTimeout(async () => {
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const ls = k => JSON.parse(localStorage.getItem('centro_controle_' + ACTIVE_PROFILE_ID + '_' + k));
   const txt = el => el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
-  window.confirm = () => true;
+  window.confirmar = async () => true;
   const passo = async (nome, fn) => { try{ out[nome] = await fn(); }catch(e){ out[nome] = 'ERR ' + e.message + ' ' + (e.stack || '').split('\n')[1]; } };
 
   await passo('curriculo', () => { const c = curriculoDoPerfil(); return c && c.id; });

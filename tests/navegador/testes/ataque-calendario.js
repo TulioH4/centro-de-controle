@@ -1,7 +1,7 @@
 setTimeout(async () => {
   const out = {injetado: {}, erros: [], estados: 0};
   const espera = ms => new Promise(r => setTimeout(r, ms));
-  window.confirm = () => true; window.alert = () => {};
+  window.confirmar = async () => true; window.avisar = async () => {};
   const caminho = el => { const p = []; for(let e = el; e && e !== document.body && p.length < 4; e = e.parentElement) p.unshift(e.id ? '#' + e.id : e.tagName.toLowerCase() + (e.classList[0] ? '.' + e.classList[0] : '')); return p.join('>'); };
   const olha = nome => { out.estados++; const a = [...new Set([...document.querySelectorAll('.pwnd, img[onerror], [onerror]')].map(caminho))]; if(a.length) out.injetado[nome] = a.slice(0, 10); };
   const tenta = async (nome, fn) => { try{ await fn(); await espera(150); olha(nome); }catch(e){ out.erros.push(nome + ': ' + e.message); } };

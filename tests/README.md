@@ -26,6 +26,7 @@ Tiram a lógica do `index.html`, `sync.js` e `sw.js` e testam sem navegador.
 - **calendario**: feriados móveis de 2025 a 2028, as aulas que restam até o fim do período (contadas à mão) e os calendários oficiais do Inatel de 2026 e 2027.
 - **notas**: a regra de aprovação do Inatel (média, NP3 e nota final) e a situação de cada disciplina no histórico.
 - **sync**: um Supabase de mentira. Um aparelho que ficou sem internet com uma alteração velha não sobrescreve a versão mais nova que outro aparelho mandou, e as listas mexidas nos dois aparelhos são combinadas item por item (o que cada um adicionou fica, o apagado sai, mudado dos dois lados vale o do servidor).
+- **conta**: de quem são os dados do aparelho. Entrar ou criar outra conta não mostra nem envia os dados da anterior; os de quem usava sem conta vão para a conta nova; alteração ainda não enviada de outra conta impede a troca; e a aba que ficou aberta quando outra saiu da conta recarrega sem gravar nada.
 - **service-worker**: os lembretes do celular com cada tipo de aviso ligado ou desligado.
 
 ## Navegador (`navegador/`)
@@ -40,5 +41,7 @@ Um teste reprova se acontecer um destes:
 - algo vazando para o lado da tela;
 - botão ou campo sem nome para leitor de tela;
 - uma conferência que o próprio teste anotou em `falhas`.
+
+O **ajustes** (no computador e, como `ajustes-celular`, com 390 px) confere os avisos do próprio app no lugar das caixas do navegador, o "Novo item" cabendo na tela, a tarefa nova aparecendo no quadro, as listas de disciplina e de semestre, Configurações no pé da barra, as tarefas no Painel, o calendário de provas no celular, as ligações do Mapa sem passar por cima das disciplinas e o horário montado no passo 2 do "Encerrar semestre".
 
 O que cada teste viu fica em `tests/.saida/<nome>.json`. Algumas telas dependem da data de hoje, como o calendário, a contagem de aulas e a previsão. Por isso os testes de navegador conferem o comportamento, não números fixos.

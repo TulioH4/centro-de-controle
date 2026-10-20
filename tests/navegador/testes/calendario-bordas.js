@@ -3,7 +3,7 @@ setTimeout(async () => {
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const txt = el => el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
   const ls = k => JSON.parse(localStorage.getItem('centro_controle_' + ACTIVE_PROFILE_ID + '_' + k));
-  window.confirm = () => true;
+  window.confirmar = async () => true;
   const passo = async (nome, fn) => { try{ out[nome] = await fn(); }catch(e){ out[nome] = 'ERR ' + e.message + ' ' + (e.stack || '').split('\n')[1]; } };
   const iso = n => localISO(calSoma(new Date(), n));
   const linhaF01 = () => { switchTab('faltas'); renderFaltas(); const c = [...document.querySelectorAll('.falta-card')].find(x => /Física Newtoniana/.test(x.textContent)); return txt(c && c.querySelector('.fc-info')); };
