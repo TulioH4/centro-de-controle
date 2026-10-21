@@ -223,7 +223,30 @@ setTimeout(async () => {
     r.depois = {ativo: tourAtivo(), visto: await storeGet('tour_visto', false), aba: currentTabId()};
     confere(r.aberta && r.secao === 'Nesta tela: Tarefas' && r.dicas >= 3 && r.faq >= 5, 'a Ajuda não abriu com as dicas da tela e as perguntas');
     confere(passos[0] === 'sem' && passos.slice(1).every(x => x === 'ok'), 'algum passo do tour ficou sem destaque ou fora da tela: ' + passos.join(','));
-    confere(!r.depois.ativo && r.depois.visto === true && r.depois.aba === 'painel', 'o tour não terminou no Painel');
+    confere(!r.depois.ativo && r.depois.visto === true && r.depois.aba === 'tarefas', 'o tour não voltou para a aba em que começou');
+    // Tab fica nos botões do cartão (não vai para o que está atrás do escuro)
+    iniciarTour(); await espera(300); document.getElementById('tourProx').click(); await espera(300);
+    const foco = [];
+    for(let i = 0; i < 4; i++){ document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Tab', bubbles: true})); foco.push(document.activeElement && document.activeElement.id); }
+    r.focoTab = foco;
+    confere(foco.every(id => /^tour(Pular|Voltar|Prox)$/.test(id)), 'no tour, o Tab foi para fora do cartão: ' + foco.join(','));
+    encerrarTour(); await espera(100);
+    // barra lateral no topo: o botão de novo item some, e o passo diz o atalho
+    if(!celular){
+      applyRailPosition('top', false); await espera(50);
+      iniciarTour(); await espera(250); for(let i = 0; i < 3; i++){ document.getElementById('tourProx').click(); await espera(280); }
+      r.semBotao = {titulo: txt(document.getElementById('tourTitulo')), texto: txt(document.getElementById('tourTexto')), sem: document.getElementById('tourFoco').classList.contains('is-sem')};
+      encerrarTour(); applyRailPosition(STATE.config.railPosition, STATE.config.railAutoHide); await espera(50);
+      confere(r.semBotao.titulo === 'Novo item' && r.semBotao.sem && /Ctrl K/.test(r.semBotao.texto) && !/^Adicione/.test(r.semBotao.texto), 'sem o botão na tela, o passo do novo item não disse o atalho');
+    }
+    // a NP3 aparece na Ajuda só para quem segue a regra do Inatel
+    switchTab('desempenho'); await espera(60);
+    abrirAjuda(); await espera(60); r.np3Inatel = /NP3/.test(document.getElementById('ajudaBody').textContent); fecharAjuda();
+    const inst = STATE.config.instituicao, curr = STATE.config.curriculo;
+    STATE.config.instituicao = 'Universidade Exemplo'; STATE.config.curriculo = '';
+    abrirAjuda(); await espera(60); r.np3Outra = /NP3/.test(document.getElementById('ajudaBody').textContent); fecharAjuda();
+    STATE.config.instituicao = inst; STATE.config.curriculo = curr; switchTab('painel');
+    confere(r.np3Inatel && !r.np3Outra, 'a NP3 aparece na Ajuda de quem não é do Inatel (ou some do Inatel)');
     return r;
   });
 

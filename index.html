@@ -11771,7 +11771,7 @@ const AJUDA_TELAS = {
     'Com o calendário acadêmico, aparece também quantas aulas ainda restam.'],
   desempenho: ['Escreva a nota e o peso de cada avaliação: a média sai sozinha.',
     'O cartão de cada disciplina diz quanto falta na próxima prova para passar.',
-    'No Inatel: média entre 30 e 60 vai para a NP3; a nota final é a média das duas e passa com 50.'],
+    {np3: true, txt: 'Média entre 30 e 60 vai para a NP3; a nota final é a média das duas e passa com 50.'}],
   horario: ['<b>Montar pelo PDF</b>: envie o PDF de horários da faculdade e escolha as turmas, vendo os choques.',
     '<b>Editar grade</b>: digite as aulas à mão.',
     'As aulas do dia aparecem no Painel, com o botão Faltei.'],
@@ -11793,14 +11793,17 @@ const AJUDA_TELAS = {
 const AJUDA_FAQ = [
   ['Onde ficam os meus dados?', 'Sem conta, só neste aparelho. Com conta, também na nuvem, e só você tem acesso. O app funciona sem internet e sincroniza quando ela volta.'],
   ['Como uso no computador e no celular?', 'Crie uma conta (Configurações, Conta e sincronização) e entre com ela nos dois. Para instalar: no computador, o ícone de instalar na barra de endereço; no Android, ⋮ e Instalar app; no iPhone, Compartilhar e Adicionar à Tela de Início.'],
-  ['Como funciona a NP3?', 'No Inatel, a média do semestre a partir de 60 aprova e abaixo de 30 reprova. Entre as duas, você faz a NP3, e a nota final é a média entre ela e a do semestre: passa com 50.'],
+  {np3: true, q: 'Como funciona a NP3?', r: 'A média do semestre a partir de 60 aprova e abaixo de 30 reprova. Entre as duas, você faz a NP3, e a nota final é a média entre ela e a do semestre: passa com 50.'},
   ['Como monto o horário?', 'Na aba Horário, Montar pelo PDF: envie o PDF de horários da faculdade, marque as disciplinas e escolha as turmas sem choque. No fim do semestre, o Encerrar semestre faz isso para o próximo.'],
   ['O semestre acabou. E agora?', 'Em Configurações, Encerrar semestre: confira as notas finais, escolha as disciplinas e o horário do próximo e o que limpar. Dá para desfazer depois.'],
   ['Apaguei algo sem querer', 'Logo depois de excluir, o aviso embaixo traz Desfazer por alguns segundos. Por garantia, baixe um backup em Configurações de vez em quando.'],
   ['Esqueci a senha', 'Na tela de entrar, escreva o e-mail e toque em Esqueci a senha. O link chega no e-mail e abre o app já na tela da nova senha.'],
 ];
 function abrirAjuda(){
-  const aba = currentTabId(), t = TABS.find(x => x.id === aba), dicas = AJUDA_TELAS[aba] || [];
+  // a NP3 só aparece para quem segue a regra do Inatel
+  const vale = x => typeof x === 'string' || Array.isArray(x) || !x.np3 || regraNP3();
+  const aba = currentTabId(), t = TABS.find(x => x.id === aba), dicas = (AJUDA_TELAS[aba] || []).filter(vale).map(x => typeof x === 'string' ? x : x.txt);
+  const faq = AJUDA_FAQ.filter(vale).map(x => Array.isArray(x) ? x : [x.q, x.r]);
   const pc = !matchMedia('(max-width:880px)').matches;
   document.getElementById('ajudaBody').innerHTML = `
     <div class="ajuda-tour">
@@ -11810,7 +11813,7 @@ function abrirAjuda(){
     </div>
     ${dicas.length ? `<div class="ajuda-sec">Nesta tela: ${esc(t ? t.label : '')}</div><ul class="ajuda-dicas">${dicas.map(d => `<li>${d}</li>`).join('')}</ul>` : ''}
     <div class="ajuda-sec">Perguntas frequentes</div>
-    <div class="ajuda-faq">${AJUDA_FAQ.map(([q, r]) => `<details><summary>${q}</summary><p>${r}</p></details>`).join('')}</div>
+    <div class="ajuda-faq">${faq.map(([q, r]) => `<details><summary>${q}</summary><p>${r}</p></details>`).join('')}</div>
     <div class="ajuda-pe">
       ${pc ? '<button type="button" class="link-btn" id="ajudaAtalhos">Atalhos de teclado</button>' : ''}
       <a href="privacidade.html" target="_blank" rel="noopener">Privacidade</a>
@@ -11832,14 +11835,16 @@ const TOUR = [
   {titulo: 'Bem-vindo ao Centro de Controle', texto: 'Um minuto pelas partes principais. Dá para refazer quando quiser, na Ajuda.'},
   {aba: 'painel', alvo: '#navRail', alvoCel: '#mobileTabbar', titulo: 'As abas', texto: 'Cada parte do curso tem a sua aba.', textoCel: 'Cada parte do curso tem a sua aba. As outras ficam em Mais.'},
   {aba: 'painel', alvo: '#resumoStats', titulo: 'Resumo do dia', texto: 'Aulas de hoje, próxima aula, próxima prova e os prazos da semana.'},
-  {alvo: '#railQuickAdd', alvoCel: '#mobileFab', titulo: 'Novo item', texto: 'Adicione uma tarefa ou uma prova de qualquer tela. Atalho: Ctrl K.', textoCel: 'Adicione uma tarefa ou uma prova de qualquer tela.'},
+  {alvo: '#railQuickAdd', alvoCel: '#mobileFab', titulo: 'Novo item', texto: 'Adicione uma tarefa ou uma prova de qualquer tela. Atalho: Ctrl K.', textoCel: 'Adicione uma tarefa ou uma prova de qualquer tela.',
+    textoSem: 'Para adicionar uma tarefa ou uma prova de qualquer tela, aperte Ctrl K.'},
   {aba: 'painel', alvo: '#aulasHojeList', painel: true, titulo: 'Faltei', texto: 'Faltou numa aula de hoje? Toque em Faltei e a falta já conta na disciplina.'},
   {aba: 'provas', alvo: '#calGrid', painel: true, titulo: 'Calendário de provas', texto: 'Toque num dia para marcar uma prova. Depois dela, lance a nota ali mesmo.'},
   {aba: 'desempenho', alvo: '#notasSemestreGrid', titulo: 'Notas', texto: 'Escreva a nota e o peso de cada avaliação: a média e quanto falta para passar saem sozinhas.'},
   {aba: 'horario', alvo: '#btnMontarGrade', titulo: 'Horário', texto: 'Monte o horário pelo PDF de horários da faculdade, escolhendo as turmas sem choque.'},
   {aba: 'mapa', alvo: ['#formaturaPanel', '#mapaTimeline'], titulo: 'Mapa de Sucesso', texto: 'O curso inteiro, semestre a semestre: o que já foi, o que falta e quando você se forma.'},
   {aba: 'config', alvo: '#semPanel', titulo: 'Fim de semestre', texto: 'Quando as aulas acabarem, encerre aqui: as notas vão para o histórico e o próximo semestre já começa pronto.'},
-  {aba: 'painel', alvo: '#btnAjuda', alvoCel: '#mobileAvatar', titulo: 'Ajuda', texto: 'Ficou alguma dúvida? Aqui tem dicas de cada tela e este tour de novo. Atalho: ?.', textoCel: 'Ficou alguma dúvida? Toque aqui e depois em Ajuda: tem dicas de cada tela e este tour de novo.'},
+  {alvo: '#btnAjuda', alvoCel: '#mobileAvatar', titulo: 'Ajuda', texto: 'Ficou alguma dúvida? Aqui tem dicas de cada tela e este tour de novo. Atalho: ?.', textoCel: 'Ficou alguma dúvida? Toque aqui e depois em Ajuda: tem dicas de cada tela e este tour de novo.',
+    textoSem: 'Ficou alguma dúvida? Aperte ? ou vá ao fim das Configurações: a Ajuda tem dicas de cada tela e este tour de novo.'},
 ];
 let TOUR_I = -1, _tourVolta = null;
 const tourAtivo = () => TOUR_I >= 0;
@@ -11868,14 +11873,15 @@ function encerrarTour(){
   TOUR_I = -1;
   document.getElementById('tour').hidden = true;
   document.body.classList.remove('tour-on');
-  switchTab('painel');
+  switchTab(_tourVolta && TABS.some(t => t.id === _tourVolta) ? _tourVolta : 'painel');
   storeSet('tour_visto', true);
 }
 function tourMostrar(){
   const p = TOUR[TOUR_I], n = TOUR.length;
   document.getElementById('tourPasso').textContent = `${TOUR_I + 1} de ${n}`;
   document.getElementById('tourTitulo').textContent = p.titulo;
-  document.getElementById('tourTexto').textContent = (tourCel() && p.textoCel) || p.texto;
+  const textoDe = () => (!tourAlvo(p) && p.textoSem) || (tourCel() && p.textoCel) || p.texto;
+  document.getElementById('tourTexto').textContent = textoDe();
   document.getElementById('tourVoltar').hidden = TOUR_I === 0;
   document.getElementById('tourPular').hidden = TOUR_I === n - 1;
   document.getElementById('tourProx').textContent = TOUR_I === 0 ? 'Começar' : TOUR_I === n - 1 ? 'Concluir' : 'Próximo';
@@ -11884,7 +11890,7 @@ function tourMostrar(){
   setTimeout(() => {
     const el = tourAlvo(p);
     if(el && getComputedStyle(el).position !== 'fixed') el.scrollIntoView({block: 'center', behavior: 'auto'});
-    setTimeout(() => { tourPosicionar(); document.getElementById('tourProx').focus({preventScroll: true}); }, 120);
+    setTimeout(() => { document.getElementById('tourTexto').textContent = textoDe(); tourPosicionar(); document.getElementById('tourProx').focus({preventScroll: true}); }, 120);
   }, 80);
 }
 function tourPosicionar(){
@@ -11926,7 +11932,14 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); encerrarTour(); return; }
   if(e.key === 'ArrowRight'){ e.preventDefault(); e.stopImmediatePropagation(); tourIr(1); return; }
   if(e.key === 'ArrowLeft'){ e.preventDefault(); e.stopImmediatePropagation(); tourIr(-1); return; }
-  if(!['Tab', 'Enter', ' '].includes(e.key)) e.stopImmediatePropagation();
+  if(e.key === 'Tab'){
+    e.preventDefault(); e.stopImmediatePropagation();
+    const bs = ['tourPular', 'tourVoltar', 'tourProx'].map(id => document.getElementById(id)).filter(b => !b.hidden);
+    const i = bs.indexOf(document.activeElement);
+    bs[(i + (e.shiftKey ? -1 : 1) + bs.length) % bs.length].focus();
+    return;
+  }
+  if(!['Enter', ' '].includes(e.key)) e.stopImmediatePropagation();
 }, true);
 
 // ============================================================
