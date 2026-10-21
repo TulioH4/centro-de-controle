@@ -47,6 +47,6 @@ A **varredura** (no computador, no celular e no tema claro) entra em cada aba e 
 
 O **aluno-outro-curso** passa pelo assistente escolhendo Engenharia de Telecomunicações e confere o histórico, o nome do curso e a regra do Inatel no perfil criado.
 
-O **ajustes** (no computador e, como `ajustes-celular`, com 390 px) confere os avisos do próprio app no lugar das caixas do navegador, o "Novo item" cabendo na tela, a tarefa nova aparecendo no quadro, as listas de disciplina e de semestre, Configurações no pé da barra, as tarefas no Painel, o calendário de provas no celular, as ligações do Mapa sem passar por cima das disciplinas e o horário montado no passo 2 do "Encerrar semestre".
+O **ajustes** (no computador e, como `ajustes-celular`, com 390 px) confere os avisos do próprio app no lugar das caixas do navegador, o "Novo item" cabendo na tela, a tarefa nova aparecendo no quadro, as listas de disciplina e de semestre, Configurações no pé da barra, as tarefas no Painel, o calendário de provas no celular, as ligações do Mapa sem passar por cima das disciplinas, o horário montado no passo 2 do "Encerrar semestre", a Ajuda (tecla ?) e o tour, com cada passo destacando a parte certa e dentro da tela.
 
 O que cada teste viu fica em `tests/.saida/<nome>.json`. Algumas telas dependem da data de hoje, como o calendário, a contagem de aulas e a previsão. Por isso os testes de navegador conferem o comportamento, não números fixos.

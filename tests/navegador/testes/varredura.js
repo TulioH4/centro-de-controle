@@ -25,6 +25,7 @@ setTimeout(async () => {
     const s = document.getElementById('shortcutsModal'); if(s) s.style.display = 'none';
     const pw = document.getElementById('pomodoroWidget'); if(pw) pw.style.display = 'none';
     const dd = document.getElementById('discDetailOverlay'); if(dd) dd.style.display = 'none';
+    if(typeof tourAtivo === 'function' && tourAtivo()) encerrarTour();
     document.getElementById('app').style.display = '';
   };
   // clica em tudo o que dá dentro de raiz; volta para a aba se um clique trocou de aba
@@ -76,6 +77,9 @@ setTimeout(async () => {
   await janela('turmas', () => openModalTurmas(), () => document.getElementById('modalTurmas'), 20);
   await janela('agenda', () => abrirModalAgenda(), () => document.getElementById('modalAgenda'), 20);
   await janela('novo-item', () => openQuickAdd('tarefa'), () => document.getElementById('quickAddPanel'), 20);
+  await janela('ajuda', () => abrirAjuda(), () => document.getElementById('ajudaBody'), 20);
+  // o tour inteiro, para a frente e para trás, em todas as abas que ele visita
+  await janela('tour', async () => { iniciarTour(); for(let i = 0; i < TOUR.length + 2; i++){ await espera(260); document.getElementById(i < TOUR.length - 1 ? 'tourProx' : 'tourVoltar').click(); } }, () => null, 0);
   for(const s of (STATE.config.disciplinasAtuais || []).slice(0, 3)) await janela('detalhe-' + s, () => showDiscDetail(s), () => document.getElementById('discDetailOverlay'), 30);
   if(matchMedia('(max-width:880px)').matches) await janela('mais', () => openMoreSheet(), () => document.getElementById('moreSheet'), 20);
   // assistente, passo a passo (sem concluir)

@@ -206,6 +206,27 @@ setTimeout(async () => {
     return r;
   });
 
+  // 8b. ajuda (tecla ?): as dicas da tela aberta e as perguntas; o tour passa por todos os passos
+  await passo('ajuda', async () => {
+    switchTab('tarefas'); await espera(80);
+    document.dispatchEvent(new KeyboardEvent('keydown', {key: '?', bubbles: true})); await espera(100);
+    const r = {aberta: document.getElementById('modalAjuda').classList.contains('open'), secao: txt(document.querySelector('#ajudaBody .ajuda-sec')),
+      dicas: document.querySelectorAll('#ajudaBody .ajuda-dicas li').length, faq: document.querySelectorAll('#ajudaBody details').length};
+    document.getElementById('ajudaTour').click(); await espera(300);
+    const W = innerWidth, H = innerHeight, passos = [];
+    for(let i = 0; i < TOUR.length; i++){
+      const f = document.getElementById('tourFoco'), c = document.getElementById('tourCard').getBoundingClientRect();
+      passos.push((f.classList.contains('is-sem') ? 'sem' : 'ok') + (c.left >= 0 && c.right <= W && c.top >= 0 && c.bottom <= H ? '' : ' fora'));
+      document.getElementById('tourProx').click(); await espera(280);
+    }
+    r.passos = passos;
+    r.depois = {ativo: tourAtivo(), visto: await storeGet('tour_visto', false), aba: currentTabId()};
+    confere(r.aberta && r.secao === 'Nesta tela: Tarefas' && r.dicas >= 3 && r.faq >= 5, 'a Ajuda não abriu com as dicas da tela e as perguntas');
+    confere(passos[0] === 'sem' && passos.slice(1).every(x => x === 'ok'), 'algum passo do tour ficou sem destaque ou fora da tela: ' + passos.join(','));
+    confere(!r.depois.ativo && r.depois.visto === true && r.depois.aba === 'painel', 'o tour não terminou no Painel');
+    return r;
+  });
+
   // 9. assistente: o semestre atual vem numa lista, já no semestre de hoje
   await passo('assistente', async () => {
     showWizard(null); await espera(100);

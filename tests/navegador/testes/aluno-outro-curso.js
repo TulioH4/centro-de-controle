@@ -4,6 +4,7 @@ setTimeout(async () => {
   const out = {passos: [], falhas: []};
   const espera = ms => new Promise(r => setTimeout(r, ms));
   const confere = (cond, msg) => { if(!cond) out.falhas.push(msg); };
+  const txt = el => el ? el.textContent.replace(/\s+/g, ' ').trim() : null;
   window.avisar = async m => { out.passos.push('ALERTA: ' + m); };
   window.confirmar = async () => true;
   try{
@@ -22,6 +23,11 @@ setTimeout(async () => {
       document.getElementById('wizardNext').click(); await espera(400);
     }
     await espera(2500);
+    // o tour começa sozinho depois do assistente (uma vez)
+    out.tour = {ativo: tourAtivo(), passo: txt(document.getElementById('tourTitulo'))};
+    confere(out.tour.ativo && out.tour.passo === 'Bem-vindo ao Centro de Controle', 'o tour não começou depois do assistente');
+    document.getElementById('tourPular').click(); await espera(150);
+    confere(!tourAtivo() && await storeGet('tour_visto', false) === true, '"Pular" não encerrou o tour');
     const h = s => STATE.historico.find(i => i.sigla === s);
     out.config = {curriculo: STATE.config.curriculo, curso: STATE.config.curso, atuais: STATE.config.disciplinasAtuais, historico: STATE.historico.length};
     out.itens = {M01: h('M01') && situacao(h('M01')), T27: h('T27') && [situacao(h('T27')), h('T27').periodo], TCC: h('TCC') && situacao(h('TCC')), P09: !!h('P09')};

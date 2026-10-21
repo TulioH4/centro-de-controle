@@ -629,6 +629,41 @@
   .dlg__txt:empty{display:none;}
   .dlg-overlay .modal-foot{border-top:none; padding-top:4px;}
   .btn.btn-perigo{background:var(--red); border-color:var(--red); color:#fff;}
+  /* ===== AJUDA E TOUR ===== */
+  .ajuda-modal{max-width:560px;}
+  .ajuda-tour{display:flex; align-items:center; gap:14px; padding:14px 16px; border-radius:16px; background:var(--blue-dim); margin-bottom:18px;}
+  .ajuda-tour__ic{width:40px; height:40px; border-radius:12px; display:grid; place-items:center; flex-shrink:0; background:var(--blue); color:#fff;}
+  .ajuda-tour__ic .i{width:22px; height:22px;}
+  .ajuda-tour__txt{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+  .ajuda-tour__txt b{font-size:14.5px; color:var(--text);}
+  .ajuda-tour__txt span{font-size:12.5px; color:var(--text-dim);}
+  .ajuda-sec{font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--text-faint); margin:18px 0 8px;}
+  .ajuda-dicas{margin:0; padding-left:18px; display:flex; flex-direction:column; gap:7px; font-size:13.5px; line-height:1.5; color:var(--text);}
+  .ajuda-faq details{border-top:1px solid var(--line-soft); padding:10px 0;}
+  .ajuda-faq details:last-child{border-bottom:1px solid var(--line-soft);}
+  .ajuda-faq summary{cursor:pointer; font-size:13.5px; font-weight:600; color:var(--text); list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .ajuda-faq summary::-webkit-details-marker{display:none;}
+  .ajuda-faq summary::after{content:'+'; font-size:17px; font-weight:400; color:var(--text-faint);}
+  .ajuda-faq details[open] summary::after{content:'−';}
+  .ajuda-faq p{margin:8px 0 2px; font-size:13px; line-height:1.55; color:var(--text-dim);}
+  .ajuda-pe{display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; margin-top:18px; font-size:12.5px;}
+  .ajuda-pe a, .ajuda-pe .link-btn{color:var(--text-dim); font-size:12.5px; font-weight:500;}
+  #tour{position:fixed; inset:0; z-index:1250;}
+  #tour[hidden]{display:none;}
+  .tour-bloq{position:absolute; inset:0;}
+  .tour-foco{position:fixed; border-radius:16px; box-shadow:0 0 0 9999px rgba(4,6,16,.58), 0 0 0 2px var(--blue); pointer-events:none; transition:top .25s, left .25s, width .25s, height .25s;}
+  .tour-foco.is-sem{box-shadow:0 0 0 9999px rgba(4,6,16,.58); width:0 !important; height:0 !important; top:50% !important; left:50% !important;}
+  html[data-theme="light"] .tour-foco{box-shadow:0 0 0 9999px rgba(20,24,40,.42), 0 0 0 2px var(--blue);}
+  html[data-theme="light"] .tour-foco.is-sem{box-shadow:0 0 0 9999px rgba(20,24,40,.42);}
+  .tour-card{position:fixed; width:min(340px, calc(100vw - 24px)); padding:16px 18px 14px; border-radius:20px;
+    background:#17171F; color:var(--text); box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.08); border:1px solid var(--line-soft);}
+  html[data-theme="light"] .tour-card{background:#fff;}
+  .tour-passo{font-size:11.5px; font-weight:600; color:var(--blue); letter-spacing:.02em; margin-bottom:4px;}
+  .tour-card h3{margin:0 0 6px; font-size:16.5px; font-weight:650; letter-spacing:-.01em; text-wrap:balance;}
+  .tour-card p{margin:0; font-size:13.5px; line-height:1.55; color:var(--text-dim);}
+  .tour-acoes{display:flex; align-items:center; gap:8px; margin-top:14px;}
+  .tour-acoes .tour-esp{flex:1;}
+  @media (prefers-reduced-motion: reduce){ .tour-foco{transition:none;} }
   .modal{
     background:rgba(12,14,28,.82);
     backdrop-filter:blur(32px) saturate(180%); -webkit-backdrop-filter:blur(32px) saturate(180%);
@@ -1936,7 +1971,7 @@
   .auth-link--quiet{color:var(--text-faint); font-size:12.5px;}
   .auth-priv{text-decoration:none; font-size:12px;}
   .config-pe{margin:22px 2px 0; font-size:12.5px; color:var(--text-faint);}
-  .config-pe a{color:var(--text-dim);}
+  .config-pe a, .config-pe .link-btn{color:var(--text-dim); font-size:12.5px; font-weight:500;}
   .loading-text{font-size:13px; color:var(--text-faint);}
 
   /* the floating timer belongs to the app, not to login / profile / setup screens */
@@ -2780,7 +2815,7 @@
       <div class="rail__toolbar">
         <button class="rail-icon-btn" id="btnInstall" title="Instalar app" aria-label="Instalar app" data-ico="download" hidden></button>
         <button class="rail-icon-btn" id="btnNotifications" title="Notificações de prazo" aria-label="Notificações"></button>
-        <button class="rail-icon-btn" id="btnShortcuts" title="Atalhos de teclado (?)" aria-label="Atalhos de teclado" data-ico="keyboard"></button>
+        <button class="rail-icon-btn" id="btnAjuda" title="Ajuda (?)" aria-label="Ajuda" data-ico="help"></button>
         <button class="rail-icon-btn" id="themeToggle" title="Alternar tema" aria-label="Alternar tema">
           <span id="themeIcon"></span><span id="themeLabel" hidden></span>
         </button>
@@ -3263,7 +3298,7 @@
 
       <div class="section-label">Recursos em teste</div>
       <div class="panel panel--pad" id="labsPanel"></div>
-      <p class="config-pe"><a href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a> · <a href="https://github.com/TulioH4/centro-de-controle" target="_blank" rel="noopener">Código e contato</a></p>
+      <p class="config-pe"><button type="button" class="link-btn" id="cfgAjuda">Ajuda e tour</button> · <a href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a> · <a href="https://github.com/TulioH4/centro-de-controle" target="_blank" rel="noopener">Código e contato</a></p>
     </section>
 
   </main>
@@ -3333,6 +3368,32 @@
     <div class="modal-foot">
       <button type="button" class="btn" id="dlgCancelar">Cancelar</button>
       <button type="button" class="btn btn-primary" id="dlgOk">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAjuda">
+  <div class="modal ajuda-modal" role="dialog" aria-modal="true" aria-labelledby="ajudaTitulo">
+    <div class="modal-head">
+      <h3 id="ajudaTitulo">Ajuda</h3>
+      <button class="btn btn-ghost" id="ajudaFechar" style="padding:4px 8px; font-size:16px;" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body" id="ajudaBody"></div>
+  </div>
+</div>
+
+<div id="tour" hidden>
+  <div class="tour-bloq"></div>
+  <div class="tour-foco" id="tourFoco"></div>
+  <div class="tour-card" id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitulo" aria-describedby="tourTexto">
+    <div class="tour-passo" id="tourPasso"></div>
+    <h3 id="tourTitulo"></h3>
+    <p id="tourTexto"></p>
+    <div class="tour-acoes">
+      <button type="button" class="btn btn-ghost btn-sm" id="tourPular">Pular</button>
+      <span class="tour-esp"></span>
+      <button type="button" class="btn btn-sm" id="tourVoltar">Voltar</button>
+      <button type="button" class="btn btn-primary btn-sm" id="tourProx">Próximo</button>
     </div>
   </div>
 </div>
@@ -3473,7 +3534,7 @@
       <tbody>
         <tr><td style="padding:6px 0;color:var(--text-dim);">Navegar abas</td><td style="text-align:right;"><kbd class="kbd">1</kbd>–<kbd class="kbd">0</kbd></td></tr>
         <tr><td style="padding:6px 0;color:var(--text-dim);">Adicionar rápido</td><td style="text-align:right;"><kbd class="kbd">Ctrl+K</kbd></td></tr>
-        <tr><td style="padding:6px 0;color:var(--text-dim);">Este painel</td><td style="text-align:right;"><kbd class="kbd">?</kbd></td></tr>
+        <tr><td style="padding:6px 0;color:var(--text-dim);">Ajuda</td><td style="text-align:right;"><kbd class="kbd">?</kbd></td></tr>
         <tr><td style="padding:6px 0;color:var(--text-dim);">Fechar modal / overlay</td><td style="text-align:right;"><kbd class="kbd">Esc</kbd></td></tr>
         <tr><td style="padding:6px 0;color:var(--text-dim);">Alternar tema</td><td style="text-align:right;"><kbd class="kbd">T</kbd></td></tr>
         <tr><td style="padding:6px 0;color:var(--text-dim);">Salvar campo (em edição)</td><td style="text-align:right;"><kbd class="kbd">Enter</kbd></td></tr>
@@ -3956,6 +4017,7 @@ const ICONS = {
   download:'<path d="M12 4.5V15M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 15v3.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V15"/>',
   list:'<path d="M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01"/>',
   board:'<rect x="3.5" y="4" width="17" height="16" rx="3"/><path d="M9.2 4v16M14.8 4v16"/>',
+  help:'<circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.4a2.4 2.4 0 0 1 4.6.9c0 1.6-2.3 2.1-2.3 3.7"/><path d="M12 17h.01"/>',
   keyboard:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7.5 14h9"/>',
   calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   cloud:'<path d="M7.2 18.5h10.3a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.4 9.2a4.7 4.7 0 0 0 .8 9.3z"/>',
@@ -4117,6 +4179,7 @@ function openMoreSheet(){
       <button type="button" class="msheet__act" data-more-act="tema">${ico(STATE.tema === 'light' ? 'moon' : 'sun')}<span>${STATE.tema === 'light' ? 'Tema escuro' : 'Tema claro'}</span></button>
       <button type="button" class="msheet__act" data-more-act="notif">${ico('bell')}<span>Notificações</span></button>
       ${install && !install.hidden ? `<button type="button" class="msheet__act" data-more-act="install">${ico('download')}<span>Instalar app</span></button>` : ''}
+      <button type="button" class="msheet__act" data-more-act="ajuda">${ico('help')}<span>Ajuda</span></button>
       <button type="button" class="msheet__act${cur === 'config' ? ' active' : ''}" data-more-tab="config">${ico('sliders')}<span>Configurações</span></button>
     </div>`;
   sheet.querySelectorAll('[data-more-tab]').forEach(b => b.onclick = () => switchTab(b.dataset.moreTab));
@@ -4125,6 +4188,7 @@ function openMoreSheet(){
     tema: () => { document.getElementById('themeToggle').click(); openMoreSheet(); },
     notif: () => { closeMoreSheet(); goToNotifications(); },
     install: () => { closeMoreSheet(); install.click(); },
+    ajuda: () => { closeMoreSheet(); abrirAjuda(); },
   };
   sheet.querySelectorAll('[data-more-act]').forEach(b => b.onclick = act[b.dataset.moreAct]);
   const swap = document.getElementById('moreSwap');
@@ -7660,7 +7724,8 @@ window.addEventListener('afterprint', () => {
   const closeBtn = document.getElementById('shortcutsClose');
   function openShortcuts(){ modal.style.display = 'flex'; }
   function closeShortcuts(){ modal.style.display = 'none'; }
-  document.getElementById('btnShortcuts').addEventListener('click', openShortcuts);
+  window.abrirAtalhos = openShortcuts;
+  document.getElementById('btnAjuda').addEventListener('click', abrirAjuda);
   closeBtn.addEventListener('click', closeShortcuts);
   modal.addEventListener('click', e => { if(e.target === modal) closeShortcuts(); });
   document.addEventListener('keydown', e => {
@@ -7671,7 +7736,8 @@ window.addEventListener('afterprint', () => {
     if(e.key === 'Escape' && modal.style.display === 'flex'){ closeShortcuts(); return; }
     const tag = document.activeElement ? document.activeElement.tagName : '';
     if(['INPUT','TEXTAREA','SELECT'].includes(tag)) return;
-    if(e.key === '?'){ e.preventDefault(); modal.style.display === 'flex' ? closeShortcuts() : openShortcuts(); }
+    // ? abre a Ajuda (os atalhos de teclado estão dentro dela)
+    if(e.key === '?'){ e.preventDefault(); const aj = document.getElementById('modalAjuda'); aj.classList.contains('open') ? fecharAjuda() : abrirAjuda(); }
     if(e.key === 't' || e.key === 'T'){
       if(!e.ctrlKey && !e.metaKey){
         e.preventDefault();
@@ -7759,7 +7825,8 @@ document.getElementById('modalHorario').addEventListener('click', e => { if(e.ta
 
 document.addEventListener('keydown', e => {
   if(e.key !== 'Escape') return;
-  if(document.getElementById('modalHorario').classList.contains('open')) closeModalHorario();
+  if(document.getElementById('modalAjuda').classList.contains('open')) fecharAjuda();
+  else if(document.getElementById('modalHorario').classList.contains('open')) closeModalHorario();
   else if(document.getElementById('modalTurmas').classList.contains('open')) closeModalTurmas();
   else if(document.getElementById('modalAgenda').classList.contains('open')) fecharModalAgenda();
   else if(document.getElementById('modalGrade').classList.contains('open')) fecharGrade();
@@ -11598,6 +11665,7 @@ async function wizardFinish(){
   closeWizard();
   document.getElementById('loading').style.display = 'flex';
   await init();
+  if(!(await storeGet('tour_visto', false))) setTimeout(iniciarTour, 700);
 }
 
 // Eventos dos botões do wizard
@@ -11680,6 +11748,185 @@ document.addEventListener('keydown', e => {
   if(e.key !== 'Escape' || !_dlgFim) return;
   e.preventDefault(); e.stopImmediatePropagation();
   _dlgFim(false);
+}, true);
+
+// ============================================================
+// AJUDA E TOUR
+// ============================================================
+// Ajuda: as dicas da tela aberta, perguntas frequentes e o tour. O tour destaca uma parte da tela por
+// vez (aparece sozinho uma vez, depois do assistente) e pode ser refeito pela Ajuda.
+const AJUDA_TELAS = {
+  painel: ['O resumo mostra as aulas de hoje, a próxima prova e os prazos da semana.',
+    'Faltou numa aula de hoje? Toque em <b>Faltei</b> e a falta já conta na disciplina.',
+    '<b>+ Lembrete</b> fixa um post-it no topo.',
+    'Para adicionar tarefa ou prova de qualquer tela: botão <b>+</b> (no computador, <b>Ctrl K</b>).'],
+  provas: ['Toque num dia do calendário para marcar uma prova nele.',
+    'Depois da prova, lance a nota nela mesma, em <b>Provas realizadas</b>: ela vai para a aba Notas.',
+    '<b>Levar para a agenda do celular</b> exporta provas e prazos, com aviso na véspera.'],
+  tarefas: ['Toque no círculo para concluir uma tarefa; no status, para avançar (Pendente, Em andamento, Concluído).',
+    '<b>Kanban</b> mostra as tarefas por status; <b>Lista</b>, por prazo.',
+    '<b>Hoje</b> deixa só as do dia e as atrasadas.'],
+  faltas: ['Cada disciplina mostra as faltas e o limite; o app avisa antes de chegar nele.',
+    'Ajuste com <b>+</b> e <b>−</b>, ou toque em <b>Faltei</b> nas aulas de hoje, no Painel.',
+    'Com o calendário acadêmico, aparece também quantas aulas ainda restam.'],
+  desempenho: ['Escreva a nota e o peso de cada avaliação: a média sai sozinha.',
+    'O cartão de cada disciplina diz quanto falta na próxima prova para passar.',
+    'No Inatel: média entre 30 e 60 vai para a NP3; a nota final é a média das duas e passa com 50.'],
+  horario: ['<b>Montar pelo PDF</b>: envie o PDF de horários da faculdade e escolha as turmas, vendo os choques.',
+    '<b>Editar grade</b>: digite as aulas à mão.',
+    'As aulas do dia aparecem no Painel, com o botão Faltei.'],
+  lab: ['As turmas de laboratório e os prazos dos relatórios.',
+    'Marque o relatório como concluído quando entregar.'],
+  mapa: ['<b>Semestres</b>: o curso inteiro, com o que você já fez e o que falta.',
+    '<b>Árvore</b>: toque numa disciplina para ver o que ela exige e o que libera.',
+    'No curso com quadro de pré-requisitos, aparece também a previsão de formatura.'],
+  horas: ['Copie as horas do sistema da faculdade; toque num valor para editar.',
+    '<b>+ Adicionar atividade</b> inclui uma nova.'],
+  historico: ['Todas as disciplinas do curso, separadas por semestre.',
+    'Para adicionar uma, basta o nome, o semestre e se já passou, está cursando ou vai fazer.',
+    'As notas finais chegam aqui quando você encerra o semestre.'],
+  estudos: ['Envie um material e o app gera resumo, cartões e questões (precisa de uma chave do Gemini).'],
+  config: ['<b>Encerrar semestre</b>: no fim das aulas, as notas vão para o histórico e o próximo semestre começa.',
+    '<b>Conta e sincronização</b>: os mesmos dados no computador e no celular.',
+    '<b>Backup</b>: baixe um arquivo com tudo, por garantia.'],
+};
+const AJUDA_FAQ = [
+  ['Onde ficam os meus dados?', 'Sem conta, só neste aparelho. Com conta, também na nuvem, e só você tem acesso. O app funciona sem internet e sincroniza quando ela volta.'],
+  ['Como uso no computador e no celular?', 'Crie uma conta (Configurações, Conta e sincronização) e entre com ela nos dois. Para instalar: no computador, o ícone de instalar na barra de endereço; no Android, ⋮ e Instalar app; no iPhone, Compartilhar e Adicionar à Tela de Início.'],
+  ['Como funciona a NP3?', 'No Inatel, a média do semestre a partir de 60 aprova e abaixo de 30 reprova. Entre as duas, você faz a NP3, e a nota final é a média entre ela e a do semestre: passa com 50.'],
+  ['Como monto o horário?', 'Na aba Horário, Montar pelo PDF: envie o PDF de horários da faculdade, marque as disciplinas e escolha as turmas sem choque. No fim do semestre, o Encerrar semestre faz isso para o próximo.'],
+  ['O semestre acabou. E agora?', 'Em Configurações, Encerrar semestre: confira as notas finais, escolha as disciplinas e o horário do próximo e o que limpar. Dá para desfazer depois.'],
+  ['Apaguei algo sem querer', 'Logo depois de excluir, o aviso embaixo traz Desfazer por alguns segundos. Por garantia, baixe um backup em Configurações de vez em quando.'],
+  ['Esqueci a senha', 'Na tela de entrar, escreva o e-mail e toque em Esqueci a senha. O link chega no e-mail e abre o app já na tela da nova senha.'],
+];
+function abrirAjuda(){
+  const aba = currentTabId(), t = TABS.find(x => x.id === aba), dicas = AJUDA_TELAS[aba] || [];
+  const pc = !matchMedia('(max-width:880px)').matches;
+  document.getElementById('ajudaBody').innerHTML = `
+    <div class="ajuda-tour">
+      <span class="ajuda-tour__ic">${ico('map')}</span>
+      <span class="ajuda-tour__txt"><b>Tour pelo app</b><span>Um minuto pelas partes principais.</span></span>
+      <button type="button" class="btn btn-sm btn-primary" id="ajudaTour">Fazer o tour</button>
+    </div>
+    ${dicas.length ? `<div class="ajuda-sec">Nesta tela: ${esc(t ? t.label : '')}</div><ul class="ajuda-dicas">${dicas.map(d => `<li>${d}</li>`).join('')}</ul>` : ''}
+    <div class="ajuda-sec">Perguntas frequentes</div>
+    <div class="ajuda-faq">${AJUDA_FAQ.map(([q, r]) => `<details><summary>${q}</summary><p>${r}</p></details>`).join('')}</div>
+    <div class="ajuda-pe">
+      ${pc ? '<button type="button" class="link-btn" id="ajudaAtalhos">Atalhos de teclado</button>' : ''}
+      <a href="privacidade.html" target="_blank" rel="noopener">Privacidade</a>
+      <a href="https://github.com/TulioH4/centro-de-controle/issues" target="_blank" rel="noopener">Falar com o desenvolvedor</a>
+    </div>`;
+  document.getElementById('ajudaTour').onclick = () => { fecharAjuda(); iniciarTour(); };
+  const at = document.getElementById('ajudaAtalhos');
+  if(at) at.onclick = () => { fecharAjuda(); abrirAtalhos(); };
+  document.getElementById('modalAjuda').classList.add('open');
+  setTimeout(() => document.getElementById('ajudaTour').focus({preventScroll: true}), 60);
+}
+function fecharAjuda(){ document.getElementById('modalAjuda').classList.remove('open'); }
+document.getElementById('ajudaFechar').addEventListener('click', fecharAjuda);
+document.getElementById('cfgAjuda').addEventListener('click', abrirAjuda);
+document.getElementById('modalAjuda').addEventListener('click', e => { if(e.target === e.currentTarget) fecharAjuda(); });
+
+// passos do tour: alvo = seletor (ou lista: o primeiro que estiver na tela); no celular, alvoCel se houver
+const TOUR = [
+  {titulo: 'Bem-vindo ao Centro de Controle', texto: 'Um minuto pelas partes principais. Dá para refazer quando quiser, na Ajuda.'},
+  {aba: 'painel', alvo: '#navRail', alvoCel: '#mobileTabbar', titulo: 'As abas', texto: 'Cada parte do curso tem a sua aba.', textoCel: 'Cada parte do curso tem a sua aba. As outras ficam em Mais.'},
+  {aba: 'painel', alvo: '#resumoStats', titulo: 'Resumo do dia', texto: 'Aulas de hoje, próxima aula, próxima prova e os prazos da semana.'},
+  {alvo: '#railQuickAdd', alvoCel: '#mobileFab', titulo: 'Novo item', texto: 'Adicione uma tarefa ou uma prova de qualquer tela. Atalho: Ctrl K.', textoCel: 'Adicione uma tarefa ou uma prova de qualquer tela.'},
+  {aba: 'painel', alvo: '#aulasHojeList', painel: true, titulo: 'Faltei', texto: 'Faltou numa aula de hoje? Toque em Faltei e a falta já conta na disciplina.'},
+  {aba: 'provas', alvo: '#calGrid', painel: true, titulo: 'Calendário de provas', texto: 'Toque num dia para marcar uma prova. Depois dela, lance a nota ali mesmo.'},
+  {aba: 'desempenho', alvo: '#notasSemestreGrid', titulo: 'Notas', texto: 'Escreva a nota e o peso de cada avaliação: a média e quanto falta para passar saem sozinhas.'},
+  {aba: 'horario', alvo: '#btnMontarGrade', titulo: 'Horário', texto: 'Monte o horário pelo PDF de horários da faculdade, escolhendo as turmas sem choque.'},
+  {aba: 'mapa', alvo: ['#formaturaPanel', '#mapaTimeline'], titulo: 'Mapa de Sucesso', texto: 'O curso inteiro, semestre a semestre: o que já foi, o que falta e quando você se forma.'},
+  {aba: 'config', alvo: '#semPanel', titulo: 'Fim de semestre', texto: 'Quando as aulas acabarem, encerre aqui: as notas vão para o histórico e o próximo semestre já começa pronto.'},
+  {aba: 'painel', alvo: '#btnAjuda', alvoCel: '#mobileAvatar', titulo: 'Ajuda', texto: 'Ficou alguma dúvida? Aqui tem dicas de cada tela e este tour de novo. Atalho: ?.', textoCel: 'Ficou alguma dúvida? Toque aqui e depois em Ajuda: tem dicas de cada tela e este tour de novo.'},
+];
+let TOUR_I = -1, _tourVolta = null;
+const tourAtivo = () => TOUR_I >= 0;
+const tourCel = () => matchMedia('(max-width:880px)').matches;
+function tourAlvo(p){
+  const sel = (tourCel() && p.alvoCel) || p.alvo;
+  if(!sel) return null;
+  for(const s of [].concat(sel)){
+    let el = document.querySelector(s);
+    if(el && p.painel) el = el.closest('.panel') || el;
+    if(el && !el.hidden){ const r = el.getBoundingClientRect(); if(r.width > 0 && r.height > 0) return el; }
+  }
+  return null;
+}
+function iniciarTour(){
+  if(!STATE.config) return;
+  closeQuickAdd(); closeMoreSheet(); fecharAjuda();
+  _tourVolta = currentTabId();
+  TOUR_I = 0;
+  document.getElementById('tour').hidden = false;
+  document.body.classList.add('tour-on');
+  tourMostrar();
+}
+function encerrarTour(){
+  if(!tourAtivo()) return;
+  TOUR_I = -1;
+  document.getElementById('tour').hidden = true;
+  document.body.classList.remove('tour-on');
+  switchTab('painel');
+  storeSet('tour_visto', true);
+}
+function tourMostrar(){
+  const p = TOUR[TOUR_I], n = TOUR.length;
+  document.getElementById('tourPasso').textContent = `${TOUR_I + 1} de ${n}`;
+  document.getElementById('tourTitulo').textContent = p.titulo;
+  document.getElementById('tourTexto').textContent = (tourCel() && p.textoCel) || p.texto;
+  document.getElementById('tourVoltar').hidden = TOUR_I === 0;
+  document.getElementById('tourPular').hidden = TOUR_I === n - 1;
+  document.getElementById('tourProx').textContent = TOUR_I === 0 ? 'Começar' : TOUR_I === n - 1 ? 'Concluir' : 'Próximo';
+  if(p.aba && currentTabId() !== p.aba){ switchTab(p.aba); if(p.aba === 'desempenho') renderCharts(); }
+  // a aba troca e rola para o topo; depois, o alvo vai para o meio da tela e o destaque vai até ele
+  setTimeout(() => {
+    const el = tourAlvo(p);
+    if(el && getComputedStyle(el).position !== 'fixed') el.scrollIntoView({block: 'center', behavior: 'auto'});
+    setTimeout(() => { tourPosicionar(); document.getElementById('tourProx').focus({preventScroll: true}); }, 120);
+  }, 80);
+}
+function tourPosicionar(){
+  if(!tourAtivo()) return;
+  const el = tourAlvo(TOUR[TOUR_I]), foco = document.getElementById('tourFoco'), card = document.getElementById('tourCard');
+  const W = innerWidth, H = innerHeight, cw = card.offsetWidth, ch = card.offsetHeight, m = 6, g = 14;
+  if(!el){
+    foco.classList.add('is-sem');
+    card.style.left = Math.round((W - cw) / 2) + 'px'; card.style.top = Math.round((H - ch) / 2) + 'px';
+    return;
+  }
+  foco.classList.remove('is-sem');
+  const r = el.getBoundingClientRect();
+  const t = Math.max(4, r.top - m), b = Math.min(H - 4, r.bottom + m), l = Math.max(4, r.left - m), rr = Math.min(W - 4, r.right + m);
+  Object.assign(foco.style, {top: t + 'px', left: l + 'px', width: (rr - l) + 'px', height: Math.max(0, b - t) + 'px'});
+  const meio = Math.min(Math.max(12, r.left + r.width / 2 - cw / 2), W - cw - 12);
+  let x, y;
+  if(H - b >= ch + g){ x = meio; y = b + g; }                       // embaixo
+  else if(t >= ch + g){ x = meio; y = t - ch - g; }                 // em cima
+  else if(W - rr >= cw + g){ x = rr + g; y = Math.min(Math.max(12, r.top + r.height / 2 - ch / 2), H - ch - 12); } // à direita
+  else if(l >= cw + g){ x = l - cw - g; y = Math.min(Math.max(12, r.top + r.height / 2 - ch / 2), H - ch - 12); }  // à esquerda
+  else { x = (W - cw) / 2; y = H - ch - 16; }                       // alvo enorme: no pé da tela, por cima
+  card.style.left = Math.round(x) + 'px'; card.style.top = Math.round(y) + 'px';
+}
+function tourIr(d){
+  const i = TOUR_I + d;
+  if(i < 0) return;
+  if(i >= TOUR.length){ encerrarTour(); return; }
+  TOUR_I = i; tourMostrar();
+}
+document.getElementById('tourProx').addEventListener('click', () => tourIr(1));
+document.getElementById('tourVoltar').addEventListener('click', () => tourIr(-1));
+document.getElementById('tourPular').addEventListener('click', encerrarTour);
+window.addEventListener('resize', () => { if(tourAtivo()) tourPosicionar(); });
+window.addEventListener('scroll', () => { if(tourAtivo()) tourPosicionar(); }, {passive: true});
+// no tour, o teclado só anda pelos passos (as outras teclas de atalho ficam paradas)
+document.addEventListener('keydown', e => {
+  if(!tourAtivo() || _dlgFim) return;
+  if(e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); encerrarTour(); return; }
+  if(e.key === 'ArrowRight'){ e.preventDefault(); e.stopImmediatePropagation(); tourIr(1); return; }
+  if(e.key === 'ArrowLeft'){ e.preventDefault(); e.stopImmediatePropagation(); tourIr(-1); return; }
+  if(!['Tab', 'Enter', ' '].includes(e.key)) e.stopImmediatePropagation();
 }, true);
 
 // ============================================================
@@ -12272,7 +12519,7 @@ function refreshFromSync(){
       return;
     }
     const a = document.activeElement;
-    const busy = (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))
+    const busy = (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) || tourAtivo()
       || document.querySelector('.modal-overlay.open')
       || document.getElementById('quickAddOverlay').style.display === 'flex';
     if(busy){ refreshFromSync(); return; }
