@@ -7,7 +7,7 @@ setTimeout(async () => {
   const passo = async (nome, fn) => { try{ out[nome] = await fn(); }catch(e){ out[nome] = 'ERR ' + e.message + ' ' + (e.stack || '').split('\n')[1]; } };
   const iso = n => localISO(calSoma(new Date(), n));
   const linhaF01 = () => { switchTab('faltas'); renderFaltas(); const c = [...document.querySelectorAll('.falta-card')].find(x => /Física Newtoniana/.test(x.textContent)); return txt(c && c.querySelector('.fc-info')); };
-  const frase = async eventos => { STATE.calendario = Object.assign({inicio: '', fim: '', ocultos: []}, STATE.calendario, {eventos}); renderDayOverview(); return txt(document.getElementById('dayOverview')); };
+  const frase = async eventos => { STATE.calendario = Object.assign({inicio: '', fim: '', ocultos: []}, STATE.calendario, {eventos}); return calAvisos(new Date()).join(' ').replace(/<[^>]+>/g, ''); };
   await espera(1500);
 
   await passo('estimada', () => linhaF01());

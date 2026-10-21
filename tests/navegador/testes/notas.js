@@ -26,9 +26,9 @@ setTimeout(async () => {
     const linha = sg => [...document.querySelectorAll('#discRiscoPanel .risco-row')].find(r => txt(r.querySelector('.risco-sigla')) === sg);
     out.risco = {F01: txt(linha('F01')), M04: txt(linha('M04')), P06: txt(linha('P06'))};
     confere(/NP3: precisa de 55/.test(out.risco.F01) && /ficou em 25/.test(out.risco.M04) && /vai para a NP3/.test(out.risco.P06), 'quadro de risco sem a regra da NP3');
-    const rep = [...document.querySelectorAll('#resumoStats .stat')].find(s => /Reprovando/.test(s.textContent));
+    const rep = [...document.querySelectorAll('#pgAvisos .pc-aviso')].find(s => /Reprovando/.test(s.textContent));
     out.reprovando = rep ? txt(rep) : null;
-    confere(out.reprovando && /1 disc/.test(out.reprovando), '"Reprovando em notas" não contou só a M04');
+    confere(out.reprovando && /: 1 disciplina$/.test(out.reprovando), '"Reprovando em notas" não contou só a M04');
     // lança a NP3 de F01: 55 → final 50, aprovado
     switchTab('desempenho'); renderNotasSemestre(); await espera(100);
     const inp = card('F01').querySelector('[data-nota-np3]');

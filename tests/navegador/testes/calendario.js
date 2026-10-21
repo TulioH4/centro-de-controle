@@ -27,8 +27,8 @@ setTimeout(async () => {
   });
   await passo('painel', async () => {
     switchTab('painel'); renderPainel(); await espera(200);
-    return {semestre: [...document.querySelectorAll('#resumoStats .stat')].map(txt).find(t => t.startsWith('Semestre')), aulasHoje: txt(document.getElementById('aulasHojeList')),
-      proxAula: [...document.querySelectorAll('#resumoStats .stat')].map(txt).find(t => t.startsWith('Próxima aula')), frases: txt(document.getElementById('dayOverview'))};
+    return {semestre: txt(document.getElementById('pgSem')), hoje: txt(document.getElementById('pgHoje')),
+      proxAula: txt(document.querySelector('#pcWidgets [data-ir="horario"]')), avisos: txt(document.getElementById('pgAvisos'))};
   });
   await passo('faltas', async () => { switchTab('faltas'); renderFaltas(); await espera(200); return [...document.querySelectorAll('.falta-card')].map(c => txt(c.querySelector('.fc-info'))).filter(t => /Ainda há/.test(t)); });
   await passo('calendarioMes', async () => {

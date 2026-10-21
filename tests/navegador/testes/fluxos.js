@@ -61,7 +61,7 @@ setTimeout(async () => {
       salvoAulas: (ls('aulas_custom') || []).length, siglas: STATE.aulasCustom.map(aulaSigla).filter(x => !x).length + ' sem sigla'};
     await espera(700);
     r.planoSalvo = !!ls('grade_plano'); r.ofertaSalva = !!ls('grade_oferta');
-    r.painelAulas = document.querySelectorAll('#aulasHojeList .row-item').length;
+    r.painelAulas = document.querySelectorAll('#pgHoje [data-faltei]').length;
     r.diaCelular = document.getElementById('horarioDia').textContent.replace(/\s+/g, ' ').trim().slice(0, 160);
     // histórico sem os códigos do PDF
     const hist = STATE.historico; STATE.historico = [];

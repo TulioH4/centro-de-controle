@@ -78,26 +78,38 @@ setTimeout(async () => {
     const r = {titulo, tarefa: linhas.some(l => /Lista do laboratório/.test(l) && /Tarefa, faltam 2 dias/.test(l)), plano: !!document.getElementById('planoEstudosPanel')};
     confere(r.titulo === 'Relatórios e tarefas' && r.tarefa, 'o Painel não mostra as tarefas junto dos relatórios');
     confere(!r.plano && !/próximos 7 dias/.test(document.getElementById('tab-painel').textContent), 'o plano de estudos de 7 dias ainda aparece');
-    // resumo do dia: sem a sequência de estudos, e todo valor no mesmo tamanho (número junto da palavra)
+    // sem a sequência de estudos em lugar nenhum do painel
     STATE.pomSessions = [{ts: new Date().toISOString(), sigla: 'F01', min: 25}]; renderPainel();
-    const cards = [...document.querySelectorAll('#resumoStats .stat')];
-    r.resumo = cards.map(txt);
-    confere(!r.resumo.some(t => /Sequência/.test(t)), 'o card da sequência de estudos ainda aparece');
-    confere(cards.every(c => c.querySelector('.stat__value.small')) && /^Aulas hoje (\d+ aulas?|Nenhuma)$/.test(r.resumo[0]), 'os números do resumo não estão no mesmo tamanho dos outros valores');
-    // celular: a data, os quatro atalhos e a lista de hoje já na primeira tela; no computador, o painel de sempre
+    confere(!/Sequência/.test(document.getElementById('tab-painel').textContent), 'o card da sequência de estudos ainda aparece');
+    // celular: a data, os quatro atalhos e a lista de hoje já na primeira tela; computador: os blocos da G
     const vis = el => !!el && el.getClientRects().length > 0;
     window.scrollTo(0, 0); await espera(50);
-    const hoje = document.getElementById('pcHoje').closest('.panel');
-    r.cel = {visivel: vis(document.getElementById('painelCel')), resumo: vis(document.getElementById('resumoStats')), atalhos: document.querySelectorAll('#pcWidgets .pc-w').length,
-      hojeTopo: Math.round(hoje.getBoundingClientRect().top), tela: innerHeight, oi: txt(document.getElementById('pcOi'))};
+    r.cel = {visivel: vis(document.getElementById('painelCel')), atalhos: document.querySelectorAll('#pcWidgets .pc-w').length,
+      hojeTopo: Math.round(document.getElementById('pcHoje').closest('.panel').getBoundingClientRect().top), tela: innerHeight, oi: txt(document.getElementById('pcOi')),
+      lembretes: document.getElementById('lembretesList').parentNode.id};
+    r.g = {visivel: vis(document.getElementById('painelG')), blocos: document.querySelectorAll('#pgGrid > .panel').length, oi: txt(document.getElementById('pgOi')),
+      tarefas: txt(document.getElementById('pgTarefas')), sem: txt(document.getElementById('pgSem')), faltas: document.querySelectorAll('#pgFaltas .pg-barra').length,
+      notas: document.querySelectorAll('#pgNotas .pg-barra').length, ultimaFila: Math.round(document.getElementById('pgNotas').getBoundingClientRect().top)};
     if(celular){
-      confere(r.cel.visivel && !r.cel.resumo && r.cel.atalhos === 4, 'o painel do celular não trocou o resumo pelos quatro atalhos');
+      confere(r.cel.visivel && !r.g.visivel && r.cel.atalhos === 4, 'o painel do celular não trocou o resumo pelos quatro atalhos');
       confere(r.cel.hojeTopo < r.cel.tela - 200, 'a lista de hoje não aparece na primeira tela do celular');
       confere(/^(Bom dia|Boa tarde|Boa noite)/.test(r.cel.oi), 'o painel do celular não começa com a saudação');
+      confere(r.cel.lembretes === 'lemCel', 'no celular, os lembretes não ficaram embaixo do dia de hoje');
       document.querySelector('#pcWidgets [data-ir="provas"]').click(); await espera(100);
       r.cel.abriu = currentTabId(); switchTab('painel'); await espera(50);
       confere(r.cel.abriu === 'provas', 'o atalho da próxima prova não abriu a aba Provas');
-    } else confere(!r.cel.visivel && r.cel.resumo, 'o painel do celular aparece no computador');
+    } else {
+      confere(r.g.visivel && !r.cel.visivel && r.g.blocos === 7, 'o painel do computador não está com os blocos da G');
+      confere(/^(Bom dia|Boa tarde|Boa noite)/.test(r.g.oi), 'o painel do computador não começa com a saudação');
+      confere(/Lista do laboratório/.test(r.g.tarefas), 'o bloco de tarefas não mostra as tarefas em aberto');
+      const nDisc = Math.min(6, STATE.config.disciplinasAtuais.length);
+      confere(r.g.faltas === nDisc && r.g.notas === nDisc, 'faltas e notas não têm uma barra por disciplina');
+      confere(r.g.ultimaFila < innerHeight, 'a última fila de blocos não começa na primeira tela');
+      confere(r.cel.lembretes === 'lemDesk', 'no computador, os lembretes não foram para o bloco deles');
+      document.getElementById('pgProva').click(); await espera(100);
+      r.g.abriu = currentTabId(); switchTab('painel'); await espera(50);
+      confere(r.g.abriu === 'provas', 'o bloco da próxima prova não abriu a aba Provas');
+    }
     return r;
   });
 

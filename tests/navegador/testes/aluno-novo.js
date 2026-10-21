@@ -36,7 +36,7 @@ setTimeout(async () => {
     switchTab('faltas'); await espera(200);
     out.faltas = document.querySelectorAll('.falta-card').length;
     switchTab('painel'); await espera(200);
-    out.painel = [...document.querySelectorAll('#resumoStats .stat')].map(txt).slice(0, 6);
+    out.painel = [...document.querySelectorAll('#pgGrid > .panel')].map(txt).map(t => t.slice(0, 90));
   }catch(e){ out.passos.push('ERRO ' + e.message + ' ' + (e.stack || '').split('\n')[1]); }
   out.erros = __erros;
   const pre = document.createElement('pre'); pre.id = '__audit'; pre.textContent = JSON.stringify(out); document.body.appendChild(pre);
