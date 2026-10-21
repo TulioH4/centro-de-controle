@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
-const SHELL = ['index.html', 'sync.js', 'manifest.webmanifest', 'icons'];
+const SHELL = ['index.html', 'sync.js', 'manifest.webmanifest', 'icons', 'privacidade.html', 'capturas'];
 
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });

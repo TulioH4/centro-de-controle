@@ -31,6 +31,8 @@ Depois de instalado, entre com a sua conta para ter os mesmos dados em todos os 
 
 Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado se atualiza na próxima vez que for aberto com internet.
 
+Para publicar na Microsoft Store (gratuito para pessoa física), o passo a passo e os textos da página da loja estão em [`loja/microsoft-store.md`](loja/microsoft-store.md); as capturas saem de `node scripts/capturas.mjs`.
+
 ## Funcionalidades
 
 **Painel**
@@ -78,10 +80,12 @@ Atualizações chegam sozinhas: a cada nova versão publicada, o app instalado s
 
 - **Com conta:** os dados ficam na sua conta (Supabase), protegidos por regras que só permitem a cada usuário ler e gravar os próprios registros. O app trabalha sempre com uma cópia local, então abre na hora e funciona sem internet; as alterações sobem em segundo plano e aparecem nos outros aparelhos em poucos segundos.
 - **Esqueceu a senha:** na tela de entrar, escreva o e-mail e toque em *Esqueci a senha*. O link que chega abre o app já na tela da nova senha, mostrando de qual conta ela é.
+- **Sair** tira a conta e os dados só deste aparelho; os outros (o celular, por exemplo) continuam entrados.
 - **Cada pessoa, sua conta:** para outra pessoa usar o app no mesmo aparelho, basta sair e entrar com a conta dela. Os dados guardados no aparelho são sempre da conta que está entrada: entrar (ou criar) outra conta tira do aparelho os da anterior, que continuam na conta dela, e uma aba que ficou aberta com a conta anterior recarrega sem gravar nada.
 - **Sem conta:** tudo fica só no navegador daquele aparelho.
 - **Backup:** em *Configurações → Backup dos dados*, exporte ou importe um arquivo `.json` com tudo do perfil.
 - **Proteção do app:** a versão publicada só executa scripts do próprio app e das bibliotecas que ele usa, cada uma conferida pela impressão digital do arquivo (Content Security Policy e SRI). Um trecho de HTML que chegue por um backup importado ou por um campo sincronizado não consegue rodar código, e uma biblioteca alterada no CDN não é aceita.
+- **Política de privacidade:** [privacidade.html](https://tulioh4.github.io/centro-de-controle/privacidade.html) (o que o app guarda, onde e como apagar).
 - Este repositório é público, mas **não contém dados de ninguém**. A versão publicada leva apenas um modelo vazio (`dados_curso.template.js`), e o build é interrompido se encontrar dados pessoais no pacote.
 
 ## Como funciona
@@ -131,6 +135,9 @@ sw.js                      service worker: cache e funcionamento offline
 manifest.webmanifest       nome, ícones e atalhos do app instalado
 dados_curso.template.js    modelo de dados vazio usado na publicação
 icons/                     ícones do app
+privacidade.html           política de privacidade (vai junto na publicação)
+capturas/                  capturas de tela da loja e da instalação (scripts/capturas.mjs)
+loja/                      passo a passo e textos para a Microsoft Store
 scripts/build-pwa.mjs      gera dist/ para publicar
 supabase/schema.sql        tabela e regras de acesso
 tests/                     testes de unidade e no navegador

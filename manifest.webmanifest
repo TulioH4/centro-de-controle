@@ -11,17 +11,118 @@
   "dir": "ltr",
   "background_color": "#0A0A10",
   "theme_color": "#0A0A10",
-  "categories": ["education", "productivity"],
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
   ],
   "shortcuts": [
-    { "name": "Nova tarefa", "short_name": "Tarefa", "url": "./?acao=nova-tarefa", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Provas", "short_name": "Provas", "url": "./?aba=provas", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Tarefas", "short_name": "Tarefas", "url": "./?aba=tarefas", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+    {
+      "name": "Nova tarefa",
+      "short_name": "Tarefa",
+      "url": "./?acao=nova-tarefa",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Provas",
+      "short_name": "Provas",
+      "url": "./?aba=provas",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Tarefas",
+      "short_name": "Tarefas",
+      "url": "./?aba=tarefas",
+      "icons": [
+        {
+          "src": "icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "launch_handler": {
+    "client_mode": [
+      "focus-existing",
+      "auto"
+    ]
+  },
+  "screenshots": [
+    {
+      "src": "capturas/painel.png",
+      "sizes": "2049x1152",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Painel com o resumo do dia, provas, prazos e a agenda da semana"
+    },
+    {
+      "src": "capturas/provas.png",
+      "sizes": "2049x1152",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Calendário de provas"
+    },
+    {
+      "src": "capturas/notas.png",
+      "sizes": "2049x1152",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Notas do semestre, com a média e quanto falta para passar"
+    },
+    {
+      "src": "capturas/celular-painel.png",
+      "sizes": "1170x2534",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Painel no celular"
+    },
+    {
+      "src": "capturas/celular-provas.png",
+      "sizes": "1170x2534",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Calendário de provas no celular"
+    }
   ]
 }

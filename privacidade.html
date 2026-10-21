@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacidade · Centro de Controle</title>
+<meta name="description" content="Política de privacidade do Centro de Controle: o que o app guarda, onde e como apagar.">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<style>
+  :root{--bg:#F2F2F7; --fg:#1C1C1E; --dim:#5A5A66; --line:#DCDCE4; --accent:#0A84FF; --card:#FFFFFF; color-scheme:light;}
+  @media (prefers-color-scheme: dark){ :root{--bg:#0A0A10; --fg:#EEF0F6; --dim:#A0A3B1; --line:#262633; --accent:#4DA3FF; --card:#14141C; color-scheme:dark;} }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing:antialiased;}
+  main{max-width:720px; margin:0 auto; padding:40px max(20px, env(safe-area-inset-right)) 64px max(20px, env(safe-area-inset-left));}
+  header{display:flex; align-items:center; gap:12px; margin-bottom:28px;}
+  header img{width:44px; height:44px; border-radius:11px;}
+  header b{font-size:15px;} header span{display:block; font-size:13px; color:var(--dim);}
+  h1{font-size:30px; line-height:1.15; letter-spacing:-.02em; margin:0 0 8px; text-wrap:balance;}
+  .data{color:var(--dim); font-size:14px; margin:0 0 28px;}
+  h2{font-size:18px; margin:32px 0 8px; letter-spacing:-.01em;}
+  p, li{color:var(--fg);} p{margin:0 0 12px;}
+  ul{padding-left:20px; margin:0 0 12px;} li{margin:4px 0;}
+  .resumo{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; margin-bottom:8px;}
+  .resumo li{margin:6px 0;}
+  a{color:var(--accent);}
+  footer{margin-top:40px; padding-top:16px; border-top:1px solid var(--line); font-size:14px; color:var(--dim);}
+</style>
+</head>
+<body>
+<main>
+  <header><img src="icons/icon-192.png" alt=""><div><b>Centro de Controle</b><span>Painel acadêmico</span></div></header>
+  <h1>Política de privacidade</h1>
+  <p class="data">Atualizada em 20 de outubro de 2026</p>
+
+  <div class="resumo">
+    <ul>
+      <li>O app guarda só o que você mesmo escreve nele: notas, faltas, provas, tarefas, horários e histórico.</li>
+      <li>Sem conta, tudo fica apenas no seu aparelho. Com conta, fica também na nuvem, e só você tem acesso.</li>
+      <li>Não há anúncios, nem rastreamento, nem venda ou compartilhamento dos seus dados.</li>
+    </ul>
+  </div>
+
+  <h2>Quem faz o app</h2>
+  <p>O Centro de Controle é um projeto independente, de código aberto, feito por um estudante. Não é um app oficial de nenhuma faculdade: as grades curriculares que ele traz são as que as faculdades publicam.</p>
+
+  <h2>O que o app guarda</h2>
+  <ul>
+    <li><b>O que você escreve:</b> disciplinas, notas, faltas, provas, tarefas, lembretes, horário de aulas, horas complementares e as configurações do perfil.</li>
+    <li><b>Se você criar uma conta:</b> o seu e-mail. A senha é guardada pelo serviço de contas (Supabase) de forma protegida; o app não tem acesso a ela.</li>
+    <li><b>Se você ligar as notificações:</b> o endereço que o navegador cria para entregar avisos neste aparelho e o seu fuso horário, para mandar os lembretes de provas e prazos na hora certa.</li>
+    <li><b>Se você usar os Estudos (recurso em teste):</b> a sua chave do Google Gemini, guardada no seu perfil.</li>
+  </ul>
+
+  <h2>Onde os dados ficam</h2>
+  <ul>
+    <li><b>Sem conta:</b> só no armazenamento do navegador do seu aparelho. Nada sai dele.</li>
+    <li><b>Com conta:</b> numa cópia no aparelho e num banco de dados no <a href="https://supabase.com/privacy">Supabase</a>, com regras que deixam cada conta ler e gravar apenas os próprios registros.</li>
+    <li><b>PDF de horários:</b> é lido no próprio aparelho e não é enviado para lugar nenhum.</li>
+    <li><b>Grade enviada a um colega:</b> vai dentro do link, depois do <code>#</code>, parte do endereço que não chega a nenhum servidor.</li>
+    <li><b>Estudos (opcional):</b> o material que você escolher é enviado ao Google Gemini, com a sua chave, para gerar resumos e questões, conforme a <a href="https://policies.google.com/privacy">política do Google</a>.</li>
+  </ul>
+  <p>O app é hospedado no GitHub Pages e carrega algumas bibliotecas públicas (de gráficos, de leitura de PDF e do serviço de contas) de redes de distribuição de conteúdo. Como qualquer site, esses serviços recebem o endereço de rede do aparelho ao entregar os arquivos.</p>
+
+  <h2>O que o app não faz</h2>
+  <ul>
+    <li>Não mostra anúncios.</li>
+    <li>Não usa ferramentas de análise, rastreamento ou cookies de terceiros.</li>
+    <li>Não vende nem compartilha os seus dados com ninguém.</li>
+  </ul>
+
+  <h2>Como apagar</h2>
+  <ul>
+    <li><b>Sem conta:</b> limpe os dados do site no navegador ou desinstale o app.</li>
+    <li><b>Com conta:</b> em Configurações, <b>Sair</b> tira os dados deste aparelho (eles continuam na nuvem para quando você entrar de novo). Para apagar a conta e tudo o que está na nuvem, peça pelo endereço abaixo.</li>
+  </ul>
+
+  <h2>Contato</h2>
+  <p>Dúvidas ou pedidos sobre os seus dados: <a href="https://github.com/TulioH4/centro-de-controle/issues">github.com/TulioH4/centro-de-controle/issues</a>.</p>
+
+  <footer>Se esta política mudar, a nova versão aparece aqui, com a data atualizada. <a href="./">Abrir o app</a></footer>
+</main>
+</body>
+</html>

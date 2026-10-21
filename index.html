@@ -1934,6 +1934,9 @@
   .auth-link{background:none; border:none; color:var(--blue); font:inherit; font-size:13px; cursor:pointer; padding:4px; text-align:center;}
   .auth-link:hover{text-decoration:underline;}
   .auth-link--quiet{color:var(--text-faint); font-size:12.5px;}
+  .auth-priv{text-decoration:none; font-size:12px;}
+  .config-pe{margin:22px 2px 0; font-size:12.5px; color:var(--text-faint);}
+  .config-pe a{color:var(--text-dim);}
   .loading-text{font-size:13px; color:var(--text-faint);}
 
   /* the floating timer belongs to the app, not to login / profile / setup screens */
@@ -2742,6 +2745,7 @@
     <button type="button" class="auth-link" id="authSwitch">Não tem conta? Criar conta</button>
     <button type="button" class="auth-link auth-link--quiet" id="authForgot">Esqueci a senha</button>
     <button type="button" class="auth-link auth-link--quiet" id="authSkip">Usar sem conta, só neste aparelho</button>
+    <a class="auth-link auth-link--quiet auth-priv" href="privacidade.html" target="_blank" rel="noopener">Privacidade</a>
   </form>
 </div>
 
@@ -3259,6 +3263,7 @@
 
       <div class="section-label">Recursos em teste</div>
       <div class="panel panel--pad" id="labsPanel"></div>
+      <p class="config-pe"><a href="privacidade.html" target="_blank" rel="noopener">Política de privacidade</a> · <a href="https://github.com/TulioH4/centro-de-controle" target="_blank" rel="noopener">Código e contato</a></p>
     </section>
 
   </main>
@@ -7339,11 +7344,7 @@ function renderKanban(){
         const prCls = t.prioridade==='Alta'?'red':t.prioridade==='Média'?'amber':'green';
         return `<div class="kanban-card" data-kanban-move="${esc(t.id)}" title="Clique para avançar status">
           <div class="kc-name">${esc(t.nome)}</div>
-          <div class="kc-meta">
-            <span class="badge badge-${prCls}" style="font-size:9px;">${esc(t.prioridade)}</span>
-            ${t.disciplina ? `, ${esc(t.disciplina)}` : ''}
-            ${t.prazo ? `, ${fmtDate(t.prazo)}${overdue?' (atrasado)':''}` : ''}
-          </div>
+          <div class="kc-meta"><span class="badge badge-${prCls}" style="font-size:9px;">${esc(t.prioridade)}</span>${[t.disciplina ? esc(t.disciplina) : '', t.prazo ? fmtDate(t.prazo) + (overdue ? ' (atrasado)' : '') : ''].filter(Boolean).map(x => ` · ${x}`).join('')}</div>
         </div>`;
       }).join('') : `<div class="kanban-empty">Nenhuma tarefa aqui</div>`}
     </div>`;
