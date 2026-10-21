@@ -84,6 +84,20 @@ setTimeout(async () => {
     r.resumo = cards.map(txt);
     confere(!r.resumo.some(t => /Sequência/.test(t)), 'o card da sequência de estudos ainda aparece');
     confere(cards.every(c => c.querySelector('.stat__value.small')) && /^Aulas hoje (\d+ aulas?|Nenhuma)$/.test(r.resumo[0]), 'os números do resumo não estão no mesmo tamanho dos outros valores');
+    // celular: a data, os quatro atalhos e a lista de hoje já na primeira tela; no computador, o painel de sempre
+    const vis = el => !!el && el.getClientRects().length > 0;
+    window.scrollTo(0, 0); await espera(50);
+    const hoje = document.getElementById('pcHoje').closest('.panel');
+    r.cel = {visivel: vis(document.getElementById('painelCel')), resumo: vis(document.getElementById('resumoStats')), atalhos: document.querySelectorAll('#pcWidgets .pc-w').length,
+      hojeTopo: Math.round(hoje.getBoundingClientRect().top), tela: innerHeight, oi: txt(document.getElementById('pcOi'))};
+    if(celular){
+      confere(r.cel.visivel && !r.cel.resumo && r.cel.atalhos === 4, 'o painel do celular não trocou o resumo pelos quatro atalhos');
+      confere(r.cel.hojeTopo < r.cel.tela - 200, 'a lista de hoje não aparece na primeira tela do celular');
+      confere(/^(Bom dia|Boa tarde|Boa noite)/.test(r.cel.oi), 'o painel do celular não começa com a saudação');
+      document.querySelector('#pcWidgets [data-ir="provas"]').click(); await espera(100);
+      r.cel.abriu = currentTabId(); switchTab('painel'); await espera(50);
+      confere(r.cel.abriu === 'provas', 'o atalho da próxima prova não abriu a aba Provas');
+    } else confere(!r.cel.visivel && r.cel.resumo, 'o painel do celular aparece no computador');
     return r;
   });
 

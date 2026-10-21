@@ -1746,6 +1746,7 @@
   .day-overview b{color:var(--text); font-weight:600;}
   .day-overview__hi{color:var(--text); font-weight:600;}
   .day-overview__nota{display:block; margin-top:8px;}
+  .pc{display:none;}
   /* notificações: estado no topo, "quando" em cartões, atalho da agenda */
   .notif-top{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
   .notif-top__ic{width:42px; height:42px; border-radius:12px; display:grid; place-items:center; flex-shrink:0; color:var(--c); background:var(--c-dim);}
@@ -2551,6 +2552,53 @@
     .stat__value{font-size:26px;}
     .stat__value.small{font-size:16px;}
 
+    /* painel do celular: a data e o "oi", quatro atalhos, os avisos e o dia de hoje logo na primeira tela */
+    #tab-painel .painel-top .screen__header, #dayOverview, #tab-painel .so-desk{display:none !important;}
+    .pc{display:flex; flex-direction:column; gap:12px;}
+    .pc-head{display:flex; flex-direction:column; gap:2px; padding:0 2px 2px;}
+    .pc-data{font-size:13.5px; font-weight:500; color:var(--text-dim);}
+    .pc-oi{margin:0; font-size:28px; font-weight:700; letter-spacing:-.025em; line-height:1.15; color:var(--text); text-wrap:balance;}
+    .pc-ws{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px;}
+    .pc .pc-w{display:flex; flex-direction:column; align-items:flex-start; min-width:0; margin:0; padding:13px 14px 14px !important;
+      border:none; font:inherit; color:var(--text); text-align:left; cursor:pointer;}
+    .pc div.pc-w{cursor:default;}
+    .pc button.pc-w:active{transform:scale(.97);}
+    .pc-w__top{display:flex; align-items:center; gap:6px; max-width:100%; margin-bottom:7px; font-size:12.5px; font-weight:500; color:var(--text-dim);}
+    .pc-w__top .i{width:16px; height:16px; flex-shrink:0; color:var(--accent);}
+    .pc-w__top span, .pc-w__v, .pc-w__s{max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .pc-w__v{font-size:23px; font-weight:650; letter-spacing:-.02em; line-height:1.15; font-variant-numeric:tabular-nums;}
+    .pc-w__txt{display:block; font-size:16px; line-height:1.3; white-space:normal;}
+    .pc-w__s{margin-top:2px; font-size:12.5px; color:var(--text-faint);}
+    .pc-w__bar{display:block; width:100%; height:4px; margin-top:9px; border-radius:2px; background:var(--line-soft); overflow:hidden;}
+    .pc-w__bar > span{display:block; height:100%; border-radius:2px; background:var(--accent);}
+    .pc-alerta{color:var(--red); font-weight:600;}
+    .pc-avisos{display:flex; flex-direction:column; gap:8px;}
+    .pc-avisos:empty{display:none;}
+    .pc-aviso{display:flex; align-items:center; gap:10px; width:100%; margin:0; padding:11px 14px; border:none; border-radius:16px;
+      background:var(--lg-fill); box-shadow:var(--lg-drop), var(--lg-inner); font:inherit; font-size:13.5px; line-height:1.4; color:var(--text); text-align:left;}
+    button.pc-aviso{cursor:pointer;}
+    button.pc-aviso:active{transform:scale(.98);}
+    .pc-aviso > .i{width:18px; height:18px; flex-shrink:0; color:var(--accent);}
+    .pc-aviso > span{flex:1; min-width:0;}
+    .pc-aviso b{font-weight:600;}
+    .pc-hoje{padding:14px 16px 6px !important;}
+    .pc-hoje > .stat__label{margin-bottom:2px;}
+    .pc-item{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:.5px solid var(--line-soft);}
+    .pc-item:last-child{border-bottom:none;}
+    .pc-item__bar{align-self:stretch; flex:0 0 3px; border-radius:2px; background:var(--accent);}
+    .pc-item__hora{flex:0 0 42px; display:flex; align-items:center; font-size:13px; font-weight:600; color:var(--text); font-variant-numeric:tabular-nums;}
+    .pc-item__hora .i{width:18px; height:18px; color:var(--accent);}
+    .pc-item__info{flex:1; min-width:0; display:flex; flex-direction:column; gap:1px;}
+    .pc-item__info .t{font-size:14.5px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .pc-item__info .s{font-size:12.5px; color:var(--text-faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .pc-item.is-past .pc-item__bar, .pc-item.is-past .pc-item__hora, .pc-item.is-past .pc-item__info{opacity:.45;}
+    .pc-check{display:block; width:22px; height:22px; border-radius:50%; border:1.5px solid var(--line); cursor:pointer;}
+    .pc-check:active{background:var(--green-dim); border-color:var(--green);}
+    .pc-mais{display:block; margin:2px 0 10px 55px; font-size:13px;}
+    .pc-vazio{padding:10px 0 12px; font-size:13.5px; color:var(--text-faint);}
+    /* lembretes: mais baixos, logo abaixo do dia de hoje */
+    .postits .postit{min-height:68px; padding:10px 12px 12px;}
+
     /* calendário de provas: número no meio, sem caixa; feriado, evento e prova viram pontos */
     .cal-grid{gap:2px 0;}
     .cal-dow{font-size:10.5px; letter-spacing:.04em; padding:0 0 6px;}
@@ -2848,6 +2896,19 @@
 
     <!-- PAINEL -->
     <section class="tab active" id="tab-painel">
+      <!-- celular: a data, quatro atalhos, os avisos e o dia de hoje (no computador, o painel de sempre) -->
+      <div class="pc" id="painelCel">
+        <div class="pc-head">
+          <div class="pc-data" id="pcData"></div>
+          <h2 class="pc-oi" id="pcOi">Painel</h2>
+        </div>
+        <div class="pc-ws" id="pcWidgets"></div>
+        <div class="pc-avisos" id="pcAvisos"></div>
+        <div class="panel panel--pad pc-hoje" style="--accent:var(--blue)">
+          <div class="stat__label">Hoje</div>
+          <div id="pcHoje"></div>
+        </div>
+      </div>
       <div class="painel-top">
         <div class="painel-top__main">
           <div class="screen__header">
@@ -2859,11 +2920,11 @@
         <div class="postits" id="lembretesList" aria-label="Lembretes"></div>
       </div>
 
-      <div class="section-label">Resumo do dia</div>
-      <div class="stat-grid" id="resumoStats"></div>
+      <div class="section-label so-desk">Resumo do dia</div>
+      <div class="stat-grid so-desk" id="resumoStats"></div>
 
       <div class="grid-3" style="margin-top:28px;">
-        <div class="panel panel--pad" style="--accent:var(--blue)">
+        <div class="panel panel--pad so-desk" style="--accent:var(--blue)">
           <div class="stat__label" style="margin-bottom:8px;">Aulas de hoje</div>
           <div class="row-list" id="aulasHojeList"></div>
         </div>
@@ -4599,9 +4660,7 @@ function renderPainel(){
     // "Faltei": registra a falta da aula na disciplina, um toque de novo desfaz
     const sigla = aulaSigla(a);
     const reg = sigla ? faltaDaAula(hojeIso, a.inicio, sigla) : null;
-    const chip = !sigla ? '' : `<button type="button" class="falta-chip${reg ? ' is-on' : ''}" data-faltei="${esc(a.inicio)}|${esc(sigla)}|${esc(a.fim || '')}"
-      aria-pressed="${!!reg}" aria-label="${reg ? `Falta registrada em ${esc(sigla)}, toque para desfazer` : `Registrar falta em ${esc(sigla)}`}"
-      title="${reg ? `${reg.n === 1 ? '1 falta registrada' : reg.n + ' faltas registradas'}. Toque para desfazer` : `Registrar falta em ${esc(sigla)}`}">${reg ? 'Faltou' : 'Faltei'}</button>`;
+    const chip = sigla ? chipFaltei(a, sigla, reg) : '';
     return `<div class="row-item ${state}">
       <div class="time mono">${esc(a.inicio)}–${esc(a.fim)}</div>
       <div class="info"><div class="t">${esc(a.disciplina)}</div><div class="s">${esc(a.local)}</div></div>
@@ -4664,6 +4723,7 @@ function renderPainel(){
       <span class="badge badge-${stCls}">${esc(t.status)}</span>
     </div>`;
   }).join('') : `<div class="empty" style="padding:14px;">Nenhuma tarefa pendente</div>`;
+  renderPainelCel(aulasHoje, semAulaHoje, discReprovando);
 
   document.querySelectorAll('[data-dash-done]').forEach(el => {
     const fn = async (e) => {
@@ -4782,42 +4842,156 @@ function renderDayOverview(){
     frases.push(`O <b>${esc(r.nome)}</b> do laboratório entrega ${d === 0 ? 'hoje' : d === 1 ? 'amanhã' : 'depois de amanhã'}.`);
   }
 
-  // calendário acadêmico: sem aula amanhã (quando teria aula) e a próxima data do semestre
-  const amanhaD = calSoma(now, 1), temAulaNoDia = dia => getAulas().some(a => a.dia === dia && a.inicio && a.inicio !== '—');
-  const semAulaAmanha = calSemAula(localISO(amanhaD));
-  if(semAulaAmanha && temAulaNoDia(DAY_NAMES[amanhaD.getDay()])) frases.push(`Amanhã não tem aula: <b>${esc(semAulaAmanha)}</b>.`);
-  // (feriado nacional e dia sem aula de um dia só já entram em "amanhã não tem aula")
-  const ev = calProximos(7).find(e => !e.nacional && (e.tipo !== 'feriado' || (e.ate && e.ate !== e.de)));
-  if(ev){
-    const d = daysUntil(ev.de), fimEv = ev.ate && ev.ate !== ev.de ? ev.ate : '';
-    frases.push(d > 0 ? (fimEv ? `<b>${esc(ev.nome)}</b> começa ${diasLabel(d)}.` : d === 1 ? `Amanhã: <b>${esc(ev.nome)}</b>.` : `<b>${esc(ev.nome)}</b> ${diasLabel(d)}.`)
-      : fimEv && daysUntil(fimEv) > 0 ? `<b>${esc(ev.nome)}</b>: até ${fmtCurta(fimEv)}.`
-      : fimEv ? `<b>${esc(ev.nome)}</b>: hoje é o último dia.` : `Hoje: <b>${esc(ev.nome)}</b>.`);
-  }
+  frases.push(...calAvisos(now));
   if(!frases.length){
     const prox = upcomingProvas().find(p => daysUntil(p.data) > 1);
     frases.push(prox && daysUntil(prox.data) <= 7
       ? `Nada urgente por hoje. A próxima prova é <b>${prova(prox)}</b> ${diasLabel(daysUntil(prox.data))}, dá tempo de se organizar com calma.`
       : 'Nenhuma prova ou prazo à vista hoje. Aproveite o dia.');
   }
-  // nota que já deve ter saído (prova de 3 a 21 dias atrás): vem por último, sem tirar lugar dos prazos
-  const pNota = provasSemNota().find(p => daysUntil(p.data) <= -3 && daysUntil(p.data) >= -21);
-  // provas acabaram: primeiro pede as notas que faltam; com elas lançadas, sugere encerrar o semestre
-  const nudge = pNota && frases.length < 3 ? `<span class="day-overview__nota">Já saiu a nota da <b>${esc(pNota.tipo)} de ${esc(disc(pNota))}</b>? <button type="button" class="link-btn" data-lancar-nota="${esc(pNota.id)}">Lançar nota</button></span>`
-    : !pNota && semestreParaEncerrar() ? `<span class="day-overview__nota">Parece que o semestre acabou. <button type="button" class="link-btn" data-encerrar-sem>Encerrar semestre</button> <span class="dim">ou</span> <button type="button" class="link-btn" data-sem-depois>agora não</button></span>`
-    : '';
-  el.innerHTML = `<span class="day-overview__hi">${saud}${nome ? ', ' + esc(nome) : ''}.</span> ${frases.slice(0,3).join(' ')}${nudge}`;
+  // a nota que já deve ter saído vem por último, sem tirar lugar dos prazos
+  const nudge = painelNudge(frases.length < 3);
+  el.innerHTML = `<span class="day-overview__hi">${saud}${nome ? ', ' + esc(nome) : ''}.</span> ${frases.slice(0,3).join(' ')}${nudge ? `<span class="day-overview__nota">${nudge.html}</span>` : ''}`;
 }
-document.getElementById('dayOverview').addEventListener('click', e => {
+// calendário acadêmico: sem aula amanhã (quando teria aula) e a próxima data do semestre, em frases
+function calAvisos(now){
+  const out = [];
+  const amanhaD = calSoma(now, 1), temAulaNoDia = dia => getAulas().some(a => a.dia === dia && a.inicio && a.inicio !== '—');
+  const semAulaAmanha = calSemAula(localISO(amanhaD));
+  if(semAulaAmanha && temAulaNoDia(DAY_NAMES[amanhaD.getDay()])) out.push(`Amanhã não tem aula: <b>${esc(semAulaAmanha)}</b>.`);
+  // (feriado nacional e dia sem aula de um dia só já entram em "amanhã não tem aula")
+  const ev = calProximos(7).find(e => !e.nacional && (e.tipo !== 'feriado' || (e.ate && e.ate !== e.de)));
+  if(ev){
+    const d = daysUntil(ev.de), fimEv = ev.ate && ev.ate !== ev.de ? ev.ate : '';
+    out.push(d > 0 ? (fimEv ? `<b>${esc(ev.nome)}</b> começa ${diasLabel(d)}.` : d === 1 ? `Amanhã: <b>${esc(ev.nome)}</b>.` : `<b>${esc(ev.nome)}</b> ${diasLabel(d)}.`)
+      : fimEv && daysUntil(fimEv) > 0 ? `<b>${esc(ev.nome)}</b>: até ${fmtCurta(fimEv)}.`
+      : fimEv ? `<b>${esc(ev.nome)}</b>: hoje é o último dia.` : `Hoje: <b>${esc(ev.nome)}</b>.`);
+  }
+  return out;
+}
+// provas acabaram: primeiro pede a nota que já deve ter saído (prova de 3 a 21 dias atrás); com as notas
+// lançadas, sugere encerrar o semestre. comNota = false: há frases demais e o pedido de nota fica para depois
+function painelNudge(comNota){
+  const disc = p => String(p.disciplina || '').replace(/\s*\([^)]*\)\s*$/, '');
+  const pNota = provasSemNota().find(p => daysUntil(p.data) <= -3 && daysUntil(p.data) >= -21);
+  if(pNota) return comNota ? {icone: 'edit', html: `Já saiu a nota da <b>${esc(pNota.tipo)} de ${esc(disc(pNota))}</b>? <button type="button" class="link-btn" data-lancar-nota="${esc(pNota.id)}">Lançar nota</button>`} : null;
+  if(semestreParaEncerrar()) return {icone: 'cap', html: `Parece que o semestre acabou. <button type="button" class="link-btn" data-encerrar-sem>Encerrar semestre</button> <span class="dim">ou</span> <button type="button" class="link-btn" data-sem-depois>agora não</button>`};
+  return null;
+}
+function painelAcoes(e){
   const b = e.target.closest('[data-lancar-nota]');
   if(b) abrirLancarNota(b.dataset.lancarNota);
   if(e.target.closest('[data-encerrar-sem]')) abrirFimSemestre();
   // "agora não": o aviso volta em duas semanas
   if(e.target.closest('[data-sem-depois]')){
     lsSet('notif_last_sem_' + (ACTIVE_PROFILE_ID || 'default'), localISO(new Date(Date.now() + 14 * 86400000)));
-    renderDayOverview();
+    renderPainel();
   }
+}
+document.getElementById('dayOverview').addEventListener('click', painelAcoes);
+document.getElementById('pcAvisos').addEventListener('click', painelAcoes);
+// atalhos do painel do celular: cada um abre a sua aba
+document.getElementById('painelCel').addEventListener('click', e => {
+  const ir = e.target.closest('[data-ir]');
+  if(ir) switchTab(ir.dataset.ir);
 });
+
+// ---------------- Painel no celular ----------------
+// a próxima aula: a de agora, a de mais tarde ou a dos próximos dias (pulando os dias sem aula)
+function proximaAula(){
+  const aulas = getAulas().filter(a => a.dia && a.inicio && a.inicio !== '—');
+  if(!aulas.length) return null;
+  const agora = new Date(), hm = nowHHMM(), per = calPeriodo();
+  for(let i = 0; i < 8; i++){
+    const d = calSoma(agora, i), iso = localISO(d), dia = DAY_NAMES[d.getDay()];
+    if(calSemAula(iso) || (!per.estimado && (iso < per.inicio || iso > per.fim))) continue;
+    const a = aulas.filter(x => x.dia === dia && (i > 0 || (x.fim || x.inicio) > hm)).sort((x, y) => x.inicio.localeCompare(y.inicio))[0];
+    if(a) return {a, dias: i, dia, agora: i === 0 && a.inicio <= hm};
+  }
+  return null;
+}
+// botão "Faltei" de uma aula de hoje: registra a falta na disciplina, um toque de novo desfaz
+function chipFaltei(a, sigla, reg){
+  return `<button type="button" class="falta-chip${reg ? ' is-on' : ''}" data-faltei="${esc(a.inicio)}|${esc(sigla)}|${esc(a.fim || '')}"
+      aria-pressed="${!!reg}" aria-label="${reg ? `Falta registrada em ${esc(sigla)}, toque para desfazer` : `Registrar falta em ${esc(sigla)}`}"
+      title="${reg ? `${reg.n === 1 ? '1 falta registrada' : reg.n + ' faltas registradas'}. Toque para desfazer` : `Registrar falta em ${esc(sigla)}`}">${reg ? 'Faltou' : 'Faltei'}</button>`;
+}
+function renderPainelCel(aulasHoje, semAulaHoje, discReprovando){
+  if(!document.getElementById('painelCel')) return;
+  const now = new Date(), h = now.getHours(), hm = nowHHMM(), hojeIso = localISO(now);
+  const nome = String(STATE.config.aluno || '').trim().split(/\s+/)[0];
+  const data = now.toLocaleDateString('pt-BR', {weekday: 'long', day: 'numeric', month: 'long'});
+  document.getElementById('pcData').textContent = data.charAt(0).toUpperCase() + data.slice(1);
+  document.getElementById('pcOi').textContent = (h < 5 ? 'Boa noite' : h < 12 ? 'Bom dia' : h < 18 ? 'Boa tarde' : 'Boa noite') + (nome ? ', ' + nome : '');
+  const nomeDisc = s => s && (STATE.historico.find(i => i.sigla === s) || {}).disciplina;
+  const local = x => x.local && x.local !== '—' ? x.local : '';
+  const junta = (...xs) => xs.filter(Boolean).join(', ');
+
+  // os quatro atalhos (o do semestre só mostra)
+  const w = (aba, cor, icone, rotulo, valor, sub, extra = '') => {
+    const tag = aba ? 'button' : 'div';
+    return `<${tag}${aba ? ` type="button" data-ir="${aba}"` : ''} class="panel stat pc-w" style="--accent:var(--${cor})">
+      <span class="pc-w__top">${ico(icone)}<span>${rotulo}</span></span>
+      <span class="pc-w__v">${valor}</span>${sub ? `<span class="pc-w__s">${sub}</span>` : ''}${extra}</${tag}>`;
+  };
+  const pa = proximaAula(), temHorario = getAulas().some(a => a.inicio && a.inicio !== '—');
+  const naDia = d => (d === 'Sábado' || d === 'Domingo' ? 'no ' : 'na ') + d.toLowerCase();
+  const wAula = !pa ? w('horario', 'blue', 'clock', 'Próxima aula', temHorario ? 'Nenhuma' : 'Sem horário', temHorario ? 'nos próximos dias' : 'toque para montar')
+    : pa.agora ? w('horario', 'blue', 'clock', 'Aula agora', esc(pa.a.disciplina), esc(junta(pa.a.fim && 'até ' + pa.a.fim, local(pa.a))))
+    : w('horario', 'blue', 'clock', pa.dias === 0 ? 'Próxima aula' : pa.dias === 1 ? 'Aula amanhã' : 'Aula ' + naDia(pa.dia), esc(pa.a.inicio), esc(junta(pa.a.disciplina, local(pa.a))));
+  const pp = upcomingProvas(1)[0], nP = pp ? daysUntil(pp.data) : 0;
+  const sig = d => (String(d || '').match(/\(([^)]+)\)\s*$/) || [])[1] || d;
+  const wProva = !pp ? w('provas', 'blue', 'exam', 'Próxima prova', 'Nenhuma', 'marcada')
+    : w('provas', nP <= 1 ? 'red' : 'blue', 'exam', 'Próxima prova', nP === 0 ? 'Hoje' : nP === 1 ? 'Amanhã' : `${nP} dias`, esc(junta(`${pp.tipo} de ${sig(pp.disciplina)}`, pp.hora)));
+  const abertas = STATE.tarefas.filter(t => t.status !== 'Concluído' && t.prazo);
+  const atras = abertas.filter(t => daysUntil(t.prazo) < 0).length, deHoje = abertas.filter(t => daysUntil(t.prazo) === 0).length;
+  const semana = abertas.filter(t => daysUntil(t.prazo) >= 0 && daysUntil(t.prazo) <= 7).length;
+  const wTarefas = w('tarefas', atras ? 'red' : semana ? 'amber' : 'green', 'check', 'Tarefas', atras + semana ? String(atras + semana) : 'Em dia',
+    atras ? `<span class="pc-alerta">${atras} ${atras === 1 ? 'atrasada' : 'atrasadas'}</span>` : deHoje ? `${deHoje} para hoje` : semana ? 'para esta semana' : 'nada para esta semana');
+  const pr = calProgresso();
+  const wSem = pr.semana
+    ? w('', 'purple', 'calendar', 'Semestre', `Semana ${pr.semana}`, `de ${pr.total}${calPeriodo().estimado ? ' (estimado)' : ''}`,
+      `<span class="pc-w__bar"><span style="width:${Math.round(pr.semana / pr.total * 100)}%"></span></span>`)
+    : w('', 'purple', 'calendar', 'Semestre', `<span class="pc-w__txt">${esc(pr.txt)}</span>`, '');
+  document.getElementById('pcWidgets').innerHTML = wAula + wProva + wTarefas + wSem;
+
+  // avisos: faltas e notas em risco, o calendário dos próximos dias e o pedido de nota (ou de encerrar o semestre)
+  const avisos = [];
+  const aviso = (aba, cor, icone, html) => avisos.push(`<${aba ? `button type="button" data-ir="${aba}"` : 'div'} class="pc-aviso" style="--accent:var(--${cor})">${ico(icone)}<span>${html}</span></${aba ? 'button' : 'div'}>`);
+  const risco = countDisciplinasEmRisco();
+  if(risco) aviso('faltas', 'red', 'alert', `${risco} ${risco === 1 ? 'disciplina perto' : 'disciplinas perto'} do limite de faltas`);
+  if(discReprovando) aviso('desempenho', 'red', 'alert', `Reprovando em notas: ${discReprovando} ${discReprovando === 1 ? 'disciplina' : 'disciplinas'}`);
+  calAvisos(now).forEach(f => aviso('', 'purple', 'calendar', f));
+  const nudge = painelNudge(true);
+  if(nudge) aviso('', 'blue', nudge.icone, nudge.html);
+  document.getElementById('pcAvisos').innerHTML = avisos.join('');
+
+  // hoje: provas e aulas pela hora, depois as tarefas atrasadas ou de hoje e os relatórios que entregam hoje
+  const item = (cor, hora, t, s, fim = '', cls = '') => `<div class="pc-item${cls}" style="--accent:var(--${cor})"><span class="pc-item__bar"></span><span class="pc-item__hora">${hora}</span>
+      <span class="pc-item__info"><span class="t">${t}</span>${s ? `<span class="s">${s}</span>` : ''}</span>${fim}</div>`;
+  const porHora = [];
+  STATE.provas.filter(p => p.data === hojeIso).forEach(p => porHora.push({ord: p.hora || '', html:
+    item('red', esc(p.hora || 'Hoje'), esc(examLabel(p)), esc(local(p)), '', provaPendente(p) ? '' : ' is-past')}));
+  aulasHoje.forEach(a => {
+    const sigla = aulaSigla(a), reg = sigla ? faltaDaAula(hojeIso, a.inicio, sigla) : null;
+    const passou = !!a.fim && a.fim <= hm, agora = !passou && a.inicio <= hm, nomeA = nomeDisc(sigla);
+    porHora.push({ord: a.inicio, html: item('blue', esc(a.inicio), esc(nomeA || a.disciplina), esc(junta(nomeA ? sigla : '', local(a))),
+      `<span class="row-end">${agora ? '<span class="badge badge-amber">agora</span>' : ''}${sigla ? chipFaltei(a, sigla, reg) : ''}</span>`, passou ? ' is-past' : '')});
+  });
+  const tarefas = STATE.tarefas.filter(t => t.status !== 'Concluído' && t.prazo && daysUntil(t.prazo) <= 0).sort((a, b) => a.prazo.localeCompare(b.prazo));
+  const TMAX = 4, maisT = tarefas.length - TMAX;
+  const linhas = tarefas.slice(0, TMAX).map(t => {
+    const atrasada = daysUntil(t.prazo) < 0;
+    return item(atrasada ? 'red' : 'amber', `<span class="pc-check" data-dash-done="${esc(t.id)}" role="button" tabindex="0" aria-label="Concluir ${esc(t.nome)}"></span>`,
+      esc(t.nome), junta(atrasada ? `<span class="pc-alerta">atrasada desde ${fmtCurta(t.prazo)}</span>` : 'vence hoje', esc(t.disciplina)));
+  });
+  relatoriosAbertos().filter(r => daysUntil(r.fim) === 0).forEach(r => linhas.push(item('purple', ico('flask'), esc(r.nome), 'relatório, entrega hoje')));
+  const corpo = porHora.sort((a, b) => a.ord.localeCompare(b.ord)).map(x => x.html).join('') + linhas.join('')
+    + (maisT > 0 ? `<button type="button" class="link-btn pc-mais" data-ir="tarefas">e mais ${maisT} ${maisT === 1 ? 'tarefa' : 'tarefas'}</button>` : '');
+  const semAula = semAulaHoje ? `<div class="pc-vazio">Sem aula hoje: ${esc(semAulaHoje)}</div>` : '';
+  document.getElementById('pcHoje').innerHTML = semAula + corpo || (semAula || '<div class="pc-vazio">Nada marcado para hoje</div>');
+  document.querySelectorAll('#pcHoje [data-faltei]').forEach(b => b.addEventListener('click', () => alternarFalta(b.dataset.faltei)));
+}
 
 // último número mostrado em cada card: o painel se redesenha a cada minuto e não deve recontar do zero
 const _countShown = {};
@@ -11834,10 +12008,11 @@ document.getElementById('modalAjuda').addEventListener('click', e => { if(e.targ
 const TOUR = [
   {titulo: 'Bem-vindo ao Centro de Controle', texto: 'Um minuto pelas partes principais. Dá para refazer quando quiser, na Ajuda.'},
   {aba: 'painel', alvo: '#navRail', alvoCel: '#mobileTabbar', titulo: 'As abas', texto: 'Cada parte do curso tem a sua aba.', textoCel: 'Cada parte do curso tem a sua aba. As outras ficam em Mais.'},
-  {aba: 'painel', alvo: '#resumoStats', titulo: 'Resumo do dia', texto: 'Aulas de hoje, próxima aula, próxima prova e os prazos da semana.'},
+  {aba: 'painel', alvo: '#resumoStats', alvoCel: '#pcWidgets', titulo: 'Resumo do dia', texto: 'Aulas de hoje, próxima aula, próxima prova e os prazos da semana.',
+    textoCel: 'Próxima aula, próxima prova, tarefas e a semana do semestre. Toque num deles para abrir a aba.'},
   {alvo: '#railQuickAdd', alvoCel: '#mobileFab', titulo: 'Novo item', texto: 'Adicione uma tarefa ou uma prova de qualquer tela. Atalho: Ctrl K.', textoCel: 'Adicione uma tarefa ou uma prova de qualquer tela.',
     textoSem: 'Para adicionar uma tarefa ou uma prova de qualquer tela, aperte Ctrl K.'},
-  {aba: 'painel', alvo: '#aulasHojeList', painel: true, titulo: 'Faltei', texto: 'Faltou numa aula de hoje? Toque em Faltei e a falta já conta na disciplina.'},
+  {aba: 'painel', alvo: '#aulasHojeList', alvoCel: '#pcHoje', painel: true, titulo: 'Faltei', texto: 'Faltou numa aula de hoje? Toque em Faltei e a falta já conta na disciplina.'},
   {aba: 'provas', alvo: '#calGrid', painel: true, titulo: 'Calendário de provas', texto: 'Toque num dia para marcar uma prova. Depois dela, lance a nota ali mesmo.'},
   {aba: 'desempenho', alvo: '#notasSemestreGrid', titulo: 'Notas', texto: 'Escreva a nota e o peso de cada avaliação: a média e quanto falta para passar saem sozinhas.'},
   {aba: 'horario', alvo: '#btnMontarGrade', titulo: 'Horário', texto: 'Monte o horário pelo PDF de horários da faculdade, escolhendo as turmas sem choque.'},

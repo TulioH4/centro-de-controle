@@ -38,6 +38,7 @@ Para publicar na Microsoft Store (gratuito para pessoa física), o passo a passo
 **Painel**
 - Um recado curto do dia: provas de hoje e amanhã, tarefas atrasadas ou vencendo, relatórios perto do prazo e a nota de prova que já deve ter saído
 - Resumo do dia: aulas, próxima aula, próxima prova e prazos da semana
+- No celular, tudo o que importa já na primeira tela, sem rolar: a data e a saudação, quatro atalhos (próxima aula, próxima prova, tarefas e a semana do semestre, cada um abrindo a sua aba), os avisos (faltas, notas, calendário, nota que já deve ter saído) e o dia de hoje numa lista só, com as aulas (e o **Faltei**), as provas e as tarefas atrasadas ou do dia, que se concluem com um toque
 - Próximas provas com data, horário e sala; relatórios do laboratório e tarefas com prazo em aberto, por data
 - Agenda da semana em grade, juntando aulas, provas, entregas e tarefas (no dia de uma prova, a aula da disciplina dá lugar a ela)
 - Post-its de lembrete fixados no topo
